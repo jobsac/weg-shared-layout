@@ -1,7 +1,7 @@
 {
   "name": "weg-shared-layout",
   "version": "0.0.2",
-  "description": "Stencil Component Starter",
+  "description": "Shared layout Web Components built with Stencil",
   "main": "dist/index.cjs.js",
   "module": "dist/index.js",
   "types": "dist/components/index.d.ts",
@@ -29,8 +29,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/stenciljs/component-starter.git"
+    "url": "git+https://github.com/jobsac/weg-shared-layout.git"
   },
+  "bugs": {
+    "url": "https://github.com/jobsac/weg-shared-layout/issues"
+  },
+  "homepage": "https://github.com/jobsac/weg-shared-layout#readme",
   "files": [
     "dist/",
     "loader/"
