@@ -1,0 +1,24 @@
+node_modules/
+
+# Stencil build outputs
+dist/
+www/
+loader/
+.stencil/
+
+# Logs
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+*.log
+
+# OS / Editor
+.DS_Store
+.idea/
+.vscode/
+
+# Optional local env files
+.env
+.env.*
