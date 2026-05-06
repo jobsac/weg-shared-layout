@@ -134,6 +134,31 @@ Or:
 import 'weg-shared-layout';
 ```
 
+### Next.js (App Router) note
+
+Stencil custom elements must be registered **in the browser**. If you’re using Next.js `app/` (App Router), don’t import/register Stencil components from a Server Component.
+
+Instead, register them in a Client Component, for example:
+
+```tsx
+// app/components/WegFooterClient.tsx
+"use client";
+
+import "weg-shared-layout/weg-footer";
+
+export function WegFooterClient() {
+  return (
+    <weg-footer
+      variant="standard"
+      company-name="WEG"
+      company-number="12345678"
+      social-links-src="/assets/footer-social-links.json"
+      standard-links-src="/assets/footer-standard-links.json"
+    />
+  );
+}
+```
+
 Use the footer (standard):
 
 ```tsx
