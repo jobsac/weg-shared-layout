@@ -1,0 +1,20 @@
+{
+  "header": {},
+  "footer": {
+    "social": [
+      { "platform": "LinkedIn", "href": "https://www.linkedin.com/" },
+      { "platform": "Instagram", "href": "https://www.instagram.com/" },
+      { "platform": "TikTok", "href": "https://www.tiktok.com/" },
+      { "platform": "YouTube", "href": "https://www.youtube.com/" }
+    ],
+    "standardLinks": [
+      { "label": "About Us", "href": "/about" },
+      { "label": "Privacy Policy", "href": "/privacy" },
+      { "label": "Terms of Use", "href": "/terms" },
+      { "label": "Cookie Policy", "href": "/cookies" },
+      { "label": "Accessibility Statement", "href": "/accessibility" }
+    ],
+    "credits": "Warwick Employment Group is a department of the Campus and Commercial Services Group at the University of Warwick.",
+    "copyright": "Copyright © Warwick Employment Group."
+  }
+}

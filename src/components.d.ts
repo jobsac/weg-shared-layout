@@ -22,42 +22,9 @@ export namespace Components {
     }
     interface WegFooter {
         /**
-          * Additional footer groups as a JSON string. Example: `[{"id":"set-1","links":[{"label":"Services","href":"/services"}]}]`
+          * URL to a JSON file containing layout data.  Expected shape: ```json {   "footer": {     "social": [{ "platform": "LinkedIn", "href": "https://..." }],     "standardLinks": [{ "label": "About Us", "href": "/about" }],     "credits": "...",     "copyright": "..."   } } ```
          */
-        "additionalGroups"?: string;
-        /**
-          * Optional URL to a JSON file for additional groups. If provided, this takes precedence over `additionalGroups`.
-         */
-        "additionalGroupsSrc"?: string;
-        /**
-          * @default 'WEG'
-         */
-        "companyName": string;
-        /**
-          * @default ''
-         */
-        "companyNumber": string;
-        /**
-          * Social links as a JSON string (for HTML usage). Example: `[{"platform":"LinkedIn","href":"https://..."},{"platform":"X","href":"https://..."}]`  Icons render only for items with a non-empty `href`.
-         */
-        "socialLinks"?: string;
-        /**
-          * Optional URL to a JSON file for social links. If provided, this takes precedence over `socialLinks`.
-         */
-        "socialLinksSrc"?: string;
-        /**
-          * Standard footer links as a JSON string. Example: `[{"label":"Privacy Policy","href":"/privacy"}]`
-         */
-        "standardLinks"?: string;
-        /**
-          * Optional URL to a JSON file for standard links. If provided, this takes precedence over `standardLinks`.
-         */
-        "standardLinksSrc"?: string;
-        /**
-          * `standard` matches the "single group of links" footer. `additional` matches the "multiple link sets" footer.
-          * @default 'standard'
-         */
-        "variant": FooterVariant;
+        "dataSrc"?: string;
     }
 }
 declare global {
@@ -95,42 +62,9 @@ declare namespace LocalJSX {
     }
     interface WegFooter {
         /**
-          * Additional footer groups as a JSON string. Example: `[{"id":"set-1","links":[{"label":"Services","href":"/services"}]}]`
+          * URL to a JSON file containing layout data.  Expected shape: ```json {   "footer": {     "social": [{ "platform": "LinkedIn", "href": "https://..." }],     "standardLinks": [{ "label": "About Us", "href": "/about" }],     "credits": "...",     "copyright": "..."   } } ```
          */
-        "additionalGroups"?: string;
-        /**
-          * Optional URL to a JSON file for additional groups. If provided, this takes precedence over `additionalGroups`.
-         */
-        "additionalGroupsSrc"?: string;
-        /**
-          * @default 'WEG'
-         */
-        "companyName"?: string;
-        /**
-          * @default ''
-         */
-        "companyNumber"?: string;
-        /**
-          * Social links as a JSON string (for HTML usage). Example: `[{"platform":"LinkedIn","href":"https://..."},{"platform":"X","href":"https://..."}]`  Icons render only for items with a non-empty `href`.
-         */
-        "socialLinks"?: string;
-        /**
-          * Optional URL to a JSON file for social links. If provided, this takes precedence over `socialLinks`.
-         */
-        "socialLinksSrc"?: string;
-        /**
-          * Standard footer links as a JSON string. Example: `[{"label":"Privacy Policy","href":"/privacy"}]`
-         */
-        "standardLinks"?: string;
-        /**
-          * Optional URL to a JSON file for standard links. If provided, this takes precedence over `standardLinks`.
-         */
-        "standardLinksSrc"?: string;
-        /**
-          * `standard` matches the "single group of links" footer. `additional` matches the "multiple link sets" footer.
-          * @default 'standard'
-         */
-        "variant"?: FooterVariant;
+        "dataSrc"?: string;
     }
 
     interface MyComponentAttributes {
@@ -139,15 +73,7 @@ declare namespace LocalJSX {
         "last": string;
     }
     interface WegFooterAttributes {
-        "variant": FooterVariant;
-        "companyName": string;
-        "companyNumber": string;
-        "socialLinksSrc": string;
-        "socialLinks": string;
-        "standardLinksSrc": string;
-        "standardLinks": string;
-        "additionalGroupsSrc": string;
-        "additionalGroups": string;
+        "dataSrc": string;
     }
 
     interface IntrinsicElements {

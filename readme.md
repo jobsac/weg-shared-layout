@@ -10,6 +10,35 @@ Install:
 npm i weg-shared-layout
 ```
 
+## Data shape
+
+`<weg-footer>` fetches a single JSON document (typically served by your backend, e.g. `/api/layout`) with this shape:
+
+```json
+{
+  "header": {},
+  "footer": {
+    "social": [
+      { "platform": "LinkedIn", "href": "https://www.linkedin.com/" },
+      { "platform": "Instagram", "href": "https://www.instagram.com/" },
+      { "platform": "TikTok", "href": "https://www.tiktok.com/" },
+      { "platform": "YouTube", "href": "https://www.youtube.com/" }
+    ],
+    "standardLinks": [
+      { "label": "About Us", "href": "/about" },
+      { "label": "Privacy Policy", "href": "/privacy" },
+      { "label": "Terms of Use", "href": "/terms" },
+      { "label": "Cookie Policy", "href": "/cookies" },
+      { "label": "Accessibility Statement", "href": "/accessibility" }
+    ],
+    "credits": "Warwick Employment Group is a department of the Campus and Commercial Services Group at the University of Warwick.",
+    "copyright": "Copyright © Warwick Employment Group."
+  }
+}
+```
+
+Only `social.platform` values of `LinkedIn`, `Instagram`, `TikTok`, and `YouTube` render an icon. Items with missing/invalid fields are silently dropped.
+
 ## Using in Angular
 
 Register custom elements (recommended in `main.ts`):
@@ -32,28 +61,10 @@ import { CUSTOM_ELEMENTS_SCHEMA, NgModule } from '@angular/core';
 export class AppModule {}
 ```
 
-Use in a template (standard):
+Use in a template:
 
 ```html
-<weg-footer
-  variant="standard"
-  company-name="WEG"
-  company-number="12345678"
-  social-links-src="/assets/footer-social-links.json"
-  standard-links-src="/assets/footer-standard-links.json"
-></weg-footer>
-```
-
-Use in a template (additional):
-
-```html
-<weg-footer
-  variant="additional"
-  company-name="WEG"
-  company-number="12345678"
-  social-links-src="/assets/footer-social-links.json"
-  additional-groups-src="/assets/footer-additional-groups.json"
-></weg-footer>
+<weg-footer data-src="/assets/dummy-data.json"></weg-footer>
 ```
 
 ## Using in React
@@ -93,51 +104,17 @@ Instead, register them in a Client Component, for example:
 import "weg-shared-layout/weg-footer";
 
 export function WegFooterClient() {
-  return (
-    <weg-footer
-      variant="standard"
-      company-name="WEG"
-      company-number="12345678"
-      social-links-src="/assets/footer-social-links.json"
-      standard-links-src="/assets/footer-standard-links.json"
-    />
-  );
+  return <weg-footer data-src="/api/layout" />;
 }
 ```
 
-Use the footer (standard):
+Use the footer:
 
 ```tsx
 import 'weg-shared-layout/weg-footer';
 
 export function App() {
-  return (
-    <weg-footer
-      variant="standard"
-      company-name="WEG"
-      company-number="12345678"
-      social-links-src="/assets/footer-social-links.json"
-      standard-links-src="/assets/footer-standard-links.json"
-    />
-  );
-}
-```
-
-Use the footer (additional):
-
-```tsx
-import 'weg-shared-layout/weg-footer';
-
-export function App() {
-  return (
-    <weg-footer
-      variant="additional"
-      company-name="WEG"
-      company-number="12345678"
-      social-links-src="/assets/footer-social-links.json"
-      additional-groups-src="/assets/footer-additional-groups.json"
-    />
-  );
+  return <weg-footer data-src="/api/layout" />;
 }
 ```
 
@@ -151,6 +128,6 @@ Stencil generates `components.d.ts` in this repo, but React does not automatical
 
 If your app still complains about JSX intrinsic elements, you can also augment `JSX.IntrinsicElements` in that same file (varies by React/TS setup).
 
-### Note on `*-src` JSON URLs
+### Note on `data-src`
 
-`social-links-src`, `standard-links-src`, and `additional-groups-src` are fetched by the component at runtime, so the JSON files must be **served by the host app** (e.g. Angular’s `src/assets/`), or be a full `https://...` URL.
+`data-src` is fetched by the component at runtime, so the JSON must be **served by the host app** (e.g. Angular’s `src/assets/`, a Next.js route handler at `/api/layout`), or be a full `https://...` URL.

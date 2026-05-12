@@ -1,15 +1,8 @@
 import { Component, Prop, State, Watch, h } from '@stencil/core';
 
-type FooterVariant = 'standard' | 'additional';
-
 type FooterLink = {
   label: string;
   href: string;
-};
-
-type FooterLinkGroup = {
-  id: string;
-  links: FooterLink[];
 };
 
 type FooterSocialPlatform = 'LinkedIn' | 'Instagram' | 'TikTok' | 'YouTube';
@@ -19,16 +12,29 @@ type FooterSocialLink = {
   href: string;
 };
 
-function parseJsonProp<T>(value?: string): T | undefined {
-  if (typeof value !== 'string') return undefined;
-  const trimmed = value.trim();
-  if (!trimmed) return undefined;
-  try {
-    return JSON.parse(trimmed) as T;
-  } catch {
-    return undefined;
-  }
-}
+type FooterData = {
+  social: FooterSocialLink[];
+  standardLinks: FooterLink[];
+  credits: string;
+  copyright: string;
+};
+
+type LayoutData = {
+  header?: unknown;
+  footer?: Partial<{
+    social: unknown;
+    standardLinks: unknown;
+    credits: unknown;
+    copyright: unknown;
+  }>;
+};
+
+const EMPTY_FOOTER: FooterData = {
+  social: [],
+  standardLinks: [],
+  credits: '',
+  copyright: '',
+};
 
 function isExternalHref(href: string) {
   return /^https?:\/\//.test(href);
@@ -70,18 +76,15 @@ function normalizeLinks(input: unknown): FooterLink[] {
   return result;
 }
 
-function normalizeGroups(input: unknown): FooterLinkGroup[] {
-  if (!Array.isArray(input)) return [];
-  const result: FooterLinkGroup[] = [];
-  for (const item of input) {
-    if (!item || typeof item !== 'object') continue;
-    const id = (item as { id?: unknown }).id;
-    const links = normalizeLinks((item as { links?: unknown }).links);
-    if (!isNonEmptyString(id)) continue;
-    if (links.length === 0) continue;
-    result.push({ id: id.trim(), links });
-  }
-  return result;
+function normalizeFooterData(input: unknown): FooterData {
+  const root = (input && typeof input === 'object' ? input : {}) as LayoutData;
+  const footer = (root.footer && typeof root.footer === 'object' ? root.footer : {}) as LayoutData['footer'];
+  return {
+    social: normalizeSocialLinks(footer?.social),
+    standardLinks: normalizeLinks(footer?.standardLinks),
+    credits: isNonEmptyString(footer?.credits) ? footer!.credits!.trim() : '',
+    copyright: isNonEmptyString(footer?.copyright) ? footer!.copyright!.trim() : '',
+  };
 }
 
 function SocialIcon({ platform }: { platform: FooterSocialPlatform }) {
@@ -152,57 +155,23 @@ function SocialIcon({ platform }: { platform: FooterSocialPlatform }) {
 })
 export class WegFooter {
   /**
-   * `standard` matches the "single group of links" footer.
-   * `additional` matches the "multiple link sets" footer.
-   */
-  @Prop() variant: FooterVariant = 'standard';
-
-  @Prop() companyName = 'WEG';
-
-  @Prop() companyNumber = '';
-
-  /**
-   * Optional URL to a JSON file for social links.
-   * If provided, this takes precedence over `socialLinks`.
-   */
-  @Prop() socialLinksSrc?: string;
-
-  /**
-   * Social links as a JSON string (for HTML usage).
-   * Example:
-   * `[{"platform":"LinkedIn","href":"https://..."},{"platform":"X","href":"https://..."}]`
+   * URL to a JSON file containing layout data.
    *
-   * Icons render only for items with a non-empty `href`.
+   * Expected shape:
+   * ```json
+   * {
+   *   "footer": {
+   *     "social": [{ "platform": "LinkedIn", "href": "https://..." }],
+   *     "standardLinks": [{ "label": "About Us", "href": "/about" }],
+   *     "credits": "...",
+   *     "copyright": "..."
+   *   }
+   * }
+   * ```
    */
-  @Prop() socialLinks?: string;
+  @Prop() dataSrc?: string;
 
-  /**
-   * Optional URL to a JSON file for standard links.
-   * If provided, this takes precedence over `standardLinks`.
-   */
-  @Prop() standardLinksSrc?: string;
-
-  /**
-   * Standard footer links as a JSON string.
-   * Example: `[{"label":"Privacy Policy","href":"/privacy"}]`
-   */
-  @Prop() standardLinks?: string;
-
-  /**
-   * Optional URL to a JSON file for additional groups.
-   * If provided, this takes precedence over `additionalGroups`.
-   */
-  @Prop() additionalGroupsSrc?: string;
-
-  /**
-   * Additional footer groups as a JSON string.
-   * Example: `[{"id":"set-1","links":[{"label":"Services","href":"/services"}]}]`
-   */
-  @Prop() additionalGroups?: string;
-
-  @State() private resolvedSocialLinks: FooterSocialLink[] = [];
-  @State() private resolvedStandardLinks: FooterLink[] = [];
-  @State() private resolvedAdditionalGroups: FooterLinkGroup[] = [];
+  @State() private data: FooterData = EMPTY_FOOTER;
 
   private async fetchJson(url: string): Promise<unknown | undefined> {
     const trimmed = url.trim();
@@ -216,53 +185,38 @@ export class WegFooter {
     }
   }
 
-  private async loadLinksFromProps() {
-    const socialFromSrc = isNonEmptyString(this.socialLinksSrc) ? await this.fetchJson(this.socialLinksSrc) : undefined;
-    const standardFromSrc = isNonEmptyString(this.standardLinksSrc) ? await this.fetchJson(this.standardLinksSrc) : undefined;
-    const additionalFromSrc = isNonEmptyString(this.additionalGroupsSrc) ? await this.fetchJson(this.additionalGroupsSrc) : undefined;
-
-    this.resolvedSocialLinks = normalizeSocialLinks(
-      socialFromSrc !== undefined ? socialFromSrc : parseJsonProp<unknown>(this.socialLinks)
-    );
-    this.resolvedStandardLinks = normalizeLinks(
-      standardFromSrc !== undefined ? standardFromSrc : parseJsonProp<unknown>(this.standardLinks)
-    );
-    this.resolvedAdditionalGroups = normalizeGroups(
-      additionalFromSrc !== undefined ? additionalFromSrc : parseJsonProp<unknown>(this.additionalGroups)
-    );
+  private async loadData() {
+    if (!isNonEmptyString(this.dataSrc)) {
+      this.data = EMPTY_FOOTER;
+      return;
+    }
+    const raw = await this.fetchJson(this.dataSrc);
+    this.data = normalizeFooterData(raw);
   }
 
   async componentWillLoad() {
-    await this.loadLinksFromProps();
+    await this.loadData();
   }
 
-  @Watch('socialLinks')
-  @Watch('socialLinksSrc')
-  @Watch('standardLinks')
-  @Watch('standardLinksSrc')
-  @Watch('additionalGroups')
-  @Watch('additionalGroupsSrc')
-  protected async watchLinks() {
-    await this.loadLinksFromProps();
+  @Watch('dataSrc')
+  protected async watchDataSrc() {
+    await this.loadData();
   }
 
   private renderLegalText() {
+    const { credits, copyright } = this.data;
+    if (!credits && !copyright) return null;
     return (
       <div class="legal">
-        <p class="legal__p">
-          Warwick University Enterprises Limited, trading as&nbsp;{this.companyName}, is a limited company registered in England and Wales, Registered
-          number: {this.companyNumber || '—'}.
-          <br aria-hidden="true" />
-          Registered office: University House, Kirby Corner Road, Coventry, West Midlands, CV4 8UW
-        </p>
-        <p class="legal__p">{String.fromCharCode(8203)}</p>
-        <p class="legal__p">Copyright © {this.companyName}.</p>
+        {credits ? <p class="legal__p">{credits}</p> : null}
+        {credits && copyright ? <p class="legal__p">{String.fromCharCode(8203)}</p> : null}
+        {copyright ? <p class="legal__p">{copyright}</p> : null}
       </div>
     );
   }
 
   private renderSocialLinks() {
-    const links = this.resolvedSocialLinks;
+    const links = this.data.social;
     if (links.length === 0) return null;
     return (
       <div class="social">
@@ -283,63 +237,16 @@ export class WegFooter {
     );
   }
 
-  private renderStandard() {
-    const links = this.resolvedStandardLinks;
+  private renderStandardLinks() {
+    const links = this.data.standardLinks;
+    if (links.length === 0) return null;
     return (
-      <div class="standard">
-        {links.length > 0 ? (
-          <div class="standard__links">
-            {links.map((l) => (
-              <a class="footer-link" href={l.href}>
-                {l.label}
-              </a>
-            ))}
-          </div>
-        ) : null}
-        {this.renderLegalText()}
-      </div>
-    );
-  }
-
-  private renderAdditional() {
-    const groups = this.resolvedAdditionalGroups;
-    return (
-      <div class="additional">
-        {groups.length > 0 ? (
-          <div class="additional__mobile">
-            {groups.map((group, idx) => (
-              <div class="additional__mobileGroup">
-                <div class="link-list">
-                  {group.links.map((l) => (
-                    <a class="footer-link footer-link--block" href={l.href}>
-                      {l.label}
-                    </a>
-                  ))}
-                </div>
-                {idx < groups.length - 1 ? <div class="separator separator--h" /> : null}
-              </div>
-            ))}
-          </div>
-        ) : null}
-
-        {groups.length > 0 ? (
-          <div class="additional__desktop" role="presentation">
-            {groups.map((group, idx) => (
-              <div class="additional__desktopGroup">
-                <div class="link-list">
-                  {group.links.map((l) => (
-                    <a class="footer-link footer-link--block" href={l.href}>
-                      {l.label}
-                    </a>
-                  ))}
-                </div>
-                {idx < groups.length - 1 ? <div class="separator separator--v" /> : null}
-              </div>
-            ))}
-          </div>
-        ) : null}
-
-        {this.renderLegalText()}
+      <div class="standard__links">
+        {links.map((l) => (
+          <a class="footer-link" href={l.href}>
+            {l.label}
+          </a>
+        ))}
       </div>
     );
   }
@@ -349,10 +256,12 @@ export class WegFooter {
       <footer class="footer">
         <div class="container">
           {this.renderSocialLinks()}
-          {this.variant === 'additional' ? this.renderAdditional() : this.renderStandard()}
+          <div class="standard">
+            {this.renderStandardLinks()}
+            {this.renderLegalText()}
+          </div>
         </div>
       </footer>
     );
   }
 }
-
