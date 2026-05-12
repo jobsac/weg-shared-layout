@@ -36,6 +36,17 @@ const EMPTY_FOOTER: FooterData = {
   copyright: '',
 };
 
+function parseJsonProp(value: unknown): unknown {
+  if (typeof value !== 'string') return value;
+  const trimmed = value.trim();
+  if (!trimmed) return undefined;
+  try {
+    return JSON.parse(trimmed) as unknown;
+  } catch {
+    return undefined;
+  }
+}
+
 function isExternalHref(href: string) {
   return /^https?:\/\//.test(href);
 }
@@ -155,7 +166,12 @@ function SocialIcon({ platform }: { platform: FooterSocialPlatform }) {
 })
 export class WegFooter {
   /**
-   * URL to a JSON file containing layout data.
+   * Layout data, supplied by the host application.
+   *
+   * In JS / framework templates, pass the object directly (e.g. Angular
+   * `[data]="layoutData"`, vanilla `el.data = layoutData`).
+   *
+   * In plain HTML, pass the same JSON as a string attribute.
    *
    * Expected shape:
    * ```json
@@ -169,42 +185,29 @@ export class WegFooter {
    * }
    * ```
    */
-  @Prop() dataSrc?: string;
+  @Prop() data?: LayoutData | string;
 
-  @State() private data: FooterData = EMPTY_FOOTER;
+  @State() private resolved: FooterData = EMPTY_FOOTER;
 
-  private async fetchJson(url: string): Promise<unknown | undefined> {
-    const trimmed = url.trim();
-    if (!trimmed) return undefined;
-    try {
-      const res = await fetch(trimmed);
-      if (!res.ok) return undefined;
-      return (await res.json()) as unknown;
-    } catch {
-      return undefined;
-    }
-  }
-
-  private async loadData() {
-    if (!isNonEmptyString(this.dataSrc)) {
-      this.data = EMPTY_FOOTER;
+  private resolve() {
+    if (this.data === undefined || this.data === null) {
+      this.resolved = EMPTY_FOOTER;
       return;
     }
-    const raw = await this.fetchJson(this.dataSrc);
-    this.data = normalizeFooterData(raw);
+    this.resolved = normalizeFooterData(parseJsonProp(this.data));
   }
 
-  async componentWillLoad() {
-    await this.loadData();
+  componentWillLoad() {
+    this.resolve();
   }
 
-  @Watch('dataSrc')
-  protected async watchDataSrc() {
-    await this.loadData();
+  @Watch('data')
+  protected watchData() {
+    this.resolve();
   }
 
   private renderLegalText() {
-    const { credits, copyright } = this.data;
+    const { credits, copyright } = this.resolved;
     if (!credits && !copyright) return null;
     return (
       <div class="legal">
@@ -216,7 +219,7 @@ export class WegFooter {
   }
 
   private renderSocialLinks() {
-    const links = this.data.social;
+    const links = this.resolved.social;
     if (links.length === 0) return null;
     return (
       <div class="social">
@@ -238,7 +241,7 @@ export class WegFooter {
   }
 
   private renderStandardLinks() {
-    const links = this.data.standardLinks;
+    const links = this.resolved.standardLinks;
     if (links.length === 0) return null;
     return (
       <div class="standard__links">
