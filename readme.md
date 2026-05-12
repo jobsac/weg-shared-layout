@@ -103,7 +103,7 @@ Add `CUSTOM_ELEMENTS_SCHEMA` once on the module that declares components using `
 
 ## Using in React
 
-Register once (for example in your app entry):
+Register the element once (for example in `main.tsx` / your app entry):
 
 ```ts
 import { defineCustomElements } from 'weg-shared-layout/loader';
@@ -111,26 +111,18 @@ import { defineCustomElements } from 'weg-shared-layout/loader';
 defineCustomElements();
 ```
 
-Pass an object via a **ref** (or use React 19+ property handling) so you set the DOM property, not a string attribute:
+Import the fixture (or your own object with the same shape) and pass it on **`data`**:
 
 ```tsx
-import { useEffect, useRef, useState } from 'react';
 import 'weg-shared-layout/weg-footer';
-import layoutFixture from 'weg-shared-layout/dummy-data.json';
+import layout from 'weg-shared-layout/dummy-data.json';
 
 export function SiteFooter() {
-  const ref = useRef<HTMLElement & { data?: unknown }>(null);
-  const [layout, setLayout] = useState(layoutFixture);
-
-  useEffect(() => {
-    if (ref.current) ref.current.data = layout;
-  }, [layout]);
-
-  return <weg-footer ref={ref} />;
+  return <weg-footer data={layout} />;
 }
 ```
 
-Swap `layoutFixture` / `setLayout` for your own data loading. **Next.js App Router:** register and assign `data` only in a Client Component (`"use client"`).
+Use **React 19 or newer** so `data={...}` is applied as the custom element’s **`data` property** (object), not a string attribute. Register the elements in a **Client Component** only (`"use client"` in the Next.js App Router).
 
 ### React TypeScript
 
