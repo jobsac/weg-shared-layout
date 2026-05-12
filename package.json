@@ -25,7 +25,8 @@
       "import": "./loader/index.js",
       "require": "./loader/index.cjs",
       "types": "./loader/index.d.ts"
-    }
+    },
+    "./dummy-data.json": "./src/assets/dummy-data.json"
   },
   "repository": {
     "type": "git",
@@ -37,7 +38,8 @@
   "homepage": "https://github.com/jobsac/weg-shared-layout#readme",
   "files": [
     "dist/",
-    "loader/"
+    "loader/",
+    "src/assets/dummy-data.json"
   ],
   "scripts": {
     "build": "stencil build",

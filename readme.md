@@ -12,62 +12,28 @@ npm i weg-shared-layout
 
 ## How it works
 
-`<weg-footer>` is a **dumb / presentational** Web Component. It does **not** fetch data itself. Your host app calls the layout API, then passes the resulting object into the component via the `data` prop.
+`<weg-footer>` is a **presentational** Web Component: it does **not** fetch data. Your app loads layout data however you like (REST, GraphQL, SSR, etc.), then passes the object into the component via the **`data` property** (not a string HTML attribute).
 
-This keeps the component framework-agnostic, lets you share the same response with `<weg-header>` (coming soon), and means HTTP concerns like auth, caching, retries, SSR, and error handling live in your app — where they belong.
+The payload shape matches the sample file **`dummy-data.json`**, shipped with the package:
 
-## Layout API
+- **Import:** `import layout from 'weg-shared-layout/dummy-data.json'` (enable `resolveJsonModule` in TypeScript if needed).
+- **In this repo:** [`src/assets/dummy-data.json`](src/assets/dummy-data.json)
 
-Call this endpoint from your host app to retrieve the data:
-
-```
-GET https://weg-payload-test.vercel.app/api/layout
-```
-
-Response shape:
-
-```json
-{
-  "header": {},
-  "footer": {
-    "social": [
-      { "platform": "LinkedIn", "href": "https://www.linkedin.com/" },
-      { "platform": "Instagram", "href": "https://www.instagram.com/" },
-      { "platform": "TikTok", "href": "https://www.tiktok.com/" },
-      { "platform": "YouTube", "href": "https://www.youtube.com/" }
-    ],
-    "standardLinks": [
-      { "label": "About Us", "href": "/about" },
-      { "label": "Privacy Policy", "href": "/privacy" },
-      { "label": "Terms of Use", "href": "/terms" },
-      { "label": "Cookie Policy", "href": "/cookies" },
-      { "label": "Accessibility Statement", "href": "/accessibility" }
-    ],
-    "credits": "Warwick Employment Group is a department of the Campus and Commercial Services Group at the University of Warwick.",
-    "copyright": "Copyright © Warwick Employment Group."
-  }
-}
-```
-
-Only `social.platform` values of `LinkedIn`, `Instagram`, `TikTok`, and `YouTube` render an icon. Items with missing/invalid fields are silently dropped.
+Use that JSON as fixture data to see the footer working, or as a reference for your own API responses. Only `social.platform` values `LinkedIn`, `Instagram`, `TikTok`, and `YouTube` render an icon; items with missing or invalid fields are dropped.
 
 ## Using in Angular
 
-This guide assumes a modern Angular project (v17+, **standalone components**) — the default for `ng new`. There's an `NgModule` section further down for older apps.
+Assumes Angular 17+ with **standalone** components (default for `ng new`).
 
-### 1. Install the package
+### 1. Install
 
 ```bash
 npm i weg-shared-layout
-# or: pnpm add weg-shared-layout
-# or: yarn add weg-shared-layout
 ```
 
-### 2. Register the custom elements (once, at startup)
+### 2. Register custom elements (once, before bootstrap)
 
-Stencil ships a loader that calls `customElements.define()` for every component in the package. Call it **once** before Angular bootstraps your app, otherwise the browser sees `<weg-footer>` as an unknown element and renders nothing.
-
-Edit `src/main.ts`:
+In `src/main.ts`, call `defineCustomElements()` **before** `bootstrapApplication` so the browser recognises `<weg-footer>`.
 
 ```ts
 import { bootstrapApplication } from '@angular/platform-browser';
@@ -76,50 +42,26 @@ import { defineCustomElements } from 'weg-shared-layout/loader';
 import { appConfig } from './app/app.config';
 import { App } from './app/app';
 
-// MUST run before bootstrapApplication so the browser recognises <weg-footer>
-// by the time Angular's renderer touches the DOM.
 defineCustomElements();
 
 bootstrapApplication(App, appConfig).catch((err) => console.error(err));
 ```
 
-> If you don't see your footer in the page, 9 times out of 10 it's because this step was skipped. Verify by typing `customElements.get('weg-footer')` in the browser DevTools console — it should return a class, not `undefined`.
+### 3. Allow custom elements in templates
 
-### 3. Provide `HttpClient`
+Add `schemas: [CUSTOM_ELEMENTS_SCHEMA]` to every `@Component` whose template uses `<weg-footer>` (it does not cascade from the root through `router-outlet` children).
 
-You need `HttpClient` to call the layout API. In `src/app/app.config.ts`:
+### 4. Pass data with property binding
 
-```ts
-import { ApplicationConfig, provideBrowserGlobalErrorListeners } from '@angular/core';
-import { provideHttpClient } from '@angular/common/http';
-import { provideRouter } from '@angular/router';
+Use **`[data]="..."`** so Angular sets the element’s JavaScript `data` property (Stencil `@Prop()`), not an HTML attribute.
 
-import { routes } from './app.routes';
-
-export const appConfig: ApplicationConfig = {
-  providers: [
-    provideBrowserGlobalErrorListeners(),
-    provideRouter(routes),
-    provideHttpClient(),
-  ],
-};
-```
-
-### 4. Tell Angular to allow unknown elements
-
-Without this, Angular's template compiler throws:
-
-> `'weg-footer' is not a known element: ... If 'weg-footer' is a Web Component then add 'CUSTOM_ELEMENTS_SCHEMA' to the '@Component.schemas' of this component to suppress this message.`
-
-In **standalone components** (default in Angular 17+), add `schemas: [CUSTOM_ELEMENTS_SCHEMA]` to the `@Component` decorator of **every component that uses `<weg-footer>` in its template**. Easiest is to add it to your root `App` component:
+Example with the bundled sample payload:
 
 ```ts
 // src/app/app.ts
-import { Component, CUSTOM_ELEMENTS_SCHEMA, inject, OnInit, signal } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { Component, CUSTOM_ELEMENTS_SCHEMA, signal } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
-
-const LAYOUT_API = 'https://weg-payload-test.vercel.app/api/layout';
+import layoutFixture from 'weg-shared-layout/dummy-data.json';
 
 @Component({
   selector: 'app-root',
@@ -128,201 +70,87 @@ const LAYOUT_API = 'https://weg-payload-test.vercel.app/api/layout';
   templateUrl: './app.html',
   styleUrl: './app.css',
 })
-export class App implements OnInit {
-  protected readonly layoutData = signal<unknown>(null);
-
-  private readonly http = inject(HttpClient);
-
-  ngOnInit(): void {
-    this.http.get(LAYOUT_API).subscribe({
-      next: (data) => this.layoutData.set(data),
-      error: (err) => console.error('Failed to load layout data', err),
-    });
-  }
+export class App {
+  protected readonly layoutData = signal(layoutFixture);
 }
 ```
 
-> `CUSTOM_ELEMENTS_SCHEMA` is **per-component** in standalone Angular. If you use `<weg-footer>` inside a child component's template, that child must declare `schemas: [CUSTOM_ELEMENTS_SCHEMA]` too. It does **not** cascade through `<router-outlet />`.
-
-### 5. Pass the data into `<weg-footer>` via the `[data]` binding
-
-In `src/app/app.html`:
-
 ```html
+<!-- src/app/app.html -->
 <router-outlet />
-
 <weg-footer [data]="layoutData()"></weg-footer>
 ```
 
-That's the whole integration. `<weg-footer>` watches its `data` prop and re-renders when the signal value changes (e.g. when the HTTP response arrives), so an initial `null` is fine — the footer will simply render empty until the data lands.
-
-#### Why `[data]` and not `data-src` or `[attr.data]`
-
-- `[data]="..."` is Angular's **property binding** — it sets the JS property `data` on the underlying DOM element. Stencil exposes `@Prop()` values as JS properties, so this passes the object straight through. **This is what you want.**
-- `[attr.data]="..."` would set an HTML attribute, which is always a string — Angular would call `JSON.stringify(layoutData)` for you, the component would have to parse it back, and you'd lose type fidelity. Avoid unless you have a reason.
-- Plain `data="..."` only works for a static string literal and would have the same parsing cost — fine for testing, not for real data.
-
-### 6. Verify it works
-
-After running `ng serve`, open the page and check:
-
-1. The dark footer bar renders at the bottom of the page.
-2. DevTools → Network tab shows a `200 OK` to `https://weg-payload-test.vercel.app/api/layout`.
-3. DevTools → Elements → click `<weg-footer>` → in the Console, type `$0.data` — you should see the JSON object you fetched.
-4. Expand `<weg-footer>` in the Elements panel — you should see a `#shadow-root (open)` containing the actual `<footer>` markup.
+In production, replace `layoutFixture` with data from your own services; keep the same object shape as `dummy-data.json`.
 
 ### Troubleshooting
 
 | Symptom | Cause / fix |
 | --- | --- |
-| `'weg-footer' is not a known element` build error | Add `schemas: [CUSTOM_ELEMENTS_SCHEMA]` to the `@Component` decorator of the component whose template uses `<weg-footer>`. |
-| Element renders as plain inline text / empty box | `defineCustomElements()` was never called. Add it to `main.ts` **before** `bootstrapApplication`. |
-| Footer is in the DOM but blank | The HTTP request failed or returned the wrong shape. Check DevTools → Network → confirm the response matches the [API shape](#layout-api). Also inspect `$0.data` in the console to confirm the binding made it onto the element. |
-| `NullInjectorError: No provider for HttpClient` | You forgot `provideHttpClient()` in `app.config.ts`. |
-| CORS error in the console | The API host must allow your origin. Either fix CORS on the backend, or proxy through Angular's dev proxy (`proxy.conf.json`) so the call becomes same-origin. |
-| Footer doesn't update after data changes | Make sure you're using `[data]="layoutData()"` with a signal (or `[data]="layoutData$ | async"` with an Observable) so Angular pushes new values into the element. |
-| Works locally, fails in SSR (`document is not defined`) | `defineCustomElements()` touches `window` / `customElements`. Wrap in `if (typeof window !== 'undefined') { ... }` or use `isPlatformBrowser(platformId)` in `main.ts`. |
-| TypeScript: `Property 'weg-footer' does not exist on type 'HTMLElementTagNameMap'` | See the typings section below. |
+| `'weg-footer' is not a known element` | Add `schemas: [CUSTOM_ELEMENTS_SCHEMA]` on the component whose template contains `<weg-footer>`. |
+| Footer missing or empty box | `defineCustomElements()` not called before bootstrap, or `data` not set / wrong shape — compare with `dummy-data.json`. |
+| SSR: `document is not defined` | Guard `defineCustomElements()` with `typeof window !== 'undefined'` or `isPlatformBrowser`. |
 
-### TypeScript typings (Angular)
-
-If your editor / TS service complains about the unknown element or the `[data]` binding, add this to `src/global.d.ts` (creating the file if needed) and make sure it's included by `tsconfig.json`:
+### TypeScript typings
 
 ```ts
 /// <reference types="weg-shared-layout/dist/types/components" />
 ```
 
-### Legacy: using with `NgModule`
+### Legacy `NgModule`
 
-If your app is still using `NgModule` (pre-Angular 17 default), add `CUSTOM_ELEMENTS_SCHEMA` once at the module level instead of per component:
-
-```ts
-// src/app/app.module.ts
-import { CUSTOM_ELEMENTS_SCHEMA, NgModule } from '@angular/core';
-import { HttpClientModule } from '@angular/common/http';
-
-@NgModule({
-  imports: [HttpClientModule /* ... */],
-  schemas: [CUSTOM_ELEMENTS_SCHEMA],
-})
-export class AppModule {}
-```
-
-`defineCustomElements()` in `main.ts` is still required either way. Inject `HttpClient` in your component the same way as the standalone example above.
+Add `CUSTOM_ELEMENTS_SCHEMA` once on the module that declares components using `<weg-footer>`. `defineCustomElements()` in `main.ts` is still required.
 
 ## Using in React
 
-Install:
-
-```bash
-npm i weg-shared-layout
-```
-
-Register custom elements (pick one):
+Register once (for example in your app entry):
 
 ```ts
-// Option A (recommended): loader registers all components
 import { defineCustomElements } from 'weg-shared-layout/loader';
 
 defineCustomElements();
 ```
 
-Or:
-
-```ts
-// Option B: import package bundle (also registers, depending on output target configuration)
-import 'weg-shared-layout';
-```
-
-Then fetch the data in your component and pass it in via a ref (because the `data` prop is an object, not a string attribute):
+Pass an object via a **ref** (or use React 19+ property handling) so you set the DOM property, not a string attribute:
 
 ```tsx
 import { useEffect, useRef, useState } from 'react';
 import 'weg-shared-layout/weg-footer';
-
-const LAYOUT_API = 'https://weg-payload-test.vercel.app/api/layout';
+import layoutFixture from 'weg-shared-layout/dummy-data.json';
 
 export function SiteFooter() {
-  const ref = useRef<HTMLElement>(null);
-  const [layout, setLayout] = useState<unknown>(null);
+  const ref = useRef<HTMLElement & { data?: unknown }>(null);
+  const [layout, setLayout] = useState(layoutFixture);
 
   useEffect(() => {
-    fetch(LAYOUT_API).then((r) => r.json()).then(setLayout);
-  }, []);
-
-  useEffect(() => {
-    if (ref.current) (ref.current as any).data = layout;
+    if (ref.current) ref.current.data = layout;
   }, [layout]);
 
   return <weg-footer ref={ref} />;
 }
 ```
 
-> React (pre-19) sets unknown JSX attributes as HTML attributes, which would stringify your object. Assigning via a ref guarantees you set the JS property. React 19+ handles this correctly without the ref dance.
+Swap `layoutFixture` / `setLayout` for your own data loading. **Next.js App Router:** register and assign `data` only in a Client Component (`"use client"`).
 
-### Next.js (App Router) note
-
-Stencil custom elements must be registered **in the browser**. In Next.js `app/` (App Router), don't import/register Stencil components from a Server Component.
-
-Instead, register them in a Client Component, for example:
-
-```tsx
-// app/components/SiteFooter.tsx
-"use client";
-
-import { useEffect, useRef, useState } from 'react';
-import 'weg-shared-layout/weg-footer';
-
-export function SiteFooter() {
-  const ref = useRef<HTMLElement>(null);
-  const [layout, setLayout] = useState<unknown>(null);
-
-  useEffect(() => {
-    fetch('/api/layout').then((r) => r.json()).then(setLayout);
-  }, []);
-
-  useEffect(() => {
-    if (ref.current) (ref.current as any).data = layout;
-  }, [layout]);
-
-  return <weg-footer ref={ref} />;
-}
-```
-
-(You can also fetch in a Server Component and pass `layout` down as a prop to the Client Component — but the actual `data` assignment still has to happen in the browser.)
-
-### React TypeScript typings
-
-Stencil generates `components.d.ts`, but React doesn't pick up custom element typings automatically. Add a `global.d.ts` that references the generated types:
+### React TypeScript
 
 ```ts
 /// <reference types="weg-shared-layout/dist/types/components" />
 ```
 
-If your app still complains about JSX intrinsic elements, you can also augment `JSX.IntrinsicElements` in that same file (varies by React/TS setup).
-
 ## Plain HTML / vanilla JS
 
-For a quick smoke test outside of a framework, fetch the JSON and assign it to the element's `data` property:
+With a bundler that resolves `node_modules` imports:
 
 ```html
 <weg-footer id="footer"></weg-footer>
-
 <script type="module">
-  const res = await fetch('https://weg-payload-test.vercel.app/api/layout');
-  document.getElementById('footer').data = await res.json();
+  import { defineCustomElements } from 'weg-shared-layout/loader';
+  import layout from 'weg-shared-layout/dummy-data.json';
+
+  defineCustomElements();
+  document.getElementById('footer').data = layout;
 </script>
 ```
 
-You can also pass the JSON as a string attribute — useful for SSR or static HTML where you don't want a runtime fetch:
-
-```html
-<weg-footer data='{"footer":{"social":[],"standardLinks":[],"credits":"","copyright":"Copyright © WEG."}}'></weg-footer>
-```
-
-## CORS
-
-Because the host app calls the API directly, **the API must respond with `Access-Control-Allow-Origin` headers** that include your app's origin. If you hit a CORS error in the browser console, either:
-
-- Fix CORS on the API host, **or**
-- Proxy the call through your own host. Angular: configure `proxy.conf.json` so `/api/layout` is rewritten to the production URL. Next.js: add a route handler that re-fetches and returns the JSON.
+Otherwise, copy `dummy-data.json` to your static assets, `fetch` it, parse JSON, then assign **`element.data`**. You can also pass a JSON string on the **`data` attribute**; the component parses it the same way as an object `data` property.
