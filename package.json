@@ -1,30 +1,31 @@
 {
   "name": "weg-shared-layout",
-  "version": "0.0.6",
+  "version": "0.0.8",
   "description": "Shared layout Web Components built with Stencil",
   "main": "dist/index.cjs.js",
   "module": "dist/index.js",
-  "types": "dist/components/index.d.ts",
+  "types": "dist/types/components.d.ts",
   "collection": "dist/collection/collection-manifest.json",
   "collection:main": "dist/collection/index.js",
   "unpkg": "dist/weg-shared-layout/weg-shared-layout.esm.js",
   "exports": {
     ".": {
+      "types": "./dist/types/components.d.ts",
       "import": "./dist/weg-shared-layout/weg-shared-layout.esm.js",
       "require": "./dist/weg-shared-layout/weg-shared-layout.cjs.js"
     },
     "./my-component": {
-      "import": "./dist/components/my-component.js",
-      "types": "./dist/components/my-component.d.ts"
+      "types": "./dist/components/my-component.d.ts",
+      "import": "./dist/components/my-component.js"
     },
     "./weg-footer": {
-      "import": "./dist/components/weg-footer.js",
-      "types": "./dist/components/weg-footer.d.ts"
+      "types": "./dist/components/weg-footer.d.ts",
+      "import": "./dist/components/weg-footer.js"
     },
     "./loader": {
+      "types": "./loader/index.d.ts",
       "import": "./loader/index.js",
-      "require": "./loader/index.cjs",
-      "types": "./loader/index.d.ts"
+      "require": "./loader/index.cjs.js"
     },
     "./dummy-data.json": "./src/assets/dummy-data.json"
   },
@@ -38,10 +39,12 @@
   "homepage": "https://github.com/jobsac/weg-shared-layout#readme",
   "files": [
     "dist/",
+    "docs/",
     "loader/",
     "src/assets/dummy-data.json"
   ],
   "scripts": {
+    "prepack": "npm run build",
     "build": "stencil build",
     "start": "stencil build --dev --watch --serve",
     "test": "stencil-test --prod",

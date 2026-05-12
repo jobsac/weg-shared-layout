@@ -4,7 +4,7 @@
 
 > Shared layout Web Components (Stencil).
 
-Install:
+## Install
 
 ```bash
 npm i weg-shared-layout
@@ -12,137 +12,25 @@ npm i weg-shared-layout
 
 ## How it works
 
-`<weg-footer>` is a **presentational** Web Component: it does **not** fetch data. Your app loads layout data however you like (REST, GraphQL, SSR, etc.), then passes the object into the component via the **`data` property** (not a string HTML attribute).
+`<weg-footer>` is a **presentational** Web Component: it does **not** fetch data. Your app supplies an object on the element’s **`data` property** (Stencil `@Prop()`), not a string HTML attribute (unless you pass JSON as a string — see [Vanilla / HTML](./docs/vanilla.md)).
 
-The payload shape matches the sample file **`dummy-data.json`**, shipped with the package:
+The payload shape matches **`dummy-data.json`**:
 
-- **Import:** `import layout from 'weg-shared-layout/dummy-data.json'` (enable `resolveJsonModule` in TypeScript if needed).
+- **From npm:** `import layout from 'weg-shared-layout/dummy-data.json'` (enable `resolveJsonModule` in TypeScript if needed).
 - **In this repo:** [`src/assets/dummy-data.json`](src/assets/dummy-data.json)
 
-Use that JSON as fixture data to see the footer working, or as a reference for your own API responses. Only `social.platform` values `LinkedIn`, `Instagram`, `TikTok`, and `YouTube` render an icon; items with missing or invalid fields are dropped.
+Only `social.platform` values `LinkedIn`, `Instagram`, `TikTok`, and `YouTube` render an icon; items with missing or invalid fields are dropped.
 
-## Using in Angular
+## Framework guides
 
-Assumes Angular 17+ with **standalone** components (default for `ng new`).
-
-### 1. Install
-
-```bash
-npm i weg-shared-layout
-```
-
-### 2. Register custom elements (once, before bootstrap)
-
-In `src/main.ts`, call `defineCustomElements()` **before** `bootstrapApplication` so the browser recognises `<weg-footer>`.
-
-```ts
-import { bootstrapApplication } from '@angular/platform-browser';
-import { defineCustomElements } from 'weg-shared-layout/loader';
-
-import { appConfig } from './app/app.config';
-import { App } from './app/app';
-
-defineCustomElements();
-
-bootstrapApplication(App, appConfig).catch((err) => console.error(err));
-```
-
-### 3. Allow custom elements in templates
-
-Add `schemas: [CUSTOM_ELEMENTS_SCHEMA]` to every `@Component` whose template uses `<weg-footer>` (it does not cascade from the root through `router-outlet` children).
-
-### 4. Pass data with property binding
-
-Use **`[data]="..."`** so Angular sets the element’s JavaScript `data` property (Stencil `@Prop()`), not an HTML attribute.
-
-Example with the bundled sample payload:
-
-```ts
-// src/app/app.ts
-import { Component, CUSTOM_ELEMENTS_SCHEMA, signal } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
-import layoutFixture from 'weg-shared-layout/dummy-data.json';
-
-@Component({
-  selector: 'app-root',
-  imports: [RouterOutlet],
-  schemas: [CUSTOM_ELEMENTS_SCHEMA],
-  templateUrl: './app.html',
-  styleUrl: './app.css',
-})
-export class App {
-  protected readonly layoutData = signal(layoutFixture);
-}
-```
-
-```html
-<!-- src/app/app.html -->
-<router-outlet />
-<weg-footer [data]="layoutData()"></weg-footer>
-```
-
-In production, replace `layoutFixture` with data from your own services; keep the same object shape as `dummy-data.json`.
-
-### Troubleshooting
-
-| Symptom | Cause / fix |
+| Guide | Doc |
 | --- | --- |
-| `'weg-footer' is not a known element` | Add `schemas: [CUSTOM_ELEMENTS_SCHEMA]` on the component whose template contains `<weg-footer>`. |
-| Footer missing or empty box | `defineCustomElements()` not called before bootstrap, or `data` not set / wrong shape — compare with `dummy-data.json`. |
-| SSR: `document is not defined` | Guard `defineCustomElements()` with `typeof window !== 'undefined'` or `isPlatformBrowser`. |
+| Angular | [docs/angular.md](./docs/angular.md) |
+| React | [docs/react.md](./docs/react.md) |
+| Plain HTML / vanilla JS | [docs/vanilla.md](./docs/vanilla.md) |
 
-### TypeScript typings
+## Publishing (maintainers)
 
-```ts
-/// <reference types="weg-shared-layout/dist/types/components" />
-```
+**`npm publish` does not run `npm run build` by itself** — it packs what is on disk. This package uses a **`prepack`** script so a full Stencil build runs before every `npm pack` / `npm publish`, avoiding incomplete tarballs.
 
-### Legacy `NgModule`
-
-Add `CUSTOM_ELEMENTS_SCHEMA` once on the module that declares components using `<weg-footer>`. `defineCustomElements()` in `main.ts` is still required.
-
-## Using in React
-
-Register the element once (for example in `main.tsx` / your app entry):
-
-```ts
-import { defineCustomElements } from 'weg-shared-layout/loader';
-
-defineCustomElements();
-```
-
-Import the fixture (or your own object with the same shape) and pass it on **`data`**:
-
-```tsx
-import 'weg-shared-layout/weg-footer';
-import layout from 'weg-shared-layout/dummy-data.json';
-
-export function SiteFooter() {
-  return <weg-footer data={layout} />;
-}
-```
-
-Use **React 19 or newer** so `data={...}` is applied as the custom element’s **`data` property** (object), not a string attribute. Register the elements in a **Client Component** only (`"use client"` in the Next.js App Router).
-
-### React TypeScript
-
-```ts
-/// <reference types="weg-shared-layout/dist/types/components" />
-```
-
-## Plain HTML / vanilla JS
-
-With a bundler that resolves `node_modules` imports:
-
-```html
-<weg-footer id="footer"></weg-footer>
-<script type="module">
-  import { defineCustomElements } from 'weg-shared-layout/loader';
-  import layout from 'weg-shared-layout/dummy-data.json';
-
-  defineCustomElements();
-  document.getElementById('footer').data = layout;
-</script>
-```
-
-Otherwise, copy `dummy-data.json` to your static assets, `fetch` it, parse JSON, then assign **`element.data`**. You can also pass a JSON string on the **`data` attribute**; the component parses it the same way as an object `data` property.
+Details, checklist, and CI notes: **[docs/publishing.md](./docs/publishing.md)**.
