@@ -2,7 +2,7 @@
 
 # weg-shared-layout
 
-> Shared layout Web Components (Stencil).
+> Shared layout Web Components.
 
 ## Install
 
@@ -12,16 +12,17 @@ npm i weg-shared-layout
 
 ## How it works
 
-`<weg-footer>` is a **presentational** Web Component: it does **not** fetch data. Your app supplies an object on the element’s **`data` property** (Stencil `@Prop()`), not a string HTML attribute (unless you pass JSON as a string — see [Vanilla / HTML](./docs/vanilla.md)).
-
-You **can** load that object however you normally fetch JSON in your stack (`fetch`, your data layer, server components, etc.). For example, [https://weg-payload-test.vercel.app/api/layout](https://weg-payload-test.vercel.app/api/layout) returns the same shape as **`dummy-data.json`**; pass the response into `data` on `<weg-footer>` (or your framework wrapper) like any other prop.
+`<weg-footer>` is a **presentational** Web Component: it does **not** fetch data.
+  
+You **can** load that object however you normally fetch JSON in your app. For example, [https://weg-payload-test.vercel.app/api/layout](https://weg-payload-test.vercel.app/api/layout) returns the same shape as **`dummy-data.json`**; pass the response into `data` on `<weg-footer>` (or your framework wrapper) like any other prop.
 
 The payload shape matches **`dummy-data.json`**:
 
-- **From npm:** `import layout from 'weg-shared-layout/dummy-data.json'` (enable `resolveJsonModule` in TypeScript if needed).
-- **In this repo:** [`src/assets/dummy-data.json`](src/assets/dummy-data.json)
+-  **From npm:**  `import layout from 'weg-shared-layout/dummy-data.json'` (enable `resolveJsonModule` in TypeScript if needed).
 
-Only `social.platform` values `LinkedIn`, `Instagram`, `TikTok`, and `YouTube` render an icon; items with missing or invalid fields are dropped.
+-  **In this repo:** [`src/assets/dummy-data.json`](src/assets/dummy-data.json)
+
+
 
 ## Framework guides
 
