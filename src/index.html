@@ -17,7 +17,7 @@
       // In production this would hit https://weg-payload-test.vercel.app/api/layout.
       const res = await fetch('/assets/dummy-data.json');
       const layout = await res.json();
-      document.getElementById('footer').data = layout;
+      document.getElementById('footer').layout = layout;
     </script>
   </body>
 </html>

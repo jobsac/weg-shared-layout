@@ -9,10 +9,10 @@ With a bundler that resolves `node_modules` imports:
   import layout from 'weg-shared-layout/dummy-data.json';
 
   defineCustomElements();
-  document.getElementById('footer').data = layout;
+  document.getElementById('footer').layout = layout;
 </script>
 ```
 
-Otherwise, copy `dummy-data.json` to your static assets, `fetch` it, parse JSON, then assign **`element.data`**.
+Otherwise, copy `dummy-data.json` to your static assets, `fetch` it, parse JSON, then assign **`element.layout`**.
 
-You can also pass a JSON string on the **`data` attribute**; the component parses it the same way as an object `data` property.
+You can also pass a JSON string on the **`layout` attribute**; the component parses it the same way as an object `layout` property.

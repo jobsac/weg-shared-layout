@@ -30,9 +30,9 @@ If `defineCustomElements` is async in your Stencil build, `await` it (or chain `
 
 Add `schemas: [CUSTOM_ELEMENTS_SCHEMA]` to every `@Component` whose template uses `<weg-footer>` (it does not cascade from the root through `router-outlet` children).
 
-## 4. Pass data with property binding
+## 4. Pass layout with property binding
 
-Use **`[data]="..."`** so Angular sets the element’s JavaScript `data` property (Stencil `@Prop()`), not an HTML attribute.
+Use **`[layout]="..."`** so Angular sets the element’s JavaScript `layout` property (Stencil `@Prop()`), not an HTML attribute.
 
 Example with the bundled sample payload:
 
@@ -57,7 +57,7 @@ export class App {
 ```html
 <!-- src/app/app.html -->
 <router-outlet />
-<weg-footer [data]="layoutData()"></weg-footer>
+<weg-footer [layout]="layoutData()"></weg-footer>
 ```
 
 Enable `resolveJsonModule` in the TypeScript config used by the app (e.g. `tsconfig.app.json`) if you import `dummy-data.json`.
@@ -79,7 +79,7 @@ Then bootstrap as usual (no `defineCustomElements()` call required for that tag)
 | Symptom | Cause / fix |
 | --- | --- |
 | `'weg-footer' is not a known element` | Add `schemas: [CUSTOM_ELEMENTS_SCHEMA]` on the component whose template contains `<weg-footer>`. |
-| Footer missing or empty box | `defineCustomElements()` not called before bootstrap (or footer bundle not imported), or `data` not set / wrong shape — compare with `dummy-data.json`. |
+| Footer missing or empty box | `defineCustomElements()` not called before bootstrap (or footer bundle not imported), or `layout` not set / wrong shape — compare with `dummy-data.json`. |
 | SSR: `document is not defined` | Guard `defineCustomElements()` with `typeof window !== 'undefined'` or `isPlatformBrowser`. |
 
 ## TypeScript typings

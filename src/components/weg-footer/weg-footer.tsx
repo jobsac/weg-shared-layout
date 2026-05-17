@@ -166,12 +166,13 @@ function SocialIcon({ platform }: { platform: FooterSocialPlatform }) {
 })
 export class WegFooter {
   /**
-   * Layout data, supplied by the host application.
+   * Layout payload, supplied by the host application.
    *
    * In JS / framework templates, pass the object directly (e.g. Angular
-   * `[data]="layoutData"`, vanilla `el.data = layoutData`).
+   * `[layout]="layoutData"`, React `layout={layoutData}`, vanilla
+   * `el.layout = layoutData`).
    *
-   * In plain HTML, pass the same JSON as a string attribute.
+   * In plain HTML, pass the same JSON as a string on the `layout` attribute.
    *
    * Expected shape:
    * ```json
@@ -185,24 +186,24 @@ export class WegFooter {
    * }
    * ```
    */
-  @Prop() data?: LayoutData | string;
+  @Prop() layout?: LayoutData | string;
 
   @State() private resolved: FooterData = EMPTY_FOOTER;
 
   private resolve() {
-    if (this.data === undefined || this.data === null) {
+    if (this.layout === undefined || this.layout === null) {
       this.resolved = EMPTY_FOOTER;
       return;
     }
-    this.resolved = normalizeFooterData(parseJsonProp(this.data));
+    this.resolved = normalizeFooterData(parseJsonProp(this.layout));
   }
 
   componentWillLoad() {
     this.resolve();
   }
 
-  @Watch('data')
-  protected watchData() {
+  @Watch('layout')
+  protected watchLayout() {
     this.resolve();
   }
 

@@ -22,9 +22,9 @@ export namespace Components {
     }
     interface WegFooter {
         /**
-          * Layout data, supplied by the host application.  In JS / framework templates, pass the object directly (e.g. Angular `[data]="layoutData"`, vanilla `el.data = layoutData`).  In plain HTML, pass the same JSON as a string attribute.  Expected shape: ```json {   "footer": {     "social": [{ "platform": "LinkedIn", "href": "https://..." }],     "standardLinks": [{ "label": "About Us", "href": "/about" }],     "credits": "...",     "copyright": "..."   } } ```
+          * Layout payload, supplied by the host application.  In JS / framework templates, pass the object directly (e.g. Angular `[layout]="layoutData"`, React `layout={layoutData}`, vanilla `el.layout = layoutData`).  In plain HTML, pass the same JSON as a string on the `layout` attribute.  Expected shape: ```json {   "footer": {     "social": [{ "platform": "LinkedIn", "href": "https://..." }],     "standardLinks": [{ "label": "About Us", "href": "/about" }],     "credits": "...",     "copyright": "..."   } } ```
          */
-        "data"?: LayoutData | string;
+        "layout"?: LayoutData | string;
     }
 }
 declare global {
@@ -62,9 +62,9 @@ declare namespace LocalJSX {
     }
     interface WegFooter {
         /**
-          * Layout data, supplied by the host application.  In JS / framework templates, pass the object directly (e.g. Angular `[data]="layoutData"`, vanilla `el.data = layoutData`).  In plain HTML, pass the same JSON as a string attribute.  Expected shape: ```json {   "footer": {     "social": [{ "platform": "LinkedIn", "href": "https://..." }],     "standardLinks": [{ "label": "About Us", "href": "/about" }],     "credits": "...",     "copyright": "..."   } } ```
+          * Layout payload, supplied by the host application.  In JS / framework templates, pass the object directly (e.g. Angular `[layout]="layoutData"`, React `layout={layoutData}`, vanilla `el.layout = layoutData`).  In plain HTML, pass the same JSON as a string on the `layout` attribute.  Expected shape: ```json {   "footer": {     "social": [{ "platform": "LinkedIn", "href": "https://..." }],     "standardLinks": [{ "label": "About Us", "href": "/about" }],     "credits": "...",     "copyright": "..."   } } ```
          */
-        "data"?: LayoutData | string;
+        "layout"?: LayoutData | string;
     }
 
     interface MyComponentAttributes {
@@ -73,7 +73,7 @@ declare namespace LocalJSX {
         "last": string;
     }
     interface WegFooterAttributes {
-        "data": LayoutData | string;
+        "layout": LayoutData | string;
     }
 
     interface IntrinsicElements {

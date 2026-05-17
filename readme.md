@@ -14,7 +14,7 @@ npm i weg-shared-layout
 
 `<weg-footer>` is a **presentational** Web Component: it does **not** fetch data.
   
-You **can** load that object however you normally fetch JSON in your app. For example, [https://weg-payload-test.vercel.app/api/layout](https://weg-payload-test.vercel.app/api/layout) returns the same shape as **`dummy-data.json`**; pass the response into `data` on `<weg-footer>` (or your framework wrapper) like any other prop.
+You **can** load that object however you normally fetch JSON in your app. For example, [https://weg-payload-test.vercel.app/api/layout](https://weg-payload-test.vercel.app/api/layout) returns the same shape as **`dummy-data.json`**; pass the response into `layout` on `<weg-footer>` (or your framework wrapper) like any other prop.
 
 The payload shape matches **`dummy-data.json`**:
 
