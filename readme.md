@@ -29,7 +29,8 @@ The payload shape matches **`dummy-data.json`**:
 | Guide | Doc |
 | --- | --- |
 | Angular | [docs/angular.md](./docs/angular.md) |
-| React | [docs/react.md](./docs/react.md) |
+| React (SPA, client-only) | [docs/react.md](./docs/react.md) |
+| Next.js (App Router) | [docs/nextjs.md](./docs/nextjs.md) |
 | Plain HTML / vanilla JS | [docs/vanilla.md](./docs/vanilla.md) |
 
 ## Publishing (maintainers)
