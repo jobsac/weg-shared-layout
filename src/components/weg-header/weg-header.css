@@ -6,6 +6,11 @@
   font-family: var(--weg-font-family);
 }
 
+:host {
+  position: relative;
+  z-index: 20;
+}
+
 @media (min-width: 768px) {
   .header {
     border-bottom-width: 4px;
@@ -174,6 +179,7 @@
 }
 
 .sign-in-link,
+.sign-out-link,
 .auth-button {
   display: inline-flex;
   align-items: center;
@@ -182,6 +188,11 @@
   color: inherit;
   text-decoration: none;
   outline: none;
+}
+
+.sign-out-link.mobile-nav__row {
+  justify-content: flex-start;
+  gap: 8px;
 }
 
 .auth-button {
@@ -193,11 +204,13 @@
 }
 
 .sign-in-link:hover,
+.sign-out-link:hover,
 .auth-button:hover {
   opacity: 0.85;
 }
 
 .sign-in-link:focus-visible,
+.sign-out-link:focus-visible,
 .auth-button:focus-visible {
   outline: 2px solid var(--weg-color-accent);
   outline-offset: 4px;

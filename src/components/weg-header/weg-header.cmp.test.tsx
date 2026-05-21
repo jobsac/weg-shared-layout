@@ -37,11 +37,17 @@ describe('weg-header', () => {
     expect(text).toContain('Career advice');
   });
 
-  it('shows Sign out when signed-in is true', async () => {
-    const { root } = await render(<weg-header layout={SAMPLE_HEADER_LAYOUT} signed-in></weg-header>);
+  it('shows signed-in navigation when signed-in is true', async () => {
+    const { root } = await render(
+      <weg-header layout={SAMPLE_HEADER_LAYOUT} signed-in user-name="Alex"></weg-header>,
+    );
     const text = root.shadowRoot?.textContent ?? '';
+    expect(text).toContain('Find a job');
+    expect(text).toContain('Dashboard');
+    expect(text).toContain('Alex');
     expect(text).toContain('Sign out');
     expect(text).not.toContain('Sign in');
+    expect(text).not.toContain('Career advice');
   });
 
   it('emits wegAuthClick when auth control is clicked', async () => {
@@ -67,9 +73,9 @@ describe('weg-header', () => {
       event.preventDefault();
     }) as EventListener);
 
-    const authButton = root.shadowRoot?.querySelector('.desktop .auth-button') as HTMLButtonElement | null;
-    expect(authButton).toBeTruthy();
-    authButton?.click();
+    const signOutLink = root.shadowRoot?.querySelector('.desktop .sign-out-link') as HTMLAnchorElement | null;
+    expect(signOutLink).toBeTruthy();
+    signOutLink?.click();
 
     expect(detail).toEqual({ action: 'sign-out' });
   });

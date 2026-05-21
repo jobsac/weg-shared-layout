@@ -2,6 +2,7 @@ import { Component, Prop, State, Watch, Element, Event, EventEmitter, h, Listen 
 import type { LayoutData, LayoutHeaderAuthAction, LayoutHeaderLink } from '../../types/layout-data';
 import { normalizeLinks, parseJsonProp, isNonEmptyString } from '../../utils/layout';
 import { LOGO_SRC } from './logo-data';
+import { DEFAULT_LOGO_HREF, SIGNED_IN_HEADER } from './signed-in-layout';
 
 type HeaderLink = LayoutHeaderLink;
 
@@ -16,6 +17,7 @@ type HeaderDropdown = {
 };
 
 type HeaderData = {
+  logoHref: string;
   dropdowns: HeaderDropdown[];
   links: HeaderLink[];
   signIn: HeaderLink | null;
@@ -29,6 +31,7 @@ type AuthControl = {
 };
 
 const EMPTY_HEADER: HeaderData = {
+  logoHref: DEFAULT_LOGO_HREF,
   dropdowns: [],
   links: [],
   signIn: null,
@@ -72,7 +75,10 @@ function normalizeSignOut(input: unknown): HeaderSignOutLink | null {
 function normalizeHeaderData(input: unknown): HeaderData {
   const root = (input && typeof input === 'object' ? input : {}) as LayoutData;
   const header = root.header && typeof root.header === 'object' ? root.header : {};
+  const logoHref = isNonEmptyString(header.logoHref) ? header.logoHref.trim() : DEFAULT_LOGO_HREF;
+
   return {
+    logoHref,
     dropdowns: normalizeDropdowns(header.dropdowns),
     links: normalizeLinks(header.links),
     signIn: normalizeSignIn(header.signIn),
@@ -86,6 +92,20 @@ function SignInIcon() {
       <path
         d="M304 128a80 80 0 1 0 -160 0 80 80 0 1 0 160 0zM96 128a128 128 0 1 1 256 0A128 128 0 1 1 96 128zM49.3 464l349.5 0c-8.9-63.3-63.3-112-129-112l-91.4 0c-65.7 0-120.1 48.7-129 112zM0 482.3C0 383.8 79.8 304 178.3 304l91.4 0C368.2 304 448 383.8 448 482.3c0 16.4-13.3 29.7-29.7 29.7L29.7 512C13.3 512 0 498.7 0 482.3z"
         fill="currentColor"
+      />
+    </svg>
+  );
+}
+
+function SignOutIcon() {
+  return (
+    <svg viewBox="0 0 26 24" width="26" height="24" aria-hidden="true" focusable="false" fill="none">
+      <path
+        d="M19.6667 6.33333L25 11.6667L19.6667 17M25 11.6667H6.33333M14.3333 17V18.3333C14.3333 19.3942 13.9119 20.4116 13.1618 21.1618C12.4116 21.9119 11.3942 22.3333 10.3333 22.3333H5C3.93913 22.3333 2.92172 21.9119 2.17157 21.1618C1.42143 20.4116 1 19.3942 1 18.3333V5C1 3.93913 1.42143 2.92172 2.17157 2.17157C2.92172 1.42143 3.93913 1 5 1H10.3333C11.3942 1 12.4116 1.42143 13.1618 2.17157C13.9119 2.92172 14.3333 3.93913 14.3333 5V6.33333"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
       />
     </svg>
   );
@@ -123,9 +143,9 @@ function ToggleIcon({ expanded }: { expanded: boolean }) {
   );
 }
 
-function Logo() {
+function Logo({ href }: { href: string }) {
   return (
-    <a class="logo-link" href="/" aria-label="Home">
+    <a class="logo-link" href={href} aria-label="Home">
       <img class="logo" src={LOGO_SRC} alt="WEG" width="225" height="83" />
     </a>
   );
@@ -144,10 +164,11 @@ export class WegHeader {
    * ```json
    * {
    *   "header": {
+   *     "logoHref": "https://www.warwickemploymentgroup.com/",
    *     "dropdowns": [{ "label": "Find a job", "items": [{ "label": "...", "href": "..." }] }],
    *     "links": [{ "label": "Career advice", "href": "/career-advice" }],
    *     "signIn": { "label": "Sign in", "href": "/account/login" },
-   *     "signOut": { "label": "Sign out" }
+   *     "signOut": { "label": "Sign out", "href": "/account/login" }
    *   }
    * }
    * ```
@@ -155,10 +176,15 @@ export class WegHeader {
   @Prop() layout?: LayoutData | string;
 
   /**
-   * When true, the auth control shows `header.signOut` instead of `header.signIn`.
-   * Set by the host app based on session state.
+   * When true, the header shows the signed-in navigation (Find a job, Dashboard,
+   * Manage Account, Sign out) instead of the CMS layout.
    */
   @Prop({ attribute: 'signed-in', reflect: true }) signedIn = false;
+
+  /**
+   * Signed-in user's first name, shown beside the profile icon on Manage Account.
+   */
+  @Prop({ attribute: 'user-name' }) userName?: string;
 
   /**
    * Fired when the user clicks Sign in or Sign out.
@@ -232,20 +258,41 @@ export class WegHeader {
     this.expandedSection = null;
   }
 
+  private getActiveHeaderData(): HeaderData {
+    if (!this.signedIn) return this.resolved;
+
+    return {
+      logoHref: SIGNED_IN_HEADER.logoHref,
+      dropdowns: [],
+      links: [...SIGNED_IN_HEADER.links],
+      signIn: null,
+      signOut: SIGNED_IN_HEADER.signOut,
+    };
+  }
+
+  private getLogoHref(): string {
+    return this.getActiveHeaderData().logoHref;
+  }
+
+  private getManageAccountLabel(): string {
+    const name = this.userName?.trim();
+    return name || 'Manage Account';
+  }
+
   private getAuthControl(): AuthControl | null {
-    if (this.signedIn) {
-      const signOut = this.resolved.signOut;
-      if (!signOut) return null;
-      return { label: signOut.label, href: signOut.href, action: 'sign-out' };
-    }
+    if (this.signedIn) return null;
+
     const signIn = this.resolved.signIn;
     if (!signIn) return null;
     return { label: signIn.label, href: signIn.href, action: 'sign-in' };
   }
 
   private handleAuthClick(event: MouseEvent, onNavigate?: () => void) {
-    const auth = this.getAuthControl();
-    if (!auth) return;
+    const auth = this.getAuthControl() ?? {
+      label: SIGNED_IN_HEADER.signOut.label,
+      href: SIGNED_IN_HEADER.signOut.href,
+      action: 'sign-out' as const,
+    };
 
     const emitted = this.wegAuthClick.emit({ action: auth.action });
 
@@ -274,7 +321,6 @@ export class WegHeader {
     const sharedClass = {
       'sign-in-link': !options.iconOnly,
       'icon-button': !!options.iconOnly,
-      'auth-button': auth.action === 'sign-out' && !auth.href,
       [options.className || '']: !!options.className,
     };
 
@@ -283,19 +329,6 @@ export class WegHeader {
       !options.iconOnly ? auth.label : null,
       options.iconOnly ? <span class="sr-only">{auth.label}</span> : null,
     ];
-
-    if (auth.action === 'sign-out' && !auth.href) {
-      return (
-        <button
-          type="button"
-          class={sharedClass}
-          aria-label={auth.label}
-          onClick={(event) => this.handleAuthClick(event, options.onNavigate)}
-        >
-          {content}
-        </button>
-      );
-    }
 
     return (
       <a
@@ -309,12 +342,56 @@ export class WegHeader {
     );
   }
 
+  private renderSignedInAuthControls(options: { iconOnly?: boolean; onNavigate?: () => void }) {
+    const manageAccountLabel = this.getManageAccountLabel();
+    const signOut = SIGNED_IN_HEADER.signOut;
+
+    if (options.iconOnly) {
+      return (
+        <a
+          class="icon-button manage-account-link"
+          href={SIGNED_IN_HEADER.manageAccount.href}
+          aria-label={manageAccountLabel}
+          onClick={() => options.onNavigate?.()}
+        >
+          <SignInIcon />
+          <span class="sr-only">{manageAccountLabel}</span>
+        </a>
+      );
+    }
+
+    return [
+      <li class="desktop-nav__item" key="manage-account">
+        <a
+          class="sign-in-link manage-account-link"
+          href={SIGNED_IN_HEADER.manageAccount.href}
+          aria-label={manageAccountLabel}
+          onClick={() => options.onNavigate?.()}
+        >
+          <SignInIcon />
+          {manageAccountLabel}
+        </a>
+      </li>,
+      <li class="desktop-nav__item" key="sign-out">
+        <a
+          class="sign-in-link sign-out-link"
+          href={signOut.href}
+          aria-label={signOut.label}
+          onClick={(event) => this.handleAuthClick(event, options.onNavigate)}
+        >
+          <SignOutIcon />
+          {signOut.label}
+        </a>
+      </li>,
+    ];
+  }
+
   private renderDesktop() {
-    const { dropdowns, links } = this.resolved;
+    const { dropdowns, links } = this.getActiveHeaderData();
 
     return (
       <div class="desktop">
-        <Logo />
+        <Logo href={this.getLogoHref()} />
         <nav class="desktop-nav" aria-label="Main">
           <ul class="desktop-nav__list">
             {dropdowns.map((dropdown) => {
@@ -360,9 +437,11 @@ export class WegHeader {
                 </a>
               </li>
             ))}
-            {this.getAuthControl() ? (
-              <li class="desktop-nav__item">{this.renderAuthControl({})}</li>
-            ) : null}
+            {this.signedIn
+              ? this.renderSignedInAuthControls({})
+              : this.getAuthControl()
+                ? <li class="desktop-nav__item">{this.renderAuthControl({})}</li>
+                : null}
           </ul>
         </nav>
       </div>
@@ -375,8 +454,10 @@ export class WegHeader {
         <button type="button" class="icon-button" aria-label="Open menu" onClick={() => this.openMenu()}>
           <HamburgerIcon />
         </button>
-        <Logo />
-        {this.renderAuthControl({ iconOnly: true })}
+        <Logo href={this.getLogoHref()} />
+        {this.signedIn
+          ? this.renderSignedInAuthControls({ iconOnly: true })
+          : this.renderAuthControl({ iconOnly: true })}
       </div>
     );
   }
@@ -384,7 +465,7 @@ export class WegHeader {
   private renderMobileOverlay() {
     if (!this.menuOpen) return null;
 
-    const { dropdowns, links } = this.resolved;
+    const { dropdowns, links } = this.getActiveHeaderData();
 
     return (
       <div class="mobile-overlay" role="dialog" aria-modal="true" aria-label="Menu">
@@ -393,9 +474,11 @@ export class WegHeader {
             <CloseIcon />
           </button>
           <div class="mobile-overlay__logo">
-            <Logo />
+            <Logo href={this.getLogoHref()} />
           </div>
-          {this.renderAuthControl({ iconOnly: true, onNavigate: () => this.closeMenu() })}
+          {this.signedIn
+            ? this.renderSignedInAuthControls({ iconOnly: true, onNavigate: () => this.closeMenu() })
+            : this.renderAuthControl({ iconOnly: true, onNavigate: () => this.closeMenu() })}
         </div>
         <nav class="mobile-nav" aria-label="Main">
           {dropdowns.map((dropdown) => {
@@ -435,6 +518,25 @@ export class WegHeader {
               </a>
             </div>
           ))}
+          {this.signedIn ? (
+            <div class="mobile-nav__section">
+              <a
+                class="mobile-nav__row manage-account-link"
+                href={SIGNED_IN_HEADER.manageAccount.href}
+                onClick={() => this.closeMenu()}
+              >
+                {this.getManageAccountLabel()}
+              </a>
+              <a
+                class="mobile-nav__row sign-out-link"
+                href={SIGNED_IN_HEADER.signOut.href}
+                onClick={(event) => this.handleAuthClick(event, () => this.closeMenu())}
+              >
+                <SignOutIcon />
+                {SIGNED_IN_HEADER.signOut.label}
+              </a>
+            </div>
+          ) : null}
         </nav>
       </div>
     );

@@ -30,14 +30,18 @@ export namespace Components {
     }
     interface WegHeader {
         /**
-          * Layout payload, supplied by the host application.  Expected shape: ```json {   "header": {     "dropdowns": [{ "label": "Find a job", "items": [{ "label": "...", "href": "..." }] }],     "links": [{ "label": "Career advice", "href": "/career-advice" }],     "signIn": { "label": "Sign in", "href": "/account/login" },     "signOut": { "label": "Sign out" }   } } ```
+          * Layout payload, supplied by the host application.  Expected shape: ```json {   "header": {     "logoHref": "https://www.warwickemploymentgroup.com/",     "dropdowns": [{ "label": "Find a job", "items": [{ "label": "...", "href": "..." }] }],     "links": [{ "label": "Career advice", "href": "/career-advice" }],     "signIn": { "label": "Sign in", "href": "/account/login" },     "signOut": { "label": "Sign out", "href": "/account/login" }   } } ```
          */
         "layout"?: LayoutData | string;
         /**
-          * When true, the auth control shows `header.signOut` instead of `header.signIn`. Set by the host app based on session state.
+          * When true, the header shows the signed-in navigation (Find a job, Dashboard, Manage Account, Sign out) instead of the CMS layout.
           * @default false
          */
         "signedIn": boolean;
+        /**
+          * Signed-in user's first name, shown beside the profile icon on Manage Account.
+         */
+        "userName"?: string;
     }
 }
 export interface WegHeaderCustomEvent<T> extends CustomEvent<T> {
@@ -103,7 +107,7 @@ declare namespace LocalJSX {
     }
     interface WegHeader {
         /**
-          * Layout payload, supplied by the host application.  Expected shape: ```json {   "header": {     "dropdowns": [{ "label": "Find a job", "items": [{ "label": "...", "href": "..." }] }],     "links": [{ "label": "Career advice", "href": "/career-advice" }],     "signIn": { "label": "Sign in", "href": "/account/login" },     "signOut": { "label": "Sign out" }   } } ```
+          * Layout payload, supplied by the host application.  Expected shape: ```json {   "header": {     "logoHref": "https://www.warwickemploymentgroup.com/",     "dropdowns": [{ "label": "Find a job", "items": [{ "label": "...", "href": "..." }] }],     "links": [{ "label": "Career advice", "href": "/career-advice" }],     "signIn": { "label": "Sign in", "href": "/account/login" },     "signOut": { "label": "Sign out", "href": "/account/login" }   } } ```
          */
         "layout"?: LayoutData | string;
         /**
@@ -111,10 +115,14 @@ declare namespace LocalJSX {
          */
         "onWegAuthClick"?: (event: WegHeaderCustomEvent<{ action: LayoutHeaderAuthAction }>) => void;
         /**
-          * When true, the auth control shows `header.signOut` instead of `header.signIn`. Set by the host app based on session state.
+          * When true, the header shows the signed-in navigation (Find a job, Dashboard, Manage Account, Sign out) instead of the CMS layout.
           * @default false
          */
         "signedIn"?: boolean;
+        /**
+          * Signed-in user's first name, shown beside the profile icon on Manage Account.
+         */
+        "userName"?: string;
     }
 
     interface MyComponentAttributes {
@@ -128,6 +136,7 @@ declare namespace LocalJSX {
     interface WegHeaderAttributes {
         "layout": LayoutData | string;
         "signedIn": boolean;
+        "userName": string;
     }
 
     interface IntrinsicElements {

@@ -1,43 +1,84 @@
 {
   "header": {
+    "logoHref": "https://www.warwickemploymentgroup.com/",
     "dropdowns": [
       {
         "label": "Find a job",
         "items": [
-          { "label": "Professional & operational services", "href": "/search?category=professional" },
-          { "label": "Engineering & technology", "href": "/search?category=engineering" },
-          { "label": "Graduates", "href": "/search?category=graduates" },
-          { "label": "Senior & leadership", "href": "/search?category=senior" }
+          {
+            "label": "Professional & operational services",
+            "href": "https://www.warwickemploymentgroup.com/find-a-job/professional-and-operational-services"
+          },
+          {
+            "label": "Engineering & technology",
+            "href": "https://www.warwickemploymentgroup.com/find-a-job/engineering-and-technology"
+          },
+          {
+            "label": "Graduates",
+            "href": "https://www.warwickemploymentgroup.com/find-a-job/graduates"
+          },
+          {
+            "label": "Senior & leadership",
+            "href": "https://www.warwickemploymentgroup.com/find-a-job/senior-and-leadership"
+          }
         ]
       },
       {
         "label": "Hire talent",
         "items": [
-          { "label": "Professional & operational services", "href": "/hire/professional" },
-          { "label": "Engineering & technology", "href": "/hire/engineering" },
-          { "label": "Graduates", "href": "/hire/graduates" },
-          { "label": "Executive search & selection", "href": "/hire/executive" }
+          {
+            "label": "Professional & operational services",
+            "href": "https://www.warwickemploymentgroup.com/hire-talent/professional-and-operational-services"
+          },
+          {
+            "label": "Engineering & technology",
+            "href": "https://www.warwickemploymentgroup.com/hire-talent/engineering-and-technology"
+          },
+          {
+            "label": "Graduates",
+            "href": "https://www.warwickemploymentgroup.com/hire-talent/graduates"
+          },
+          {
+            "label": "Executive search & selection",
+            "href": "https://www.warwickemploymentgroup.com/hire-talent/executive-search-and-selection"
+          }
         ]
       },
       {
         "label": "HE solutions",
         "items": [
-          { "label": "Franchise solution", "href": "/franchise" },
-          { "label": "Payroll bureau", "href": "/payroll" },
-          { "label": "Disability support", "href": "/disability-support" }
+          {
+            "label": "Franchise solution",
+            "href": "https://www.warwickemploymentgroup.com/he-solutions/unitemps-franchise"
+          },
+          {
+            "label": "Disability support solution",
+            "href": "https://www.warwickemploymentgroup.com/he-solutions/disabillity-support"
+          },
+          {
+            "label": "Payroll bureau",
+            "href": "https://www.warwickemploymentgroup.com/he-solutions/payroll-bureau"
+          }
         ]
       }
     ],
     "links": [
-      { "label": "Career advice", "href": "/career-advice" },
-      { "label": "Register", "href": "/register" }
+      {
+        "label": "Career advice",
+        "href": "https://www.warwickemploymentgroup.com/career-advice"
+      },
+      {
+        "label": "Register",
+        "href": "https://account.warwickemploymentgroup.com/account/register"
+      }
     ],
     "signIn": {
       "label": "Sign in",
-      "href": "/account/login"
+      "href": "https://account.warwickemploymentgroup.com/account/login"
     },
     "signOut": {
-      "label": "Sign out"
+      "label": "Sign out",
+      "href": "https://account.warwickemploymentgroup.com/account/login"
     }
   },
   "footer": {

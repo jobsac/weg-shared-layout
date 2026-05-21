@@ -16,6 +16,7 @@ export type LayoutHeaderDropdown = {
 };
 
 export type LayoutHeaderData = {
+  logoHref?: string;
   dropdowns?: LayoutHeaderDropdown[];
   links?: LayoutHeaderLink[];
   signIn?: LayoutHeaderLink;
