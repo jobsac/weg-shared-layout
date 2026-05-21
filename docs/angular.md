@@ -2,6 +2,15 @@
 
 Assumes Angular 17+ with **standalone** components (default for `ng new`).
 
+## Components
+
+| Tag | Import (optional, no loader) |
+| --- | --- |
+| `<weg-header>` | `import 'weg-shared-layout/weg-header';` |
+| `<weg-footer>` | `import 'weg-shared-layout/weg-footer';` |
+
+Both accept the same `layout` payload ([`dummy-data.json`](../src/assets/dummy-data.json)). `<weg-header>` also accepts **`signed-in`** and emits **`wegAuthClick`**.
+
 ## 1. Install
 
 ```bash
@@ -10,7 +19,7 @@ npm i weg-shared-layout
 
 ## 2. Register custom elements (once, before bootstrap)
 
-In `src/main.ts`, call `defineCustomElements()` **before** `bootstrapApplication` so the browser recognises `<weg-footer>`.
+In `src/main.ts`, call `defineCustomElements()` **before** `bootstrapApplication`:
 
 ```ts
 import { bootstrapApplication } from '@angular/platform-browser';
@@ -24,17 +33,22 @@ defineCustomElements();
 bootstrapApplication(App, appConfig).catch((err) => console.error(err));
 ```
 
-If `defineCustomElements` is async in your Stencil build, `await` it (or chain `.then()`) before bootstrapping so the custom element is defined before the first render.
+If `defineCustomElements` is async in your Stencil build, `await` it before bootstrapping.
+
+**Alternative:** side-effect import only the tags you need (no loader call):
+
+```ts
+import 'weg-shared-layout/weg-header';
+import 'weg-shared-layout/weg-footer';
+```
 
 ## 3. Allow custom elements in templates
 
-Add `schemas: [CUSTOM_ELEMENTS_SCHEMA]` to every `@Component` whose template uses `<weg-footer>` (it does not cascade from the root through `router-outlet` children).
+Add `schemas: [CUSTOM_ELEMENTS_SCHEMA]` to every `@Component` whose template uses `<weg-header>` or `<weg-footer>` (does not cascade through `router-outlet` children).
 
-## 4. Pass layout with property binding
+## 4. Layout shell example
 
-Use **`[layout]="..."`** so Angular sets the element’s JavaScript `layout` property (Stencil `@Prop()`), not an HTML attribute.
-
-Example with the bundled sample payload:
+Use **`[layout]="..."`** so Angular sets the JavaScript `layout` property, not an HTML attribute.
 
 ```ts
 // src/app/app.ts
@@ -51,35 +65,62 @@ import layoutFixture from 'weg-shared-layout/dummy-data.json';
 })
 export class App {
   protected readonly layoutData = signal(layoutFixture);
+  protected readonly signedIn = signal(false);
+
+  protected onAuthClick(event: Event) {
+    const customEvent = event as CustomEvent<{ action: 'sign-in' | 'sign-out' }>;
+    customEvent.preventDefault();
+
+    if (customEvent.detail.action === 'sign-out') {
+      // call your logout service
+      this.signedIn.set(false);
+      return;
+    }
+
+    // navigate to sign-in, e.g. inject Router
+    window.location.href = '/account/login';
+  }
 }
 ```
 
 ```html
 <!-- src/app/app.html -->
+<weg-header
+  [layout]="layoutData()"
+  [signedIn]="signedIn()"
+  (wegAuthClick)="onAuthClick($event)"
+></weg-header>
+
 <router-outlet />
+
 <weg-footer [layout]="layoutData()"></weg-footer>
 ```
 
-Enable `resolveJsonModule` in the TypeScript config used by the app (e.g. `tsconfig.app.json`) if you import `dummy-data.json`.
+Enable `resolveJsonModule` in `tsconfig.app.json` if you import `dummy-data.json`.
 
-In production, replace `layoutFixture` with data from your own services; keep the same object shape as `dummy-data.json`.
+In production, replace `layoutFixture` with data from your services; keep the same object shape.
 
-### Alternative: register only `<weg-footer>`
+## Header: `signed-in` and `wegAuthClick`
 
-To avoid the full lazy bundle (e.g. simpler bundling with some dev servers), you can side-effect import the custom-elements bundle instead of the loader:
+| Input / output | Binding | Notes |
+| --- | --- | --- |
+| Session state | `[signedIn]="signedIn()"` | When `true`, shows `layout.header.signOut` instead of `signIn` |
+| Auth click | `(wegAuthClick)="onAuthClick($event)"` | `event.detail.action` is `'sign-in'` or `'sign-out'` |
+| Prevent default | `event.preventDefault()` in handler | Stops link navigation / `signOut.href` redirect |
 
-```ts
-import 'weg-shared-layout/weg-footer';
-```
+Logo is bundled in the component — not configurable via `layout`.
 
-Then bootstrap as usual (no `defineCustomElements()` call required for that tag).
+## Footer
+
+`<weg-footer>` only needs `[layout]`. See [`dummy-data.json`](../src/assets/dummy-data.json) for the `footer` shape (social, columns, credits, copyright).
 
 ## Troubleshooting
 
 | Symptom | Cause / fix |
 | --- | --- |
-| `'weg-footer' is not a known element` | Add `schemas: [CUSTOM_ELEMENTS_SCHEMA]` on the component whose template contains `<weg-footer>`. |
-| Footer missing or empty box | `defineCustomElements()` not called before bootstrap (or footer bundle not imported), or `layout` not set / wrong shape — compare with `dummy-data.json`. |
+| `'weg-header'` / `'weg-footer'` is not a known element | Add `CUSTOM_ELEMENTS_SCHEMA` on the component template that uses the tag. |
+| Header/footer empty | `defineCustomElements()` not called before bootstrap, tag bundle not imported, or `layout` not set — compare with `dummy-data.json`. |
+| Auth always shows Sign in | `[signedIn]` not bound or still `false`. |
 | SSR: `document is not defined` | Guard `defineCustomElements()` with `typeof window !== 'undefined'` or `isPlatformBrowser`. |
 
 ## TypeScript typings
@@ -90,4 +131,11 @@ Then bootstrap as usual (no `defineCustomElements()` call required for that tag)
 
 ## Legacy `NgModule`
 
-Add `CUSTOM_ELEMENTS_SCHEMA` once on the module that declares components using `<weg-footer>`. `defineCustomElements()` in `main.ts` is still required when using the loader.
+Add `CUSTOM_ELEMENTS_SCHEMA` on the module that declares components using these tags. `defineCustomElements()` in `main.ts` is still required when using the loader.
+
+## See also
+
+- **[React SPA](./react.md)**
+- **[Next.js App Router](./nextjs.md)**
+- **[Plain HTML / vanilla JS](./vanilla.md)**
+- **[Package readme](../readme.md)**

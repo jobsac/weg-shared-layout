@@ -1,10 +1,8 @@
 import { Component, Prop, State, Watch, h } from '@stencil/core';
-import type { LayoutData } from '../../types/layout-data';
+import type { LayoutData, LayoutFooterLink } from '../../types/layout-data';
+import { isNonEmptyString, normalizeLinks, parseJsonProp } from '../../utils/layout';
 
-type FooterLink = {
-  label: string;
-  href: string;
-};
+type FooterLink = LayoutFooterLink;
 
 type FooterColumn = {
   links: FooterLink[];
@@ -31,23 +29,8 @@ const EMPTY_FOOTER: FooterData = {
   copyright: '',
 };
 
-function parseJsonProp(value: unknown): unknown {
-  if (typeof value !== 'string') return value;
-  const trimmed = value.trim();
-  if (!trimmed) return undefined;
-  try {
-    return JSON.parse(trimmed) as unknown;
-  } catch {
-    return undefined;
-  }
-}
-
 function isExternalHref(href: string) {
   return /^https?:\/\//.test(href);
-}
-
-function isNonEmptyString(value: unknown): value is string {
-  return typeof value === 'string' && value.trim().length > 0;
 }
 
 function isValidSocialPlatform(value: unknown): value is FooterSocialPlatform {
@@ -64,23 +47,6 @@ function normalizeSocialLinks(input: unknown): FooterSocialLink[] {
     if (!isValidSocialPlatform(platform)) continue;
     if (!isNonEmptyString(href)) continue;
     result.push({ platform, href: href.trim() });
-  }
-  return result;
-}
-
-function normalizeLinks(input: unknown): FooterLink[] {
-  if (!Array.isArray(input)) return [];
-  const result: FooterLink[] = [];
-  for (const item of input) {
-    if (!item || typeof item !== 'object') continue;
-    const label = (item as { label?: unknown }).label;
-    const href = (item as { href?: unknown }).href;
-    if (!isNonEmptyString(label)) continue;
-    if (!isNonEmptyString(href)) continue;
-    result.push({
-      label: label.trim(),
-      href: href.trim(),
-    });
   }
   return result;
 }
@@ -174,7 +140,7 @@ function SocialIcon({ platform }: { platform: FooterSocialPlatform }) {
 
 @Component({
   tag: 'weg-footer',
-  styleUrl: 'weg-footer.css',
+  styleUrls: ['../../styles/shared.css', 'weg-footer.css'],
   shadow: true,
 })
 export class WegFooter {
@@ -284,7 +250,7 @@ export class WegFooter {
   render() {
     return (
       <footer class="footer">
-        <div class="container">
+        <div class="container container--stack">
           {this.renderSocialLinks()}
           <div class="standard">
             {this.renderColumns()}

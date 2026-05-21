@@ -1,6 +1,6 @@
 {
   "name": "weg-shared-layout",
-  "version": "0.0.14",
+  "version": "0.0.15",
   "description": "Shared layout Web Components built with Stencil",
   "main": "dist/index.cjs.js",
   "module": "dist/index.js",
@@ -21,6 +21,10 @@
     "./weg-footer": {
       "types": "./dist/components/weg-footer.d.ts",
       "import": "./dist/components/weg-footer.js"
+    },
+    "./weg-header": {
+      "types": "./dist/components/weg-header.d.ts",
+      "import": "./dist/components/weg-header.js"
     },
     "./loader": {
       "types": "./loader/index.d.ts",

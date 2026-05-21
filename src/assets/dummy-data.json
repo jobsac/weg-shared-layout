@@ -1,5 +1,45 @@
 {
-  "header": {},
+  "header": {
+    "dropdowns": [
+      {
+        "label": "Find a job",
+        "items": [
+          { "label": "Professional & operational services", "href": "/search?category=professional" },
+          { "label": "Engineering & technology", "href": "/search?category=engineering" },
+          { "label": "Graduates", "href": "/search?category=graduates" },
+          { "label": "Senior & leadership", "href": "/search?category=senior" }
+        ]
+      },
+      {
+        "label": "Hire talent",
+        "items": [
+          { "label": "Professional & operational services", "href": "/hire/professional" },
+          { "label": "Engineering & technology", "href": "/hire/engineering" },
+          { "label": "Graduates", "href": "/hire/graduates" },
+          { "label": "Executive search & selection", "href": "/hire/executive" }
+        ]
+      },
+      {
+        "label": "HE solutions",
+        "items": [
+          { "label": "Franchise solution", "href": "/franchise" },
+          { "label": "Payroll bureau", "href": "/payroll" },
+          { "label": "Disability support", "href": "/disability-support" }
+        ]
+      }
+    ],
+    "links": [
+      { "label": "Career advice", "href": "/career-advice" },
+      { "label": "Register", "href": "/register" }
+    ],
+    "signIn": {
+      "label": "Sign in",
+      "href": "/account/login"
+    },
+    "signOut": {
+      "label": "Sign out"
+    }
+  },
   "footer": {
     "social": [
       { "platform": "LinkedIn", "href": "https://www.linkedin.com/company/warwickemploymentgroup/" },

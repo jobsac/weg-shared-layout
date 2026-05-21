@@ -2,19 +2,22 @@
 
 Guide for **client-rendered** React apps (Vite, Create React App, etc.). If you use **Next.js App Router**, see **[Next.js](./nextjs.md)** — SSR and Server Components require a different integration.
 
-## What is `<weg-footer>`?
+## Components
 
-`<weg-footer>` is a **presentational** [Stencil](https://stenciljs.com/) Web Component shipped by `weg-shared-layout`. It renders the site footer (social links, link columns, credits, copyright) from a **layout payload** you provide.
+| Tag | Purpose |
+| --- | --- |
+| `<weg-header>` | Site header — logo (bundled), nav dropdowns, flat links, Sign in / Sign out |
+| `<weg-footer>` | Site footer — social links, columns, credits, copyright |
 
-The component **does not fetch data**. Your app loads JSON (from an API, CMS, or a static file) and passes it on the `layout` property.
+Both are **presentational** [Stencil](https://stenciljs.com/) Web Components. They **do not fetch data** — your app passes a **`layout`** payload (API, CMS, or [`dummy-data.json`](../src/assets/dummy-data.json)).
 
-Payload shape matches [`dummy-data.json`](../src/assets/dummy-data.json) (see also [readme](../readme.md#how-it-works)).
+`<weg-header>` additionally accepts **`signed-in`** and emits **`wegAuthClick`** for auth handling.
 
 ## Requirements
 
 | Requirement | Notes |
 | --- | --- |
-| **React 19+** | React 19 maps custom-element props to DOM **properties** when possible. Older React often sets `layout` as a string **attribute**, which breaks object payloads. |
+| **React 19+** | React 19 maps custom-element props to DOM **properties** when possible. Older React often sets props as string **attributes**, which breaks object payloads. |
 | **Bundler** | Must resolve `node_modules` ESM/CJS from `weg-shared-layout`. |
 | **TypeScript (optional)** | Module augmentation below; enable `resolveJsonModule` if you import `dummy-data.json`. |
 
@@ -28,7 +31,7 @@ pnpm add weg-shared-layout
 
 ## 1. Register custom elements (once)
 
-Call `defineCustomElements()` **once** before the first `<weg-footer>` render — typically in your app entry (`main.tsx`, `index.tsx`):
+Call `defineCustomElements()` **once** before the first render — typically in `main.tsx` / `index.tsx`:
 
 ```ts
 import { defineCustomElements } from 'weg-shared-layout/loader';
@@ -36,53 +39,129 @@ import { defineCustomElements } from 'weg-shared-layout/loader';
 defineCustomElements();
 ```
 
-Also side-effect import the tag so your bundler includes the component definition:
+Side-effect import the tags your app uses:
 
 ```ts
+import 'weg-shared-layout/weg-header';
 import 'weg-shared-layout/weg-footer';
 ```
 
-**Alternative:** import only the footer bundle (no loader call):
+**Alternative:** import individual tag bundles only (no loader):
 
 ```ts
+import 'weg-shared-layout/weg-header';
 import 'weg-shared-layout/weg-footer';
 ```
 
 Use the loader when you may add more tags from this package later.
 
-## 2. Render the footer
+## 2. Layout shell
 
 ### Recommended: pass `layout` as an object (React 19+)
 
 ```tsx
+import 'weg-shared-layout/weg-header';
 import 'weg-shared-layout/weg-footer';
 import layout from 'weg-shared-layout/dummy-data.json';
 
-export function SiteFooter() {
-  return <weg-footer layout={layout} />;
+export function SiteLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <>
+      <weg-header layout={layout} />
+      {children}
+      <weg-footer layout={layout} />
+    </>
+  );
 }
 ```
 
-With React 19+, `layout={layoutObject}` is applied as the custom element’s **`layout` property** (object), which `<weg-footer>` expects.
-
-### Fallback: `JSON.stringify` (all React versions)
-
-If you are on React 18 or see an empty footer despite correct data, pass a JSON **string**. The component parses string values the same as objects:
+### Fallback: `JSON.stringify` (React 18 or empty components)
 
 ```tsx
+<weg-header layout={JSON.stringify(layout)} />
 <weg-footer layout={JSON.stringify(layout)} />
 ```
 
-### Plain HTML attribute
+## 3. Header auth
 
-Outside React, you can set `layout='{"footer":{...}}'` on the element. Prefer the property in SPA code.
+The WEG logo is bundled inside `<weg-header>` — not configurable via `layout`.
 
-## 3. Production: fetch layout from your API
+Configure labels in `layout.header`:
 
-Example using the public test API (same shape as `dummy-data.json`):
+```json
+"signIn": { "label": "Sign in", "href": "/account/login" },
+"signOut": { "label": "Sign out" }
+```
+
+Set **`signed-in`** from your session state and listen for **`wegAuthClick`**:
+
+```tsx
+import { useCallback, useState } from 'react';
+import 'weg-shared-layout/weg-header';
+import layout from 'weg-shared-layout/dummy-data.json';
+
+export function SiteHeader() {
+  const [signedIn, setSignedIn] = useState(false);
+
+  const onAuthClick = useCallback((event: CustomEvent<{ action: 'sign-in' | 'sign-out' }>) => {
+    event.preventDefault();
+
+    if (event.detail.action === 'sign-out') {
+      // your logout(), then:
+      setSignedIn(false);
+      return;
+    }
+
+    window.location.href = '/account/login';
+  }, []);
+
+  return (
+    <weg-header
+      layout={layout}
+      signed-in={signedIn}
+      // @ts-expect-error Stencil custom event
+      onWegAuthClick={onAuthClick}
+    />
+  );
+}
+```
+
+| Prop / event | Purpose |
+| --- | --- |
+| `signed-in={boolean}` | Shows Sign out when `true` |
+| `onWegAuthClick` | Host handles routing / logout; call `event.preventDefault()` to override defaults |
+
+**Ref fallback for the event** (if `onWegAuthClick` does not bind in your React version):
+
+```tsx
+import { useEffect, useRef } from 'react';
+
+const ref = useRef<HTMLWegHeaderElement>(null);
+
+useEffect(() => {
+  const el = ref.current;
+  if (!el) return;
+
+  const handler = (event: Event) => {
+    const e = event as CustomEvent<{ action: 'sign-in' | 'sign-out' }>;
+    e.preventDefault();
+    // ...
+  };
+
+  el.addEventListener('wegAuthClick', handler);
+  return () => el.removeEventListener('wegAuthClick', handler);
+}, []);
+
+return <weg-header ref={ref} layout={layout} signed-in={signedIn} />;
+```
+
+Update `signedIn` via `ref.current.signedIn = true` if property binding is unreliable.
+
+## 4. Production: fetch layout from your API
 
 ```tsx
 import { useEffect, useState } from 'react';
+import 'weg-shared-layout/weg-header';
 import 'weg-shared-layout/weg-footer';
 import layoutFixture from 'weg-shared-layout/dummy-data.json';
 
@@ -90,7 +169,7 @@ type LayoutData = typeof layoutFixture;
 
 const LAYOUT_URL = 'https://weg-payload-test.vercel.app/api/layout';
 
-export function SiteFooter() {
+export function SiteLayout({ children }: { children: React.ReactNode }) {
   const [layout, setLayout] = useState<LayoutData | null>(null);
 
   useEffect(() => {
@@ -109,17 +188,23 @@ export function SiteFooter() {
     };
   }, []);
 
-  if (!layout) return null; // or a skeleton
+  if (!layout) return null;
 
-  return <weg-footer layout={layout} />;
+  return (
+    <>
+      <weg-header layout={layout} />
+      {children}
+      <weg-footer layout={layout} />
+    </>
+  );
 }
 ```
 
-Replace the URL with your own CMS/API. Keep the object shape aligned with `dummy-data.json`.
+Replace the URL with your CMS/API. Keep the object shape aligned with `dummy-data.json`.
 
 ## TypeScript: module augmentation
 
-Do **not** rely on a triple-slash reference in every file. Augment React’s JSX namespace once (e.g. `src/types/weg-shared-layout-jsx.d.ts`):
+Add once (e.g. `src/types/weg-shared-layout-jsx.d.ts`):
 
 ```ts
 import type { JSX as WegSharedLayoutJSX } from 'weg-shared-layout';
@@ -128,14 +213,14 @@ import type { DetailedHTMLProps, HTMLAttributes } from 'react';
 declare module 'react' {
   namespace JSX {
     interface IntrinsicElements extends WegSharedLayoutJSX.IntrinsicElements {
+      'weg-header': WegSharedLayoutJSX.IntrinsicElements['weg-header'] &
+        DetailedHTMLProps<HTMLAttributes<HTMLWegHeaderElement>, HTMLWegHeaderElement>;
       'weg-footer': WegSharedLayoutJSX.IntrinsicElements['weg-footer'] &
         DetailedHTMLProps<HTMLAttributes<HTMLWegFooterElement>, HTMLWegFooterElement>;
     }
   }
 }
 ```
-
-Ensure that file is included by your `tsconfig.json` `include`/`files`.
 
 Enable in `tsconfig.json` when importing JSON fixtures:
 
@@ -147,55 +232,34 @@ Enable in `tsconfig.json` when importing JSON fixtures:
 }
 ```
 
-## `layout` prop vs attribute (why React version matters)
+## `layout` prop vs attribute
 
 | How data is set | Works with object? |
 | --- | --- |
 | **Property** `el.layout = obj` / React 19 `layout={obj}` | Yes |
-| **Attribute** `layout="[object Object]"` / React 18 `layout={obj}` | No — footer stays empty |
-| **Attribute** `layout='{"footer":...}'` / `layout={JSON.stringify(obj)}` | Yes — component parses JSON |
+| **Attribute** `layout="[object Object]"` / React 18 `layout={obj}` | No — components stay empty |
+| **Attribute** `layout={JSON.stringify(obj)}` | Yes — component parses JSON |
 
-`<weg-footer>` accepts `layout` as either an object or a JSON string (see `parseJsonProp` in the component source).
+Both components accept `layout` as an object or JSON string.
 
 ## Note: `prop:layout` is unreliable in React
 
-Some examples set Stencil props with a `prop:` prefix (e.g. `prop:layout={data}`). In React this is **not dependable** — behavior varies by version and reconciler. Prefer:
-
-1. **`layout={object}`** on React 19+, or  
-2. **`layout={JSON.stringify(object)}`**, or  
-3. **Ref fallback** after mount:
-
-```tsx
-import { useEffect, useRef } from 'react';
-import type layoutFixture from 'weg-shared-layout/dummy-data.json';
-
-type LayoutData = typeof layoutFixture;
-
-export function SiteFooter({ layout }: { layout: LayoutData }) {
-  const ref = useRef<HTMLWegFooterElement>(null);
-
-  useEffect(() => {
-    if (ref.current) ref.current.layout = layout;
-  }, [layout]);
-
-  return <weg-footer ref={ref} />;
-}
-```
+Prefer `layout={object}`, `layout={JSON.stringify(object)}`, or ref assignment — not `prop:layout`.
 
 ## Troubleshooting
 
 | Symptom | Likely cause | Fix |
 | --- | --- | --- |
-| Empty footer, no errors | `defineCustomElements()` not called, or missing `import 'weg-shared-layout/weg-footer'` | Register loader + import tag in entry before render. |
-| Empty footer, data looks correct | React set `layout` as attribute (`[object Object]`) | Upgrade to React 19+, or use `layout={JSON.stringify(layout)}` or ref assignment. |
-| TypeScript: `'weg-footer' does not exist on JSX.IntrinsicElements` | No module augmentation | Add `weg-shared-layout-jsx.d.ts` as above. |
-| Cannot find module `weg-shared-layout/dummy-data.json` | `resolveJsonModule` off | Enable in `tsconfig.json`. |
-| Footer flashes then disappears | Strict Mode double-mount + async layout | Ensure stable `layout` reference; avoid resetting state on remount. |
-| Styles missing | Shadow DOM is encapsulated | Footer ships its own CSS; do not expect global site styles inside the shadow root. |
+| Empty header/footer | Loader/tag import missing | `defineCustomElements()` + `import 'weg-shared-layout/weg-header'` (and footer). |
+| Empty despite correct data | React set `layout` as attribute | React 19+, or `JSON.stringify`, or ref assignment. |
+| Logo missing on header | Old build without inlined logo | Upgrade package; logo is bundled in `logo-data.ts`. |
+| Auth always Sign in | `signed-in` not set | Bind `signed-in={!!session}`. |
+| `onWegAuthClick` not firing | React CE event binding | Use `addEventListener` on a ref (see above). |
+| TS: unknown element | No augmentation | Add `weg-shared-layout-jsx.d.ts`. |
 
 ## See also
 
-- **[Next.js App Router](./nextjs.md)** — Server Components, `transpilePackages`, hydration
+- **[Next.js App Router](./nextjs.md)**
 - **[Angular](./angular.md)**
 - **[Plain HTML / vanilla JS](./vanilla.md)**
 - **[Package readme](../readme.md)**

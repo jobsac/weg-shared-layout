@@ -1,7 +1,30 @@
-export type LayoutFooterLink = {
+export type LayoutLink = {
   label: string;
   href: string;
 };
+
+export type LayoutHeaderLink = LayoutLink;
+
+export type LayoutHeaderSignOutLink = {
+  label: string;
+  href?: string;
+};
+
+export type LayoutHeaderDropdown = {
+  label: string;
+  items: LayoutHeaderLink[];
+};
+
+export type LayoutHeaderData = {
+  dropdowns?: LayoutHeaderDropdown[];
+  links?: LayoutHeaderLink[];
+  signIn?: LayoutHeaderLink;
+  signOut?: LayoutHeaderSignOutLink;
+};
+
+export type LayoutHeaderAuthAction = 'sign-in' | 'sign-out';
+
+export type LayoutFooterLink = LayoutLink;
 
 export type LayoutFooterColumn = {
   links: LayoutFooterLink[];
@@ -15,11 +38,11 @@ export type LayoutFooterSocialLink = {
 };
 
 /**
- * Layout payload accepted by `<weg-footer layout={...}>`.
- * Matches `GET /api/layout` footer shape from the WEG CMS.
+ * Layout payload accepted by `<weg-header>` and `<weg-footer>`.
+ * Matches `GET /api/layout` shape from the WEG CMS.
  */
 export type LayoutData = {
-  header?: unknown;
+  header?: Partial<LayoutHeaderData>;
   footer?: Partial<{
     social: unknown;
     columns: unknown;

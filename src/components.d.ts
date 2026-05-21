@@ -5,8 +5,8 @@
  * It contains typing information for all components that exist in this project.
  */
 import { HTMLStencilElement, JSXBase } from "@stencil/core/internal";
-import { LayoutData } from "./types/layout-data";
-export { LayoutData } from "./types/layout-data";
+import { LayoutData, LayoutHeaderAuthAction } from "./types/layout-data";
+export { LayoutData, LayoutHeaderAuthAction } from "./types/layout-data";
 export namespace Components {
     interface MyComponent {
         /**
@@ -28,6 +28,21 @@ export namespace Components {
          */
         "layout"?: LayoutData | string;
     }
+    interface WegHeader {
+        /**
+          * Layout payload, supplied by the host application.  Expected shape: ```json {   "header": {     "dropdowns": [{ "label": "Find a job", "items": [{ "label": "...", "href": "..." }] }],     "links": [{ "label": "Career advice", "href": "/career-advice" }],     "signIn": { "label": "Sign in", "href": "/account/login" },     "signOut": { "label": "Sign out" }   } } ```
+         */
+        "layout"?: LayoutData | string;
+        /**
+          * When true, the auth control shows `header.signOut` instead of `header.signIn`. Set by the host app based on session state.
+          * @default false
+         */
+        "signedIn": boolean;
+    }
+}
+export interface WegHeaderCustomEvent<T> extends CustomEvent<T> {
+    detail: T;
+    target: HTMLWegHeaderElement;
 }
 declare global {
     interface HTMLMyComponentElement extends Components.MyComponent, HTMLStencilElement {
@@ -42,9 +57,27 @@ declare global {
         prototype: HTMLWegFooterElement;
         new (): HTMLWegFooterElement;
     };
+    interface HTMLWegHeaderElementEventMap {
+        "wegAuthClick": { action: LayoutHeaderAuthAction };
+    }
+    interface HTMLWegHeaderElement extends Components.WegHeader, HTMLStencilElement {
+        addEventListener<K extends keyof HTMLWegHeaderElementEventMap>(type: K, listener: (this: HTMLWegHeaderElement, ev: WegHeaderCustomEvent<HTMLWegHeaderElementEventMap[K]>) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener<K extends keyof DocumentEventMap>(type: K, listener: (this: Document, ev: DocumentEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions): void;
+        removeEventListener<K extends keyof HTMLWegHeaderElementEventMap>(type: K, listener: (this: HTMLWegHeaderElement, ev: WegHeaderCustomEvent<HTMLWegHeaderElementEventMap[K]>) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener<K extends keyof DocumentEventMap>(type: K, listener: (this: Document, ev: DocumentEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | EventListenerOptions): void;
+    }
+    var HTMLWegHeaderElement: {
+        prototype: HTMLWegHeaderElement;
+        new (): HTMLWegHeaderElement;
+    };
     interface HTMLElementTagNameMap {
         "my-component": HTMLMyComponentElement;
         "weg-footer": HTMLWegFooterElement;
+        "weg-header": HTMLWegHeaderElement;
     }
 }
 declare namespace LocalJSX {
@@ -68,6 +101,21 @@ declare namespace LocalJSX {
          */
         "layout"?: LayoutData | string;
     }
+    interface WegHeader {
+        /**
+          * Layout payload, supplied by the host application.  Expected shape: ```json {   "header": {     "dropdowns": [{ "label": "Find a job", "items": [{ "label": "...", "href": "..." }] }],     "links": [{ "label": "Career advice", "href": "/career-advice" }],     "signIn": { "label": "Sign in", "href": "/account/login" },     "signOut": { "label": "Sign out" }   } } ```
+         */
+        "layout"?: LayoutData | string;
+        /**
+          * Fired when the user clicks Sign in or Sign out. Call `event.preventDefault()` in the host to handle navigation/logout yourself.
+         */
+        "onWegAuthClick"?: (event: WegHeaderCustomEvent<{ action: LayoutHeaderAuthAction }>) => void;
+        /**
+          * When true, the auth control shows `header.signOut` instead of `header.signIn`. Set by the host app based on session state.
+          * @default false
+         */
+        "signedIn"?: boolean;
+    }
 
     interface MyComponentAttributes {
         "first": string;
@@ -77,10 +125,15 @@ declare namespace LocalJSX {
     interface WegFooterAttributes {
         "layout": LayoutData | string;
     }
+    interface WegHeaderAttributes {
+        "layout": LayoutData | string;
+        "signedIn": boolean;
+    }
 
     interface IntrinsicElements {
         "my-component": Omit<MyComponent, keyof MyComponentAttributes> & { [K in keyof MyComponent & keyof MyComponentAttributes]?: MyComponent[K] } & { [K in keyof MyComponent & keyof MyComponentAttributes as `attr:${K}`]?: MyComponentAttributes[K] } & { [K in keyof MyComponent & keyof MyComponentAttributes as `prop:${K}`]?: MyComponent[K] };
         "weg-footer": Omit<WegFooter, keyof WegFooterAttributes> & { [K in keyof WegFooter & keyof WegFooterAttributes]?: WegFooter[K] } & { [K in keyof WegFooter & keyof WegFooterAttributes as `attr:${K}`]?: WegFooterAttributes[K] } & { [K in keyof WegFooter & keyof WegFooterAttributes as `prop:${K}`]?: WegFooter[K] };
+        "weg-header": Omit<WegHeader, keyof WegHeaderAttributes> & { [K in keyof WegHeader & keyof WegHeaderAttributes]?: WegHeader[K] } & { [K in keyof WegHeader & keyof WegHeaderAttributes as `attr:${K}`]?: WegHeaderAttributes[K] } & { [K in keyof WegHeader & keyof WegHeaderAttributes as `prop:${K}`]?: WegHeader[K] };
     }
 }
 export { LocalJSX as JSX };
@@ -89,6 +142,7 @@ declare module "@stencil/core" {
         interface IntrinsicElements {
             "my-component": LocalJSX.IntrinsicElements["my-component"] & JSXBase.HTMLAttributes<HTMLMyComponentElement>;
             "weg-footer": LocalJSX.IntrinsicElements["weg-footer"] & JSXBase.HTMLAttributes<HTMLWegFooterElement>;
+            "weg-header": LocalJSX.IntrinsicElements["weg-header"] & JSXBase.HTMLAttributes<HTMLWegHeaderElement>;
         }
     }
 }
