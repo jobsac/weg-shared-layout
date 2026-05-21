@@ -14,52 +14,82 @@ npm i weg-shared-layout
 
 `<weg-header>` and `<weg-footer>` are **presentational** Web Components: they do **not** fetch data.
 
-You **can** load that object however you normally fetch JSON in your app. For example, [https://weg-payload-test.vercel.app/api/layout](https://weg-payload-test.vercel.app/api/layout) returns the same shape as **`dummy-data.json`**; pass the response into `layout` on `<weg-header>` / `<weg-footer>` (or your framework wrapper) like any other prop.
+Load layout JSON from your CMS/API (e.g. [`GET /api/layout`](https://weg-payload-test.vercel.app/api/layout) from WEG CMS) or import [`dummy-data.json`](src/assets/dummy-data.json), then pass it to `layout` on each tag.
 
-The payload shape matches **`dummy-data.json`** (and `GET /api/layout` from the WEG CMS):
+### Layout shape (abbreviated)
+
+Full reference: [`src/assets/dummy-data.json`](src/assets/dummy-data.json). This package keeps auth URLs in [`src/constants/weg-urls.ts`](src/constants/weg-urls.ts) for the signed-in nav and docs — **host apps should define their own constants file** (e.g. `auth.ts`) rather than importing from the package.
 
 ```json
 {
   "header": {
-    "dropdowns": [
-      {
-        "label": "Find a job",
-        "items": [{ "label": "Graduates", "href": "/search?category=graduates" }]
-      }
-    ],
-    "links": [{ "label": "Career advice", "href": "/career-advice" }],
-    "signIn": { "label": "Sign in", "href": "/account/login" },
-    "signOut": { "label": "Sign out" }
+    "logoHref": "…",
+    "dropdowns": [{ "label": "Find a job", "items": [{ "label": "Graduates", "href": "…" }] }],
+    "links": [{ "label": "Career advice", "href": "…" }, { "label": "Register", "href": "…" }],
+    "signIn": { "label": "Sign in", "href": "…" }
   },
   "footer": {
-    "social": [{ "platform": "LinkedIn", "href": "https://..." }],
-    "columns": [{ "links": [{ "label": "About Us", "href": "/about" }] }],
-    "credits": "...",
-    "copyright": "..."
+    "social": [{ "platform": "LinkedIn", "href": "…" }],
+    "columns": [{ "links": [{ "label": "About WEG", "href": "…" }] }],
+    "credits": "…",
+    "copyright": "…"
   }
 }
 ```
 
+Use **`dummy-data.json`** for full production URLs. In your app, keep sign-in/out URLs in a local constants file:
+
+```ts
+// auth.ts (host app — example)
+export const HEADER_SIGN_IN = {
+  label: 'Sign in',
+  href: 'https://account.warwickemploymentgroup.com/account/login',
+};
+
+export const ACCOUNT_LOGIN_HREF = HEADER_SIGN_IN.href;
+```
+
+| Field | Used when | Notes |
+| --- | --- | --- |
+| `header.logoHref` | Always (signed out) | Logo link target. Defaults to WEG home if omitted. Logo image is bundled. |
+| `header.dropdowns` | Signed out | CMS-managed dropdown menus |
+| `header.links` | Signed out | CMS-managed flat nav links |
+| `header.signIn` | Signed out | Sign in button label + href |
+| `footer.*` | Always | Social, columns, credits, copyright |
+
 ### Auth (Sign in / Sign out)
 
-Set **`signed-in`** on `<weg-header>` from your app when the user has a session. Labels come from `layout.header.signIn` / `layout.header.signOut`.
+**Signed out** (`signed-in` false): renders `dropdowns`, `links`, and `signIn` from `layout`.
 
-Listen for **`wegAuthClick`** to run sign-in routing or sign-out logic. Call `event.preventDefault()` to stop default navigation (sign-in link follow or sign-out `href` redirect).
+**Signed in** (`signed-in` true): **ignores** CMS nav and shows built-in links:
+
+- Find a job
+- Dashboard
+- Manage Account (profile icon + `user-name`, or "Manage Account" if omitted)
+- Sign out (with icon)
+
+Set **`signed-in`** from your app session state. Pass **`user-name`** with the user's first name for Manage Account.
+
+Listen for **`wegAuthClick`** to handle sign-in routing or sign-out logic. Call `event.preventDefault()` to stop default navigation.
 
 ```js
+// auth.ts
+const HEADER_SIGN_IN = {
+  label: 'Sign in',
+  href: 'https://account.warwickemploymentgroup.com/account/login',
+};
+
 header.signedIn = true;
+header.userName = 'Alex';
 header.addEventListener('wegAuthClick', (event) => {
   event.preventDefault();
   if (event.detail.action === 'sign-out') logout();
-  else window.location.href = '/account/login';
+  else window.location.href = layout.header.signIn?.href ?? HEADER_SIGN_IN.href;
 });
 ```
 
--  **From npm:**  `import layout from 'weg-shared-layout/dummy-data.json'` (enable `resolveJsonModule` in TypeScript if needed).
-
--  **In this repo:** [`src/assets/dummy-data.json`](src/assets/dummy-data.json)
-
-
+- **From npm:** `import layout from 'weg-shared-layout/dummy-data.json'` (enable `resolveJsonModule` in TypeScript if needed).
+- **In this repo:** [`src/assets/dummy-data.json`](src/assets/dummy-data.json)
 
 ## Framework guides
 

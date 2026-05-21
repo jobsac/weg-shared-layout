@@ -6,10 +6,10 @@ Guide for **Next.js 13+ App Router** (`app/` directory). For Vite/CRA-style clie
 
 | Tag | Purpose |
 | --- | --- |
-| `<weg-header>` | Site header — logo (bundled), nav, Sign in / Sign out |
+| `<weg-header>` | Site header — bundled logo, CMS nav (signed out), built-in nav (signed in), Sign in / Manage Account / Sign out |
 | `<weg-footer>` | Site footer — social, columns, legal text |
 
-Both accept **`layout`** (JSON string recommended in Next). `<weg-header>` also accepts **`signed-in`** and emits **`wegAuthClick`**.
+Both accept **`layout`** (JSON string recommended in Next). `<weg-header>` also accepts **`signed-in`**, **`user-name`**, and emits **`wegAuthClick`**.
 
 ## Why Next.js is different
 
@@ -50,7 +50,21 @@ const nextConfig: NextConfig = {
 export default nextConfig;
 ```
 
-## 2. Client layout components
+## 2. Auth constants (host app)
+
+Keep sign-in/out URLs in your app — not imported from `weg-shared-layout`:
+
+```ts
+// src/auth.ts
+export const HEADER_SIGN_IN = {
+  label: 'Sign in',
+  href: 'https://account.warwickemploymentgroup.com/account/login',
+};
+
+export const ACCOUNT_LOGIN_HREF = HEADER_SIGN_IN.href;
+```
+
+## 3. Client layout components
 
 ```tsx
 // src/components/layout/Header.tsx
@@ -58,26 +72,29 @@ export default nextConfig;
 
 import { useCallback } from 'react';
 import { defineCustomElements } from 'weg-shared-layout/loader';
+import { ACCOUNT_LOGIN_HREF, HEADER_SIGN_IN } from '@/auth';
 import 'weg-shared-layout/weg-header';
 
 defineCustomElements();
 
 type LayoutData = {
   header?: {
+    logoHref?: string;
     dropdowns?: { label: string; items: { label: string; href: string }[] }[];
     links?: { label: string; href: string }[];
     signIn?: { label: string; href: string };
-    signOut?: { label: string; href?: string };
   };
 };
 
 export function Header({
   layout,
   signedIn,
+  userName,
   onSignedInChange,
 }: {
   layout: LayoutData;
   signedIn: boolean;
+  userName?: string;
   onSignedInChange?: (signedIn: boolean) => void;
 }) {
   const onAuthClick = useCallback(
@@ -85,12 +102,12 @@ export function Header({
       event.preventDefault();
 
       if (event.detail.action === 'sign-out') {
-        // your logout(), then:
         onSignedInChange?.(false);
+        window.location.href = ACCOUNT_LOGIN_HREF;
         return;
       }
 
-      window.location.href = layout.header?.signIn?.href ?? '/account/login';
+      window.location.href = layout.header?.signIn?.href ?? HEADER_SIGN_IN.href;
     },
     [layout, onSignedInChange],
   );
@@ -98,9 +115,9 @@ export function Header({
   return (
     <weg-header
       layout={JSON.stringify(layout)}
-      signed-in={signedIn}
+      signedIn={signedIn}
+      {...(userName ? { userName } : {})}
       suppressHydrationWarning
-      // @ts-expect-error Stencil custom event
       onWegAuthClick={onAuthClick}
     />
   );
@@ -137,10 +154,16 @@ export function SiteChrome({
   children: React.ReactNode;
 }) {
   const [signedIn, setSignedIn] = useState(false);
+  const userName = signedIn ? 'Alex' : undefined; // from your session
 
   return (
     <>
-      <Header layout={layout} signedIn={signedIn} onSignedInChange={setSignedIn} />
+      <Header
+        layout={layout}
+        signedIn={signedIn}
+        userName={userName}
+        onSignedInChange={setSignedIn}
+      />
       {children}
       <Footer layout={layout} />
     </>
@@ -158,7 +181,7 @@ export function SiteChrome({
 
 Do **not** pass `layout={layoutObject}` directly on the custom elements in Next.
 
-## 3. Server layout
+## 4. Server layout
 
 ```tsx
 // app/layout.tsx (Server Component)
@@ -176,7 +199,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 }
 ```
 
-## 4. Production: fetch layout on the server
+## 5. Production: fetch layout on the server
 
 ```tsx
 // app/layout.tsx
@@ -205,19 +228,23 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 
 Pass the plain object into the Client Component; **stringify inside** the header/footer wrappers.
 
-Wire **`signedIn`** from your auth provider (e.g. session from a client context populated after mount, or a client-only wrapper around `<Header />`).
+Wire **`signedIn`** and **`userName`** from your auth provider (session hook / context in a client wrapper).
 
 ## Header auth reference
 
-| API | Usage |
-| --- | --- |
-| `layout.header.signIn` | `{ label, href }` — shown when `signed-in` is false |
-| `layout.header.signOut` | `{ label, href? }` — shown when `signed-in` is true |
-| `signed-in` prop | Boolean session flag from host app |
-| `wegAuthClick` event | `event.detail.action`: `'sign-in'` \| `'sign-out'` |
-| `event.preventDefault()` | Skip default link navigation / redirect |
+| API | Signed out | Signed in |
+| --- | --- | --- |
+| `layout.header.dropdowns` / `links` | CMS nav rendered | Ignored — built-in nav used |
+| `layout.header.signIn` | Sign in button | Not shown |
+| `layout.header.logoHref` | Logo link target | Built-in WEG home URL |
+| `signed-in` prop | `false` | `true` — session flag from host app |
+| `user-name` prop | — | User's first name on Manage Account |
+| `wegAuthClick` event | `'sign-in'` on Sign in click | `'sign-out'` on Sign out click |
+| `event.preventDefault()` | Skip default navigation | Skip default redirect |
 
-Logo is bundled in the component — not in `layout`.
+**Signed-in nav (built into the component):** Find a job, Dashboard, Manage Account, Sign out.
+
+The logo **image** is bundled. The logo **link** uses `layout.header.logoHref` when signed out.
 
 ## Passing `layout` — quick reference
 
@@ -254,6 +281,7 @@ declare module 'react' {
 | `document is not defined` | Loader in Server Component | Keep registration in `"use client"` files only. |
 | Empty after hydration | Object passed to CE without stringify | `JSON.stringify` in client wrapper. |
 | Logo missing | Stale package | Logo is inlined in `logo-data.ts`; rebuild / upgrade. |
+| Header not clickable | Overlapping page content | `:host` uses `z-index: 20`; upgrade package if missing. |
 | Auth not updating | `signed-in` only on server | Manage session in client state / context. |
 | Hydration warning | Shadow DOM mismatch | `suppressHydrationWarning` on both tags. |
 | Build error | Package not transpiled | `transpilePackages: ['weg-shared-layout']`. |
@@ -263,7 +291,7 @@ declare module 'react' {
 - [ ] `weg-shared-layout` installed
 - [ ] `transpilePackages` in `next.config`
 - [ ] Client `Header.tsx` / `Footer.tsx` with loader, tag imports, `JSON.stringify`, `suppressHydrationWarning`
-- [ ] Auth: `signed-in` + `wegAuthClick` handler on header
+- [ ] Auth: `signed-in`, `user-name`, and `wegAuthClick` handler on header
 - [ ] Server `layout.tsx` imports client chrome only (no `defineCustomElements` on server)
 - [ ] Layout fetched or imported server-side, passed as serializable props
 - [ ] TypeScript augmentation for `'weg-header'` and `'weg-footer'`

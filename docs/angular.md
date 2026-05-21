@@ -9,7 +9,7 @@ Assumes Angular 17+ with **standalone** components (default for `ng new`).
 | `<weg-header>` | `import 'weg-shared-layout/weg-header';` |
 | `<weg-footer>` | `import 'weg-shared-layout/weg-footer';` |
 
-Both accept the same `layout` payload ([`dummy-data.json`](../src/assets/dummy-data.json)). `<weg-header>` also accepts **`signed-in`** and emits **`wegAuthClick`**.
+Both accept the same `layout` payload ([`dummy-data.json`](../src/assets/dummy-data.json)). `<weg-header>` also accepts **`signed-in`**, **`user-name`**, and emits **`wegAuthClick`**.
 
 ## 1. Install
 
@@ -33,8 +33,6 @@ defineCustomElements();
 bootstrapApplication(App, appConfig).catch((err) => console.error(err));
 ```
 
-If `defineCustomElements` is async in your Stencil build, `await` it before bootstrapping.
-
 **Alternative:** side-effect import only the tags you need (no loader call):
 
 ```ts
@@ -54,6 +52,7 @@ Use **`[layout]="..."`** so Angular sets the JavaScript `layout` property, not a
 // src/app/app.ts
 import { Component, CUSTOM_ELEMENTS_SCHEMA, signal } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
+import { ACCOUNT_LOGIN_HREF, HEADER_SIGN_IN } from '../auth';
 import layoutFixture from 'weg-shared-layout/dummy-data.json';
 
 @Component({
@@ -66,19 +65,19 @@ import layoutFixture from 'weg-shared-layout/dummy-data.json';
 export class App {
   protected readonly layoutData = signal(layoutFixture);
   protected readonly signedIn = signal(false);
+  protected readonly userName = signal<string | undefined>(undefined);
 
   protected onAuthClick(event: Event) {
     const customEvent = event as CustomEvent<{ action: 'sign-in' | 'sign-out' }>;
     customEvent.preventDefault();
 
     if (customEvent.detail.action === 'sign-out') {
-      // call your logout service
       this.signedIn.set(false);
+      window.location.href = ACCOUNT_LOGIN_HREF;
       return;
     }
 
-    // navigate to sign-in, e.g. inject Router
-    window.location.href = '/account/login';
+    window.location.href = layoutFixture.header.signIn?.href ?? HEADER_SIGN_IN.href;
   }
 }
 ```
@@ -88,6 +87,7 @@ export class App {
 <weg-header
   [layout]="layoutData()"
   [signedIn]="signedIn()"
+  [userName]="userName()"
   (wegAuthClick)="onAuthClick($event)"
 ></weg-header>
 
@@ -98,17 +98,23 @@ export class App {
 
 Enable `resolveJsonModule` in `tsconfig.app.json` if you import `dummy-data.json`.
 
+Define auth URLs in `src/app/auth.ts` (same shape as the React/Next examples).
+
 In production, replace `layoutFixture` with data from your services; keep the same object shape.
 
-## Header: `signed-in` and `wegAuthClick`
+## Header: `signed-in`, `user-name`, and `wegAuthClick`
 
 | Input / output | Binding | Notes |
 | --- | --- | --- |
-| Session state | `[signedIn]="signedIn()"` | When `true`, shows `layout.header.signOut` instead of `signIn` |
+| CMS nav | `[layout]="layoutData()"` | `dropdowns`, `links`, `signIn` used when signed out |
+| Session state | `[signedIn]="signedIn()"` | When `true`, CMS nav is ignored; built-in signed-in nav is shown |
+| User name | `[userName]="userName()"` | First name on Manage Account (signed in only) |
 | Auth click | `(wegAuthClick)="onAuthClick($event)"` | `event.detail.action` is `'sign-in'` or `'sign-out'` |
-| Prevent default | `event.preventDefault()` in handler | Stops link navigation / `signOut.href` redirect |
+| Prevent default | `event.preventDefault()` in handler | Stops link navigation / redirect |
 
-Logo is bundled in the component — not configurable via `layout`.
+**Signed-in nav (built into the component):** Find a job, Dashboard, Manage Account, Sign out.
+
+Logo **image** is bundled. Logo **link** uses `layout.header.logoHref` when signed out (defaults to WEG home).
 
 ## Footer
 
@@ -119,19 +125,10 @@ Logo is bundled in the component — not configurable via `layout`.
 | Symptom | Cause / fix |
 | --- | --- |
 | `'weg-header'` / `'weg-footer'` is not a known element | Add `CUSTOM_ELEMENTS_SCHEMA` on the component template that uses the tag. |
-| Header/footer empty | `defineCustomElements()` not called before bootstrap, tag bundle not imported, or `layout` not set — compare with `dummy-data.json`. |
+| Header/footer empty | `defineCustomElements()` not called before bootstrap, tag bundle not imported, or `layout` not set. |
 | Auth always shows Sign in | `[signedIn]` not bound or still `false`. |
+| Manage Account shows generic label | `[userName]` not set when signed in. |
 | SSR: `document is not defined` | Guard `defineCustomElements()` with `typeof window !== 'undefined'` or `isPlatformBrowser`. |
-
-## TypeScript typings
-
-```ts
-/// <reference types="weg-shared-layout/dist/types/components" />
-```
-
-## Legacy `NgModule`
-
-Add `CUSTOM_ELEMENTS_SCHEMA` on the module that declares components using these tags. `defineCustomElements()` in `main.ts` is still required when using the loader.
 
 ## See also
 

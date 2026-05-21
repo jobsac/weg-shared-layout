@@ -4,10 +4,10 @@
 
 | Tag | Purpose |
 | --- | --- |
-| `<weg-header>` | Site header — logo (bundled), nav dropdowns, flat links, Sign in / Sign out |
+| `<weg-header>` | Site header — bundled logo, CMS nav (signed out), built-in nav (signed in), Sign in / Manage Account / Sign out |
 | `<weg-footer>` | Site footer — social links, columns, credits, copyright |
 
-Both components are **presentational**: they do **not** fetch data. Pass the same `layout` payload to each (or one shared object on both).
+Both components are **presentational**: they do **not** fetch data. Pass the same `layout` payload to each.
 
 Payload shape: [`dummy-data.json`](../src/assets/dummy-data.json) (see [readme](../readme.md#how-it-works)).
 
@@ -23,6 +23,7 @@ With a bundler that resolves `node_modules` imports:
 <script type="module">
   import { defineCustomElements } from 'weg-shared-layout/loader';
   import layout from 'weg-shared-layout/dummy-data.json';
+  import { ACCOUNT_LOGIN_HREF, HEADER_SIGN_IN } from './auth.js';
 
   defineCustomElements();
 
@@ -49,51 +50,76 @@ Assign the **`layout` JavaScript property** (recommended):
 element.layout = layoutObject;
 ```
 
-Or pass a JSON **string** on the `layout` attribute — the component parses it the same way:
+Or pass a JSON **string** on the `layout` attribute:
 
 ```html
 <weg-header layout='{"header":{"links":[]}}'></weg-header>
 ```
 
+## Header layout fields (signed out)
+
+| Field | Purpose |
+| --- | --- |
+| `header.logoHref` | Logo link target (defaults to WEG home) |
+| `header.dropdowns` | Dropdown menus from CMS |
+| `header.links` | Flat nav links from CMS |
+| `header.signIn` | Sign in button `{ label, href }` |
+
+See [`dummy-data.json`](../src/assets/dummy-data.json) for production URL examples.
+
 ## Header auth (Sign in / Sign out)
 
-The logo is bundled inside `<weg-header>` and cannot be changed via `layout`.
+Define auth URLs in `./auth.js`:
 
-Set **`signedIn`** when the user has a session (maps to the `signed-in` attribute):
+```js
+export const HEADER_SIGN_IN = {
+  label: 'Sign in',
+  href: 'https://account.warwickemploymentgroup.com/account/login',
+};
+
+export const ACCOUNT_LOGIN_HREF = HEADER_SIGN_IN.href;
+```
+
+### Signed out
+
+Renders `dropdowns`, `links`, and `signIn` from `layout`.
+
+### Signed in
+
+Set **`signedIn`** and optionally **`userName`**. CMS nav is ignored; built-in links are shown (Find a job, Dashboard, Manage Account, Sign out).
 
 ```js
 header.signedIn = true;
+header.userName = 'Alex';
 // or
 header.setAttribute('signed-in', '');
+header.setAttribute('user-name', 'Alex');
 ```
 
-Labels come from `layout.header.signIn` and `layout.header.signOut`:
-
-```json
-"signIn": { "label": "Sign in", "href": "/account/login" },
-"signOut": { "label": "Sign out" }
-```
-
-Listen for **`wegAuthClick`** to handle sign-in routing or sign-out logic:
+Listen for **`wegAuthClick`**:
 
 ```js
+import { ACCOUNT_LOGIN_HREF, HEADER_SIGN_IN } from './auth.js';
+
 header.addEventListener('wegAuthClick', (event) => {
-  event.preventDefault(); // stop default navigation / redirect
+  event.preventDefault();
 
   if (event.detail.action === 'sign-out') {
-    // your logout()
     header.signedIn = false;
+    window.location.href = ACCOUNT_LOGIN_HREF;
     return;
   }
 
-  window.location.href = '/account/login';
+  window.location.href = layout.header.signIn?.href ?? HEADER_SIGN_IN.href;
 });
 ```
 
 | `event.detail.action` | Default behaviour if not prevented |
 | --- | --- |
 | `'sign-in'` | Browser follows `signIn.href` |
-| `'sign-out'` | Navigates to `signOut.href` if set; otherwise event only |
+| `'sign-out'` | Redirects to built-in sign-out URL |
+
+Logo **image** is bundled. Logo **link** uses `layout.header.logoHref` when signed out.
 
 ## Without a bundler
 
