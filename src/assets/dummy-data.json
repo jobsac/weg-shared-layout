@@ -2,17 +2,63 @@
   "header": {},
   "footer": {
     "social": [
-      { "platform": "LinkedIn", "href": "https://www.linkedin.com/" },
-      { "platform": "Instagram", "href": "https://www.instagram.com/" },
-      { "platform": "TikTok", "href": "https://www.tiktok.com/" },
-      { "platform": "YouTube", "href": "https://www.youtube.com/" }
+      { "platform": "LinkedIn", "href": "https://www.linkedin.com/company/warwickemploymentgroup/" },
+      { "platform": "TikTok", "href": "https://www.tiktok.com/@weg_updates" },
+      { "platform": "Instagram", "href": "https://www.instagram.com/warwickemploymentgroup/" },
+      { "platform": "YouTube", "href": "https://www.youtube.com/@WarwickEmploymentGroup" }
     ],
-    "standardLinks": [
-      { "label": "About Us", "href": "/about" },
-      { "label": "Privacy Policy", "href": "/privacy" },
-      { "label": "Terms of Use", "href": "/terms" },
-      { "label": "Cookie Policy", "href": "/cookies" },
-      { "label": "Accessibility Statement", "href": "/accessibility" }
+    "columns": [
+      {
+        "links": [
+          { "label": "Find a job", "href": "/jobs" },
+          { "label": "Professional & operational", "href": "/jobs/professional" },
+          { "label": "Engineering & technology", "href": "/jobs/engineering" },
+          { "label": "Graduates", "href": "/jobs/graduates" },
+          { "label": "Senior & leadership", "href": "/jobs/senior" }
+        ]
+      },
+      {
+        "links": [
+          { "label": "Hire talent", "href": "/hire" },
+          { "label": "Professional & operational", "href": "/hire/professional" },
+          { "label": "Engineering & technology", "href": "/hire/engineering" },
+          { "label": "Graduates", "href": "/hire/graduates" },
+          { "label": "Executive search & selection", "href": "/hire/executive" }
+        ]
+      },
+      {
+        "links": [
+          { "label": "HE solutions", "href": "/he-solutions" },
+          { "label": "Franchise solution", "href": "/franchise" },
+          { "label": "Payroll bureau", "href": "/payroll" },
+          { "label": "Disability support", "href": "/disability-support" }
+        ]
+      },
+      {
+        "links": [
+          { "label": "Career advice", "href": "/career-advice" },
+          { "label": "News & events", "href": "/news" },
+          { "label": "Insights", "href": "/insights" }
+        ]
+      },
+      {
+        "links": [
+          { "label": "About WEG", "href": "/about" },
+          { "label": "Our brands", "href": "/brands" },
+          { "label": "Careers at WEG", "href": "/careers" },
+          { "label": "Contact us", "href": "/contact" }
+        ]
+      },
+      {
+        "links": [
+          { "label": "Privacy policy", "href": "/privacy" },
+          { "label": "Terms of use", "href": "/terms" },
+          { "label": "Cookie policy", "href": "/cookies" },
+          { "label": "Accessibility statement", "href": "/accessibility" },
+          { "label": "Diversity & inclusion", "href": "/diversity" },
+          { "label": "Modern slavery", "href": "/modern-slavery" }
+        ]
+      }
     ],
     "credits": "Warwick Employment Group is a department of the Campus and Commercial Services Group at the University of Warwick.",
     "copyright": "Copyright © Warwick Employment Group."

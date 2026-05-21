@@ -5,6 +5,8 @@
  * It contains typing information for all components that exist in this project.
  */
 import { HTMLStencilElement, JSXBase } from "@stencil/core/internal";
+import { LayoutData } from "./types/layout-data";
+export { LayoutData } from "./types/layout-data";
 export namespace Components {
     interface MyComponent {
         /**
@@ -22,7 +24,7 @@ export namespace Components {
     }
     interface WegFooter {
         /**
-          * Layout payload, supplied by the host application.  In JS / framework templates, pass the object directly (e.g. Angular `[layout]="layoutData"`, React `layout={layoutData}`, vanilla `el.layout = layoutData`).  In plain HTML, pass the same JSON as a string on the `layout` attribute.  Expected shape: ```json {   "footer": {     "social": [{ "platform": "LinkedIn", "href": "https://..." }],     "standardLinks": [{ "label": "About Us", "href": "/about" }],     "credits": "...",     "copyright": "..."   } } ```
+          * Layout payload, supplied by the host application.  In JS / framework templates, pass the object directly (e.g. Angular `[layout]="layoutData"`, React `layout={layoutData}`, vanilla `el.layout = layoutData`).  In plain HTML, pass the same JSON as a string on the `layout` attribute.  Expected shape: ```json {   "footer": {     "social": [{ "platform": "LinkedIn", "href": "https://..." }],     "columns": [{ "links": [{ "label": "About Us", "href": "/about" }] }],     "credits": "...",     "copyright": "..."   } } ```
          */
         "layout"?: LayoutData | string;
     }
@@ -62,7 +64,7 @@ declare namespace LocalJSX {
     }
     interface WegFooter {
         /**
-          * Layout payload, supplied by the host application.  In JS / framework templates, pass the object directly (e.g. Angular `[layout]="layoutData"`, React `layout={layoutData}`, vanilla `el.layout = layoutData`).  In plain HTML, pass the same JSON as a string on the `layout` attribute.  Expected shape: ```json {   "footer": {     "social": [{ "platform": "LinkedIn", "href": "https://..." }],     "standardLinks": [{ "label": "About Us", "href": "/about" }],     "credits": "...",     "copyright": "..."   } } ```
+          * Layout payload, supplied by the host application.  In JS / framework templates, pass the object directly (e.g. Angular `[layout]="layoutData"`, React `layout={layoutData}`, vanilla `el.layout = layoutData`).  In plain HTML, pass the same JSON as a string on the `layout` attribute.  Expected shape: ```json {   "footer": {     "social": [{ "platform": "LinkedIn", "href": "https://..." }],     "columns": [{ "links": [{ "label": "About Us", "href": "/about" }] }],     "credits": "...",     "copyright": "..."   } } ```
          */
         "layout"?: LayoutData | string;
     }

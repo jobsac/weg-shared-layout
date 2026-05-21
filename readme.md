@@ -16,7 +16,18 @@ npm i weg-shared-layout
   
 You **can** load that object however you normally fetch JSON in your app. For example, [https://weg-payload-test.vercel.app/api/layout](https://weg-payload-test.vercel.app/api/layout) returns the same shape as **`dummy-data.json`**; pass the response into `layout` on `<weg-footer>` (or your framework wrapper) like any other prop.
 
-The payload shape matches **`dummy-data.json`**:
+The payload shape matches **`dummy-data.json`** (and `GET /api/layout` from the WEG CMS):
+
+```json
+{
+  "footer": {
+    "social": [{ "platform": "LinkedIn", "href": "https://..." }],
+    "columns": [{ "links": [{ "label": "About Us", "href": "/about" }] }],
+    "credits": "...",
+    "copyright": "..."
+  }
+}
+```
 
 -  **From npm:**  `import layout from 'weg-shared-layout/dummy-data.json'` (enable `resolveJsonModule` in TypeScript if needed).
 

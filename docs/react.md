@@ -4,7 +4,7 @@ Guide for **client-rendered** React apps (Vite, Create React App, etc.). If you 
 
 ## What is `<weg-footer>`?
 
-`<weg-footer>` is a **presentational** [Stencil](https://stenciljs.com/) Web Component shipped by `weg-shared-layout`. It renders the site footer (social links, standard links, credits, copyright) from a **layout payload** you provide.
+`<weg-footer>` is a **presentational** [Stencil](https://stenciljs.com/) Web Component shipped by `weg-shared-layout`. It renders the site footer (social links, link columns, credits, copyright) from a **layout payload** you provide.
 
 The component **does not fetch data**. Your app loads JSON (from an API, CMS, or a static file) and passes it on the `layout` property.
 

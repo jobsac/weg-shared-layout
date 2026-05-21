@@ -139,7 +139,7 @@ defineCustomElements();
 type LayoutData = {
   footer?: {
     social?: { platform: string; href: string }[];
-    standardLinks?: { label: string; href: string }[];
+    columns?: { links: { label: string; href: string }[] }[];
     credits?: string;
     copyright?: string;
   };

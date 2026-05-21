@@ -1,8 +1,13 @@
 import { Component, Prop, State, Watch, h } from '@stencil/core';
+import type { LayoutData } from '../../types/layout-data';
 
 type FooterLink = {
   label: string;
   href: string;
+};
+
+type FooterColumn = {
+  links: FooterLink[];
 };
 
 type FooterSocialPlatform = 'LinkedIn' | 'Instagram' | 'TikTok' | 'YouTube';
@@ -14,24 +19,14 @@ type FooterSocialLink = {
 
 type FooterData = {
   social: FooterSocialLink[];
-  standardLinks: FooterLink[];
+  columns: FooterColumn[];
   credits: string;
   copyright: string;
 };
 
-type LayoutData = {
-  header?: unknown;
-  footer?: Partial<{
-    social: unknown;
-    standardLinks: unknown;
-    credits: unknown;
-    copyright: unknown;
-  }>;
-};
-
 const EMPTY_FOOTER: FooterData = {
   social: [],
-  standardLinks: [],
+  columns: [],
   credits: '',
   copyright: '',
 };
@@ -82,7 +77,22 @@ function normalizeLinks(input: unknown): FooterLink[] {
     const href = (item as { href?: unknown }).href;
     if (!isNonEmptyString(label)) continue;
     if (!isNonEmptyString(href)) continue;
-    result.push({ label: label.trim(), href: href.trim() });
+    result.push({
+      label: label.trim(),
+      href: href.trim(),
+    });
+  }
+  return result;
+}
+
+function normalizeColumns(input: unknown): FooterColumn[] {
+  if (!Array.isArray(input)) return [];
+  const result: FooterColumn[] = [];
+  for (const item of input) {
+    if (!item || typeof item !== 'object') continue;
+    const links = normalizeLinks((item as { links?: unknown }).links);
+    if (links.length === 0) continue;
+    result.push({ links });
   }
   return result;
 }
@@ -92,14 +102,17 @@ function normalizeFooterData(input: unknown): FooterData {
   const footer = (root.footer && typeof root.footer === 'object' ? root.footer : {}) as LayoutData['footer'];
   return {
     social: normalizeSocialLinks(footer?.social),
-    standardLinks: normalizeLinks(footer?.standardLinks),
+    columns: normalizeColumns(footer?.columns),
     credits: isNonEmptyString(footer?.credits) ? footer!.credits!.trim() : '',
     copyright: isNonEmptyString(footer?.copyright) ? footer!.copyright!.trim() : '',
   };
 }
 
+function linkOpensNewTab(link: FooterLink) {
+  return isExternalHref(link.href);
+}
+
 function SocialIcon({ platform }: { platform: FooterSocialPlatform }) {
-  // Inline SVGs keep the component framework-agnostic and avoid additional bundling concerns.
   const common = {
     viewBox: '0 0 48 48',
     width: 48,
@@ -179,7 +192,7 @@ export class WegFooter {
    * {
    *   "footer": {
    *     "social": [{ "platform": "LinkedIn", "href": "https://..." }],
-   *     "standardLinks": [{ "label": "About Us", "href": "/about" }],
+   *     "columns": [{ "links": [{ "label": "About Us", "href": "/about" }] }],
    *     "credits": "...",
    *     "copyright": "..."
    *   }
@@ -241,15 +254,28 @@ export class WegFooter {
     );
   }
 
-  private renderStandardLinks() {
-    const links = this.resolved.standardLinks;
-    if (links.length === 0) return null;
+  private renderColumns() {
+    const columns = this.resolved.columns;
+    if (columns.length === 0) return null;
     return (
-      <div class="standard__links">
-        {links.map((l) => (
-          <a class="footer-link" href={l.href}>
-            {l.label}
-          </a>
+      <div class="columns">
+        {columns.map((column, columnIndex) => (
+          <div class="columns__col" key={columnIndex}>
+            {columnIndex > 0 ? <div class="columns__divider" aria-hidden="true" /> : null}
+            <nav class="columns__links" aria-label={`Footer links column ${columnIndex + 1}`}>
+              {column.links.map((l, linkIndex) => (
+                <a
+                  class="footer-link"
+                  href={l.href}
+                  key={linkIndex}
+                  target={linkOpensNewTab(l) ? '_blank' : undefined}
+                  rel={linkOpensNewTab(l) ? 'noreferrer noopener' : undefined}
+                >
+                  {l.label}
+                </a>
+              ))}
+            </nav>
+          </div>
         ))}
       </div>
     );
@@ -261,7 +287,7 @@ export class WegFooter {
         <div class="container">
           {this.renderSocialLinks()}
           <div class="standard">
-            {this.renderStandardLinks()}
+            {this.renderColumns()}
             {this.renderLegalText()}
           </div>
         </div>
