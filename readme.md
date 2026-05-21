@@ -40,8 +40,6 @@ The payload shape matches **`dummy-data.json`** (and `GET /api/layout` from the 
 }
 ```
 
-The WEG logo is bundled inside `<weg-header>` (`logo-data.ts`) and is not configurable via `layout`.
-
 ### Auth (Sign in / Sign out)
 
 Set **`signed-in`** on `<weg-header>` from your app when the user has a session. Labels come from `layout.header.signIn` / `layout.header.signOut`.
