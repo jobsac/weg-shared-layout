@@ -55,19 +55,6 @@
   }
 }
 
-.container--stack {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 20px;
-}
-
-@media (min-width: 768px) {
-  .container--stack {
-    gap: 36px;
-  }
-}
-
 .sr-only {
   position: absolute;
   width: 1px;

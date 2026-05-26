@@ -250,7 +250,7 @@ export class WegFooter {
   render() {
     return (
       <footer class="footer">
-        <div class="container container--stack">
+        <div class="container footer__inner">
           {this.renderSocialLinks()}
           <div class="standard">
             {this.renderColumns()}
