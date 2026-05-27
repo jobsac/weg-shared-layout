@@ -200,6 +200,8 @@ export class WegHeader {
   @State() private expandedSection: string | null = null;
 
   private boundHandleDocumentClick = this.handleDocumentClick.bind(this);
+  private hoverCloseTimer: ReturnType<typeof setTimeout> | null = null;
+  private hoverOpenEnabled = false;
 
   private resolve() {
     if (this.layout === undefined || this.layout === null) {
@@ -211,6 +213,7 @@ export class WegHeader {
 
   componentWillLoad() {
     this.resolve();
+    this.hoverOpenEnabled = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
   }
 
   connectedCallback() {
@@ -219,6 +222,7 @@ export class WegHeader {
 
   disconnectedCallback() {
     document.removeEventListener('click', this.boundHandleDocumentClick);
+    this.cancelScheduledDropdownClose();
   }
 
   @Watch('layout')
@@ -230,18 +234,91 @@ export class WegHeader {
   handleKeyDown(event: KeyboardEvent) {
     if (event.key !== 'Escape') return;
     this.menuOpen = false;
-    this.openDropdown = null;
+    this.closeDropdown();
   }
 
   private handleDocumentClick(event: MouseEvent) {
     const target = event.target as Node | null;
     if (!target || !this.el.contains(target)) {
-      this.openDropdown = null;
+      this.closeDropdown();
     }
   }
 
+  private cancelScheduledDropdownClose() {
+    if (!this.hoverCloseTimer) return;
+    clearTimeout(this.hoverCloseTimer);
+    this.hoverCloseTimer = null;
+  }
+
+  private openDropdownMenu(label: string) {
+    this.cancelScheduledDropdownClose();
+    this.openDropdown = label;
+  }
+
+  private closeDropdown() {
+    this.cancelScheduledDropdownClose();
+    this.openDropdown = null;
+  }
+
+  private scheduleDropdownClose() {
+    this.cancelScheduledDropdownClose();
+    this.hoverCloseTimer = setTimeout(() => {
+      this.openDropdown = null;
+      this.hoverCloseTimer = null;
+    }, 200);
+  }
+
   private toggleDropdown(label: string) {
-    this.openDropdown = this.openDropdown === label ? null : label;
+    if (this.openDropdown === label) {
+      this.closeDropdown();
+      return;
+    }
+    this.openDropdownMenu(label);
+  }
+
+  private getDropdownPanelId(label: string): string {
+    return `weg-header-dropdown-${label.trim().toLowerCase().replace(/\s+/g, '-')}`;
+  }
+
+  private handleDropdownPointerEnter(label: string) {
+    if (!this.hoverOpenEnabled) return;
+    this.openDropdownMenu(label);
+  }
+
+  private handleDropdownPointerLeave() {
+    if (!this.hoverOpenEnabled) return;
+    this.scheduleDropdownClose();
+  }
+
+  private handleDropdownFocusIn(label: string) {
+    this.openDropdownMenu(label);
+  }
+
+  private handleDropdownFocusOut(event: FocusEvent, label: string) {
+    const related = event.relatedTarget as Node | null;
+    const currentTarget = event.currentTarget as HTMLElement;
+    if (related && currentTarget.contains(related)) return;
+    if (this.openDropdown === label) {
+      this.closeDropdown();
+    }
+  }
+
+  private handleDropdownTriggerKeyDown(
+    event: KeyboardEvent,
+    label: string,
+    itemEl: HTMLElement,
+  ) {
+    if (event.key !== 'ArrowDown') return;
+    event.preventDefault();
+    this.openDropdownMenu(label);
+    this.focusFirstDropdownLink(itemEl);
+  }
+
+  private focusFirstDropdownLink(itemEl: HTMLElement) {
+    setTimeout(() => {
+      const firstLink = itemEl.querySelector('.dropdown-panel__link') as HTMLAnchorElement | null;
+      firstLink?.focus();
+    }, 0);
   }
 
   private toggleAccordion(label: string) {
@@ -396,8 +473,16 @@ export class WegHeader {
           <ul class="desktop-nav__list">
             {dropdowns.map((dropdown) => {
               const isOpen = this.openDropdown === dropdown.label;
+              const panelId = this.getDropdownPanelId(dropdown.label);
               return (
-                <li class="desktop-nav__item" key={dropdown.label}>
+                <li
+                  class="desktop-nav__item desktop-nav__item--dropdown"
+                  key={dropdown.label}
+                  onMouseEnter={() => this.handleDropdownPointerEnter(dropdown.label)}
+                  onMouseLeave={() => this.handleDropdownPointerLeave()}
+                  onFocusin={() => this.handleDropdownFocusIn(dropdown.label)}
+                  onFocusout={(event) => this.handleDropdownFocusOut(event, dropdown.label)}
+                >
                   <button
                     type="button"
                     class={{
@@ -406,16 +491,24 @@ export class WegHeader {
                     }}
                     aria-expanded={isOpen ? 'true' : 'false'}
                     aria-haspopup="true"
+                    aria-controls={panelId}
+                    id={`${panelId}-trigger`}
                     onClick={(event) => {
                       event.stopPropagation();
                       this.toggleDropdown(dropdown.label);
+                    }}
+                    onKeyDown={(event) => {
+                      const itemEl = (event.currentTarget as HTMLElement).closest(
+                        '.desktop-nav__item--dropdown',
+                      ) as HTMLElement;
+                      this.handleDropdownTriggerKeyDown(event, dropdown.label, itemEl);
                     }}
                   >
                     {dropdown.label}
                     <ToggleIcon expanded={isOpen} />
                   </button>
                   {isOpen ? (
-                    <div class="dropdown-panel" role="region" aria-label={dropdown.label}>
+                    <div class="dropdown-panel" id={panelId} role="region" aria-labelledby={`${panelId}-trigger`}>
                       <div class="dropdown-panel__accent">
                         <div class="dropdown-panel__links">
                           {dropdown.items.map((item) => (

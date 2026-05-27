@@ -80,6 +80,22 @@ describe('weg-header', () => {
     expect(detail).toEqual({ action: 'sign-out' });
   });
 
+  it('opens desktop dropdown on trigger focus with accessible wiring', async () => {
+    const { root } = await render(<weg-header layout={SAMPLE_HEADER_LAYOUT}></weg-header>);
+
+    const trigger = root.shadowRoot?.querySelector('.dropdown-trigger') as HTMLButtonElement | null;
+    expect(trigger).toBeTruthy();
+    expect(trigger?.getAttribute('aria-haspopup')).toBe('true');
+    expect(trigger?.getAttribute('aria-expanded')).toBe('false');
+    expect(trigger?.getAttribute('aria-controls')).toBeTruthy();
+
+    trigger?.focus();
+    await new Promise((r) => setTimeout(r, 0));
+
+    expect(trigger?.getAttribute('aria-expanded')).toBe('true');
+    expect(root.shadowRoot?.querySelector('.dropdown-panel')).toBeTruthy();
+  });
+
   it('toggles mobile accordion aria-expanded', async () => {
     const { root } = await render(<weg-header layout={SAMPLE_HEADER_LAYOUT}></weg-header>);
 
