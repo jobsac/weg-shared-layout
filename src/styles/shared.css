@@ -1,3 +1,5 @@
+@import './breakpoints.css';
+
 *,
 *::before,
 *::after {
@@ -22,36 +24,30 @@
   padding-block: 12px;
 }
 
-@media (width >= 40rem) {
+@media (width >= 640px) {
   .container {
-    max-width: 40rem;
+    max-width: var(--weg-breakpoint-sm);
   }
 }
 
-@media (width >= 48rem) {
+@media (width >= 768px) {
   .container {
-    max-width: 48rem;
+    max-width: var(--weg-breakpoint-md);
     padding-inline: 2rem;
     padding-block: 20px;
   }
 }
 
-@media (width >= 64rem) {
+@media (width >= 1024px) {
   .container {
-    max-width: 64rem;
+    max-width: var(--weg-breakpoint-lg);
   }
 }
 
-@media (width >= 80rem) {
+@media (width >= 1280px) {
   .container {
-    max-width: 80rem;
+    max-width: var(--weg-breakpoint-xl);
     padding-block: 28px;
-  }
-}
-
-@media (width >= 86rem) {
-  .container {
-    max-width: 86rem;
   }
 }
 

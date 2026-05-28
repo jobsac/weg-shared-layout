@@ -1,0 +1,14 @@
+/**
+ * Breakpoint tokens (Tailwind-aligned).
+ * Use var(--weg-breakpoint-*) in property values (max-width, min(), etc.).
+ *
+ * var() cannot be used in @media conditions — use the matching aliases below:
+ *   sm → (width >= 640px)   md → (width >= 768px)
+ *   lg → (width >= 1024px)  xl → (width >= 1280px)
+ */
+:host {
+  --weg-breakpoint-sm: 640px;
+  --weg-breakpoint-md: 768px;
+  --weg-breakpoint-lg: 1024px;
+  --weg-breakpoint-xl: 1280px;
+}
