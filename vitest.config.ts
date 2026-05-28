@@ -3,6 +3,9 @@ import { playwright } from '@vitest/browser-playwright';
 
 export default defineVitestConfig({
   stencilConfig: './stencil.config.ts',
+  optimizeDeps: {
+    include: ['axe-core'],
+  },
   test: {
     projects: [
       // Unit tests - stencil environment for component logic

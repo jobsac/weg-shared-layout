@@ -1,4 +1,8 @@
 import { render, h, describe, it, expect } from '@stencil/vitest';
+import { userEvent } from 'vitest/browser';
+import { runAxe } from '../../../test-utils/axe';
+import { DESKTOP_VIEWPORT, MOBILE_VIEWPORT, setViewport, waitForUpdate } from '../../../test-utils/viewport';
+import DUMMY_LAYOUT from '../../assets/dummy-data.json';
 
 const SAMPLE_HEADER_LAYOUT = {
   header: {
@@ -81,33 +85,102 @@ describe('weg-header', () => {
   });
 
   it('opens desktop dropdown on trigger focus with accessible wiring', async () => {
+    await setViewport(DESKTOP_VIEWPORT.width, DESKTOP_VIEWPORT.height);
     const { root } = await render(<weg-header layout={SAMPLE_HEADER_LAYOUT}></weg-header>);
 
-    const trigger = root.shadowRoot?.querySelector('.dropdown-trigger') as HTMLButtonElement | null;
+    const trigger = root.shadowRoot?.querySelector('.desktop .dropdown-trigger') as HTMLButtonElement | null;
     expect(trigger).toBeTruthy();
     expect(trigger?.getAttribute('aria-haspopup')).toBe('true');
     expect(trigger?.getAttribute('aria-expanded')).toBe('false');
     expect(trigger?.getAttribute('aria-controls')).toBeTruthy();
 
     trigger?.focus();
-    await new Promise((r) => setTimeout(r, 0));
+    await waitForUpdate();
 
     expect(trigger?.getAttribute('aria-expanded')).toBe('true');
     expect(root.shadowRoot?.querySelector('.dropdown-panel')).toBeTruthy();
   });
 
   it('toggles mobile accordion aria-expanded', async () => {
+    await setViewport(MOBILE_VIEWPORT.width, MOBILE_VIEWPORT.height);
     const { root } = await render(<weg-header layout={SAMPLE_HEADER_LAYOUT}></weg-header>);
 
     const openButton = root.shadowRoot?.querySelector('.mobile .icon-button') as HTMLButtonElement | null;
     expect(openButton).toBeTruthy();
-    openButton?.click();
-    await new Promise((r) => setTimeout(r, 0));
+    await userEvent.click(openButton!);
+    await waitForUpdate();
 
-    const accordionButton = root.shadowRoot?.querySelector('.mobile-nav__row') as HTMLButtonElement | null;
+    const accordionButton = root.shadowRoot?.querySelector(
+      'button.mobile-nav__row',
+    ) as HTMLButtonElement | null;
+    expect(accordionButton).toBeTruthy();
     expect(accordionButton?.getAttribute('aria-expanded')).toBe('false');
-    accordionButton?.click();
-    await new Promise((r) => setTimeout(r, 0));
+    await userEvent.click(accordionButton!);
+    await waitForUpdate();
     expect(accordionButton?.getAttribute('aria-expanded')).toBe('true');
+  });
+
+  describe('accessibility', () => {
+    it('has no WCAG violations when signed out', async () => {
+      const { root } = await render(<weg-header layout={SAMPLE_HEADER_LAYOUT}></weg-header>);
+      const results = await runAxe(root);
+      expect(results.violations).toEqual([]);
+    });
+
+    it('has no WCAG violations when signed in', async () => {
+      const { root } = await render(
+        <weg-header layout={SAMPLE_HEADER_LAYOUT} signed-in user-name="Alex"></weg-header>,
+      );
+      const results = await runAxe(root);
+      expect(results.violations).toEqual([]);
+    });
+
+    it('has no WCAG violations with full dummy layout', async () => {
+      const { root } = await render(<weg-header layout={DUMMY_LAYOUT}></weg-header>);
+      const results = await runAxe(root);
+      expect(results.violations).toEqual([]);
+    });
+
+    it('has no WCAG violations when layout is undefined', async () => {
+      const { root } = await render(<weg-header></weg-header>);
+      const results = await runAxe(root);
+      expect(results.violations).toEqual([]);
+    });
+
+    it('has no WCAG violations with desktop dropdown open', async () => {
+      await setViewport(DESKTOP_VIEWPORT.width, DESKTOP_VIEWPORT.height);
+      const { root } = await render(<weg-header layout={SAMPLE_HEADER_LAYOUT}></weg-header>);
+      const trigger = root.shadowRoot?.querySelector('.desktop .dropdown-trigger') as HTMLButtonElement | null;
+      trigger?.focus();
+      await waitForUpdate();
+      const results = await runAxe(root);
+      expect(results.violations).toEqual([]);
+    });
+
+    it('has no WCAG violations with mobile menu open', async () => {
+      await setViewport(MOBILE_VIEWPORT.width, MOBILE_VIEWPORT.height);
+      const { root } = await render(<weg-header layout={SAMPLE_HEADER_LAYOUT}></weg-header>);
+      const openButton = root.shadowRoot?.querySelector('.mobile .icon-button') as HTMLButtonElement | null;
+      await userEvent.click(openButton!);
+      await waitForUpdate();
+      const results = await runAxe(root);
+      expect(results.violations).toEqual([]);
+    });
+
+    it('has no WCAG violations with mobile accordion expanded', async () => {
+      await setViewport(MOBILE_VIEWPORT.width, MOBILE_VIEWPORT.height);
+      const { root } = await render(<weg-header layout={SAMPLE_HEADER_LAYOUT}></weg-header>);
+      const openButton = root.shadowRoot?.querySelector('.mobile .icon-button') as HTMLButtonElement | null;
+      await userEvent.click(openButton!);
+      await waitForUpdate();
+
+      const accordionButton = root.shadowRoot?.querySelector(
+        'button.mobile-nav__row',
+      ) as HTMLButtonElement | null;
+      await userEvent.click(accordionButton!);
+      await waitForUpdate();
+      const results = await runAxe(root);
+      expect(results.violations).toEqual([]);
+    });
   });
 });

@@ -22,9 +22,12 @@
     ]
   },
   "include": [
-    "src"
+    "src",
+    "test-utils"
   ],
   "exclude": [
-    "node_modules"
+    "node_modules",
+    "src/**/*.unit.test.ts",
+    "src/**/*.cmp.test.tsx"
   ]
 }

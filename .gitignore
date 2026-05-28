@@ -23,3 +23,5 @@ lerna-debug.log*
 # Optional local env files
 .env
 .env.*
+
+.vitest-attachments/
