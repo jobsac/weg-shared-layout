@@ -1,6 +1,8 @@
 # Angular
 
-Assumes Angular 17+ with **standalone** components (default for `ng new`).
+Quick start for Angular apps. For the full guide — **Angular 16+ without signals**, layout/array mapping, RxJS patterns, testing, and troubleshooting — see **[angular-integration-guide.md](./angular-integration-guide.md)**.
+
+Reference demo: [weg-angular-demo](https://github.com/jobsac/weg-angular-demo).
 
 ## Components
 
@@ -10,6 +12,8 @@ Assumes Angular 17+ with **standalone** components (default for `ng new`).
 | `<weg-footer>` | `import 'weg-shared-layout/weg-footer';` |
 
 Both accept the same `layout` payload ([`dummy-data.json`](../src/assets/dummy-data.json)). `<weg-header>` also accepts **`signed-in`**, **`user-name`**, and emits **`wegAuthClick`**.
+
+> **Signals are optional.** Examples below use signals for brevity; plain properties and RxJS work the same — see the [integration guide](./angular-integration-guide.md#3-signals-are-not-required).
 
 ## 1. Install
 
@@ -42,7 +46,7 @@ import 'weg-shared-layout/weg-footer';
 
 ## 3. Allow custom elements in templates
 
-Add `schemas: [CUSTOM_ELEMENTS_SCHEMA]` to every `@Component` whose template uses `<weg-header>` or `<weg-footer>` (does not cascade through `router-outlet` children).
+Add `schemas: [CUSTOM_ELEMENTS_SCHEMA]` to every `@Component` (or `@NgModule`) whose template uses `<weg-header>` or `<weg-footer>` (does not cascade through `router-outlet` children).
 
 ## 4. Layout shell example
 
@@ -100,7 +104,7 @@ Enable `resolveJsonModule` in `tsconfig.app.json` if you import `dummy-data.json
 
 Define auth URLs in `src/app/auth.ts` (same shape as the React/Next examples).
 
-In production, replace `layoutFixture` with data from your services; keep the same object shape.
+In production, replace `layoutFixture` with data from your services; keep the same object shape. If your API returns separate arrays, map them into `{ header: { ... }, footer: { ... } }` — see [Passing arrays and mapping API data](./angular-integration-guide.md#7-passing-arrays-and-mapping-api-data).
 
 ## Header: `signed-in`, `user-name`, and `wegAuthClick`
 
@@ -126,12 +130,16 @@ Logo **image** is bundled. Logo **link** uses `layout.header.logoHref` when sign
 | --- | --- |
 | `'weg-header'` / `'weg-footer'` is not a known element | Add `CUSTOM_ELEMENTS_SCHEMA` on the component template that uses the tag. |
 | Header/footer empty | `defineCustomElements()` not called before bootstrap, tag bundle not imported, or `layout` not set. |
+| Nav empty after passing an array | `[layout]` must be an object; put arrays in `header.dropdowns`, `header.links`, etc. |
 | Auth always shows Sign in | `[signedIn]` not bound or still `false`. |
 | Manage Account shows generic label | `[userName]` not set when signed in. |
 | SSR: `document is not defined` | Guard `defineCustomElements()` with `typeof window !== 'undefined'` or `isPlatformBrowser`. |
 
+More detail: **[angular-integration-guide.md § Troubleshooting](./angular-integration-guide.md#15-troubleshooting)**.
+
 ## See also
 
+- **[Angular integration guide (full)](./angular-integration-guide.md)**
 - **[React SPA](./react.md)**
 - **[Next.js App Router](./nextjs.md)**
 - **[Plain HTML / vanilla JS](./vanilla.md)**
