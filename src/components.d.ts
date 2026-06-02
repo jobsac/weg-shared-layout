@@ -8,20 +8,6 @@ import { HTMLStencilElement, JSXBase } from "@stencil/core/internal";
 import { LayoutData, LayoutHeaderAuthAction } from "./types/layout-data";
 export { LayoutData, LayoutHeaderAuthAction } from "./types/layout-data";
 export namespace Components {
-    interface MyComponent {
-        /**
-          * The first name
-         */
-        "first"?: string;
-        /**
-          * The last name
-         */
-        "last"?: string;
-        /**
-          * The middle name
-         */
-        "middle"?: string;
-    }
     interface WegFooter {
         /**
           * Layout payload, supplied by the host application.  In JS / framework templates, pass the object directly (e.g. Angular `[layout]="layoutData"`, React `layout={layoutData}`, vanilla `el.layout = layoutData`).  In plain HTML, pass the same JSON as a string on the `layout` attribute.  Expected shape: ```json {   "footer": {     "social": [{ "platform": "LinkedIn", "href": "https://..." }],     "columns": [{ "links": [{ "label": "About Us", "href": "/about" }] }],     "credits": "...",     "copyright": "..."   } } ```
@@ -49,12 +35,6 @@ export interface WegHeaderCustomEvent<T> extends CustomEvent<T> {
     target: HTMLWegHeaderElement;
 }
 declare global {
-    interface HTMLMyComponentElement extends Components.MyComponent, HTMLStencilElement {
-    }
-    var HTMLMyComponentElement: {
-        prototype: HTMLMyComponentElement;
-        new (): HTMLMyComponentElement;
-    };
     interface HTMLWegFooterElement extends Components.WegFooter, HTMLStencilElement {
     }
     var HTMLWegFooterElement: {
@@ -79,26 +59,11 @@ declare global {
         new (): HTMLWegHeaderElement;
     };
     interface HTMLElementTagNameMap {
-        "my-component": HTMLMyComponentElement;
         "weg-footer": HTMLWegFooterElement;
         "weg-header": HTMLWegHeaderElement;
     }
 }
 declare namespace LocalJSX {
-    interface MyComponent {
-        /**
-          * The first name
-         */
-        "first"?: string;
-        /**
-          * The last name
-         */
-        "last"?: string;
-        /**
-          * The middle name
-         */
-        "middle"?: string;
-    }
     interface WegFooter {
         /**
           * Layout payload, supplied by the host application.  In JS / framework templates, pass the object directly (e.g. Angular `[layout]="layoutData"`, React `layout={layoutData}`, vanilla `el.layout = layoutData`).  In plain HTML, pass the same JSON as a string on the `layout` attribute.  Expected shape: ```json {   "footer": {     "social": [{ "platform": "LinkedIn", "href": "https://..." }],     "columns": [{ "links": [{ "label": "About Us", "href": "/about" }] }],     "credits": "...",     "copyright": "..."   } } ```
@@ -125,11 +90,6 @@ declare namespace LocalJSX {
         "userName"?: string;
     }
 
-    interface MyComponentAttributes {
-        "first": string;
-        "middle": string;
-        "last": string;
-    }
     interface WegFooterAttributes {
         "layout": LayoutData | string;
     }
@@ -140,7 +100,6 @@ declare namespace LocalJSX {
     }
 
     interface IntrinsicElements {
-        "my-component": Omit<MyComponent, keyof MyComponentAttributes> & { [K in keyof MyComponent & keyof MyComponentAttributes]?: MyComponent[K] } & { [K in keyof MyComponent & keyof MyComponentAttributes as `attr:${K}`]?: MyComponentAttributes[K] } & { [K in keyof MyComponent & keyof MyComponentAttributes as `prop:${K}`]?: MyComponent[K] };
         "weg-footer": Omit<WegFooter, keyof WegFooterAttributes> & { [K in keyof WegFooter & keyof WegFooterAttributes]?: WegFooter[K] } & { [K in keyof WegFooter & keyof WegFooterAttributes as `attr:${K}`]?: WegFooterAttributes[K] } & { [K in keyof WegFooter & keyof WegFooterAttributes as `prop:${K}`]?: WegFooter[K] };
         "weg-header": Omit<WegHeader, keyof WegHeaderAttributes> & { [K in keyof WegHeader & keyof WegHeaderAttributes]?: WegHeader[K] } & { [K in keyof WegHeader & keyof WegHeaderAttributes as `attr:${K}`]?: WegHeaderAttributes[K] } & { [K in keyof WegHeader & keyof WegHeaderAttributes as `prop:${K}`]?: WegHeader[K] };
     }
@@ -149,7 +108,6 @@ export { LocalJSX as JSX };
 declare module "@stencil/core" {
     export namespace JSX {
         interface IntrinsicElements {
-            "my-component": LocalJSX.IntrinsicElements["my-component"] & JSXBase.HTMLAttributes<HTMLMyComponentElement>;
             "weg-footer": LocalJSX.IntrinsicElements["weg-footer"] & JSXBase.HTMLAttributes<HTMLWegFooterElement>;
             "weg-header": LocalJSX.IntrinsicElements["weg-header"] & JSXBase.HTMLAttributes<HTMLWegHeaderElement>;
         }
