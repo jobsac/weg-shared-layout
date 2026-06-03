@@ -98,6 +98,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 0.75rem;
+  padding-inline: 0.5rem;
 }
 
 @media (--weg-md) {
@@ -138,6 +139,7 @@
 
 .main-nav-panel {
   display: none;
+  margin-inline: -0.5rem;
 }
 
 @media (--weg-md) {
@@ -153,7 +155,7 @@
 }
 
 .main-nav {
-  padding: 0 16px 24px;
+  padding: 0 1rem 1.5rem;
 }
 
 @media (--weg-md) {
