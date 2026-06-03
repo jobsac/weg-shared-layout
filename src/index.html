@@ -3,8 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=5.0" />
-    <title>weg-shared-layout</title>
-
+    <title>WCMS Component Playground</title>
     <script type="module" src="/build/weg-shared-layout.esm.js"></script>
     <script nomodule src="/build/weg-shared-layout.js"></script>
   </head d>
@@ -13,8 +12,6 @@
     <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Quisquam, quos.</p>
     <weg-footer id="footer"></weg-footer>
     <script type="module">
-      // The host app fetches the layout data and passes it in as a prop.
-      // In production this would hit https://weg-payload-test.vercel.app/api/layout.
       const res = await fetch('/assets/dummy-data.json');
       const layout = await res.json();
       document.getElementById('header').layout = layout;
