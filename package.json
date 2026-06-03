@@ -14,10 +14,6 @@
       "import": "./dist/weg-shared-layout/weg-shared-layout.esm.js",
       "require": "./dist/weg-shared-layout/weg-shared-layout.cjs.js"
     },
-    "./my-component": {
-      "types": "./dist/components/my-component.d.ts",
-      "import": "./dist/components/my-component.js"
-    },
     "./weg-footer": {
       "types": "./dist/components/weg-footer.d.ts",
       "import": "./dist/components/weg-footer.js"
@@ -68,5 +64,10 @@
     "postcss-custom-media": "^12.0.1",
     "vitest": "^4.0.0"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "author": "WEG",
+  "contributors": [
+    "Tan Ahmed <tan.ahmed@warwick.ac.uk>",
+    "Rakin Ahmed <rakin.ahmed@warwick.ac.uk>"
+  ]
 }
