@@ -1,3 +1,5 @@
+@import '../../styles/breakpoints.css';
+
 .footer {
   background: #030712; /* close to tailwind gray-950 */
   color: #ffffff;
@@ -143,8 +145,7 @@
   text-align: center;
 }
 
-/* md: matches --weg-breakpoint-md */
-@media (width >= 768px) {
+@media (--weg-md) {
   .footer__inner {
     gap: 36px;
     padding-block: 56px;
