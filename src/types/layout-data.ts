@@ -9,6 +9,9 @@ export type LayoutHeaderData = {
   logoSrc?: string;
   menu?: LayoutLink[];
 };
+
+export type LayoutHeaderAuthAction = 'sign-in' | 'sign-out';
+
 export type LayoutFooterSocialLink = {
   platform: 'LinkedIn' | 'Instagram' | 'TikTok' | 'YouTube';
   href: string;

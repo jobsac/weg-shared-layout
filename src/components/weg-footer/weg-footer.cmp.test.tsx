@@ -5,13 +5,11 @@ import DUMMY_LAYOUT from '../../assets/dummy-data.json';
 const SAMPLE_FOOTER_LAYOUT = {
   footer: {
     social: [{ platform: 'LinkedIn', href: 'https://www.linkedin.com/company/example/' }],
-    columns: [
-      {
-        links: [
-          { label: 'Find a job', href: '/jobs' },
-          { label: 'About WEG', href: '/about' },
-        ],
-      },
+    menu: [
+      [
+        { label: 'Find a job', href: '/jobs' },
+        { label: 'About WEG', href: '/about' },
+      ],
     ],
     credits: 'Example credits text.',
     copyright: 'Copyright © Example.',
@@ -25,7 +23,7 @@ describe('weg-footer', () => {
     expect(root.shadowRoot?.querySelector('.footer')).toBeTruthy();
   });
 
-  it('renders social links, columns, and legal text from layout object', async () => {
+  it('renders social links, menu, and legal text from layout object', async () => {
     const { root } = await render(<weg-footer layout={SAMPLE_FOOTER_LAYOUT}></weg-footer>);
     const text = root.shadowRoot?.textContent ?? '';
     expect(text).toContain('Find a job');

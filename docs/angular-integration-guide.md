@@ -51,7 +51,7 @@ Copy this list while integrating:
 | Tag | Purpose |
 | --- | --- |
 | `<weg-header>` | Header — bundled logo, CMS nav (signed out), built-in nav (signed in), Sign in / Manage Account / Sign out |
-| `<weg-footer>` | Footer — social links, columns, credits, copyright |
+| `<weg-footer>` | Footer — social links, menu, credits, copyright |
 
 They are **presentational**: they **do not** fetch data. Your Angular app loads layout JSON and passes it in.
 
@@ -156,8 +156,6 @@ Create `src/app/auth.ts`. Host apps own sign-in/out URLs — do not import auth 
 
 ```ts
 // src/app/auth.ts
-export const HEADER_LOGO_HREF = 'https://www.warwickemploymentgroup.com/';
-
 export const HEADER_SIGN_IN = {
   label: 'Sign in',
   href: 'https://account.warwickemploymentgroup.com/account/login',
@@ -167,7 +165,7 @@ export const HEADER_SIGN_IN = {
 export const ACCOUNT_LOGIN_HREF = HEADER_SIGN_IN.href;
 ```
 
-You will merge `HEADER_LOGO_HREF` and `HEADER_SIGN_IN` into layout data in Step 6/7.
+If your API omits a Sign in entry in `header.menu`, append `HEADER_SIGN_IN` when building layout — see Step 7.
 
 ---
 
@@ -210,7 +208,7 @@ import { Component, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import layoutFixture from 'weg-shared-layout/dummy-data.json';
 
-import { ACCOUNT_LOGIN_HREF, HEADER_LOGO_HREF, HEADER_SIGN_IN } from './auth';
+import { ACCOUNT_LOGIN_HREF, HEADER_SIGN_IN } from './auth';
 import type { LayoutData } from './layout.types';
 
 @Component({
@@ -221,14 +219,7 @@ import type { LayoutData } from './layout.types';
 })
 export class App {
   /** Same object for header and footer */
-  layoutData: LayoutData = {
-    ...layoutFixture,
-    header: {
-      ...layoutFixture.header,
-      logoHref: HEADER_LOGO_HREF,
-      signIn: HEADER_SIGN_IN,
-    },
-  };
+  layoutData: LayoutData = layoutFixture;
 
   signedIn = false;
   userName?: string;
@@ -243,8 +234,7 @@ export class App {
       return;
     }
 
-    window.location.href =
-      this.layoutData.header?.signIn?.href ?? HEADER_SIGN_IN.href;
+    window.location.href = HEADER_SIGN_IN.href;
   }
 }
 ```
@@ -287,7 +277,7 @@ import { Component, CUSTOM_ELEMENTS_SCHEMA, signal } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import layoutFixture from 'weg-shared-layout/dummy-data.json';
 
-import { ACCOUNT_LOGIN_HREF, HEADER_LOGO_HREF, HEADER_SIGN_IN } from './auth';
+import { ACCOUNT_LOGIN_HREF, HEADER_SIGN_IN } from './auth';
 import type { LayoutData } from './layout.types';
 
 @Component({
@@ -297,14 +287,7 @@ import type { LayoutData } from './layout.types';
   templateUrl: './app.html',
 })
 export class App {
-  readonly layoutData = signal<LayoutData>({
-    ...layoutFixture,
-    header: {
-      ...layoutFixture.header,
-      logoHref: HEADER_LOGO_HREF,
-      signIn: HEADER_SIGN_IN,
-    },
-  });
+  readonly layoutData = signal<LayoutData>(layoutFixture);
 
   readonly signedIn = signal(false);
   readonly userName = signal<string | undefined>(undefined);
@@ -320,8 +303,7 @@ export class App {
       return;
     }
 
-    window.location.href =
-      this.layoutData().header?.signIn?.href ?? HEADER_SIGN_IN.href;
+    window.location.href = HEADER_SIGN_IN.href;
   }
 }
 ```
@@ -358,7 +340,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { map, Observable } from 'rxjs';
 
-import { HEADER_LOGO_HREF, HEADER_SIGN_IN } from './auth';
+import { HEADER_SIGN_IN } from './auth';
 import type { LayoutData } from './layout.types';
 
 @Injectable({ providedIn: 'root' })
@@ -368,18 +350,21 @@ export class LayoutService {
   /** CMS returns full { header, footer } object */
   loadLayout(): Observable<LayoutData> {
     return this.http.get<LayoutData>('/api/layout').pipe(
-      map((data) => this.withAppHeaderOverrides(data)),
+      map((data) => this.ensureSignInMenu(data)),
     );
   }
 
-  private withAppHeaderOverrides(data: LayoutData): LayoutData {
+  private ensureSignInMenu(data: LayoutData): LayoutData {
+    const menu = data.header?.menu ?? [];
+    const hasSignIn = menu.some(
+      (item) =>
+        !item.items?.length &&
+        item.label?.trim().toLowerCase() === 'sign in',
+    );
+    if (hasSignIn) return data;
     return {
       ...data,
-      header: {
-        ...data.header,
-        logoHref: HEADER_LOGO_HREF,
-        signIn: HEADER_SIGN_IN,
-      },
+      header: { ...data.header, menu: [...menu, HEADER_SIGN_IN] },
     };
   }
 }
@@ -527,14 +512,14 @@ export class App {
 | Binding | Web component | Purpose |
 | --- | --- | --- |
 | `[layout]="..."` | `layout` | CMS nav when **signed out** |
-| `[signedIn]="..."` | `signed-in` | `true` → built-in signed-in nav (ignores CMS dropdowns/links/signIn) |
+| `[signedIn]="..."` | `signed-in` | `true` → built-in signed-in nav (ignores CMS `header.menu`) |
 | `[userName]="..."` | `user-name` | First name on Manage Account when signed in |
 | `(wegAuthClick)="..."` | `wegAuthClick` | `detail.action`: `'sign-in'` \| `'sign-out'` |
 
 **Signed out** (`signedIn === false`):
 
-- Uses `layout.header.dropdowns`, `links`, `signIn`
-- Logo links to `layout.header.logoHref` (default WEG home if omitted); logo **image** is bundled
+- Uses `layout.header.menu` — dropdown groups (`items`) and flat links (`href`), including Sign in
+- Logo **image** from `layout.header.logoSrc` (bundled if omitted); logo **link** always goes to WEG home
 
 **Signed in** (`signedIn === true`):
 
@@ -570,19 +555,16 @@ Both tags accept one **`layout`** object with optional `header` and `footer` key
 ### TypeScript shape
 
 ```ts
-type LayoutLink = { label: string; href: string };
-
-type LayoutHeaderDropdown = {
+type LayoutLink = {
   label: string;
-  items: LayoutLink[];
+  href?: string;
+  target?: '_blank' | '_self' | '_parent' | '_top';
+  items?: LayoutLink[];
 };
 
 type LayoutHeaderData = {
-  logoHref?: string;
-  dropdowns?: LayoutHeaderDropdown[];
-  links?: LayoutLink[];
-  signIn?: LayoutLink;
-  signOut?: { label: string; href?: string };
+  logoSrc?: string;
+  menu?: LayoutLink[];
 };
 
 type LayoutFooterSocialLink = {
@@ -590,18 +572,16 @@ type LayoutFooterSocialLink = {
   href: string;
 };
 
-type LayoutFooterColumn = {
-  links: LayoutLink[];
+type LayoutFooterData = {
+  social?: LayoutFooterSocialLink[];
+  menu?: LayoutLink[][];
+  credits?: string;
+  copyright?: string;
 };
 
 type LayoutData = {
   header?: Partial<LayoutHeaderData>;
-  footer?: Partial<{
-    social: LayoutFooterSocialLink[];
-    columns: LayoutFooterColumn[];
-    credits: string;
-    copyright: string;
-  }>;
+  footer?: Partial<LayoutFooterData>;
 };
 ```
 
@@ -616,27 +596,25 @@ Full example JSON:
 ```json
 {
   "header": {
-    "logoHref": "https://www.warwickemploymentgroup.com/",
-    "dropdowns": [
+    "logoSrc": "https://www.warwickemploymentgroup.com/assets/weg-logo.svg",
+    "menu": [
       {
         "label": "Find a job",
         "items": [
           { "label": "Graduates", "href": "https://example.com/jobs/graduates" }
         ]
-      }
-    ],
-    "links": [
+      },
       { "label": "Career advice", "href": "https://example.com/career-advice" },
-      { "label": "Register", "href": "https://example.com/register" }
-    ],
-    "signIn": { "label": "Sign in", "href": "https://example.com/login" }
+      { "label": "Register", "href": "https://example.com/register" },
+      { "label": "Sign in", "href": "https://example.com/login" }
+    ]
   },
   "footer": {
     "social": [
       { "platform": "LinkedIn", "href": "https://linkedin.com/company/example" }
     ],
-    "columns": [
-      { "links": [{ "label": "About WEG", "href": "/about" }] }
+    "menu": [
+      [{ "label": "About WEG", "href": "/about" }]
     ],
     "credits": "Warwick Employment Group …",
     "copyright": "Copyright © Warwick Employment Group."
@@ -648,17 +626,14 @@ Full example JSON:
 
 | Field | Used when | Notes |
 | --- | --- | --- |
-| `header.logoHref` | Signed **out** | Logo link; image is bundled |
-| `header.dropdowns` | Signed **out** | `{ label, items[] }` |
-| `header.links` | Signed **out** | Flat nav links |
-| `header.signIn` | Signed **out** | Sign in button |
-| `header.signOut` | Rarely | Signed-in sign-out uses built-in URLs |
+| `header.logoSrc` | Signed **out** | Logo image URL; bundled if omitted |
+| `header.menu` | Signed **out** | Unified nav — groups use `items[]`, flat links use `href` |
 | `footer.social` | Always | `platform` must be `LinkedIn`, `Instagram`, `TikTok`, or `YouTube` exactly |
-| `footer.columns` | Always | `{ links: [...] }[]` |
-| `footer.credits` | Always | Text below columns |
+| `footer.menu` | Always | `LayoutLink[][]` — one link array per column |
+| `footer.credits` | Always | Text below menu |
 | `footer.copyright` | Always | Copyright line |
 
-When **`signedIn` is true**, `<weg-header>` **ignores** `dropdowns`, `links`, and `signIn` from layout.
+When **`signedIn` is true**, `<weg-header>` **ignores** `header.menu` from layout.
 
 ### Property binding vs attributes
 
@@ -675,7 +650,7 @@ The component can parse a JSON **string** for `layout`, but `[layout]="object"` 
 ### Invalid entries are silently dropped
 
 - Links without `label` or `href` are skipped
-- Dropdowns with empty `items` are skipped
+- Menu groups with empty `items` are skipped
 - Unknown social `platform` values are skipped
 - Malformed input → empty sections (no throw) — inspect `$0.layout` in DevTools
 
@@ -703,19 +678,18 @@ const navLinks = [
 
 | Field | Array element shape |
 | --- | --- |
-| `header.dropdowns` | `{ label, items: { label, href }[] }` |
-| `header.links` | `{ label, href }` |
+| `header.menu` | `LayoutLink` — group with `items[]` or flat link with `href` |
 | `footer.social` | `{ platform, href }` |
-| `footer.columns` | `{ links: { label, href }[] }` |
+| `footer.menu` | `{ label, href }[]` per column |
 
-**`src/app/layout.service.ts` — merge multiple endpoints:**
+**`src/app/layout.service.ts` — merge multiple endpoints into one menu:**
 
 ```ts
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { forkJoin, map, Observable } from 'rxjs';
 
-import { HEADER_LOGO_HREF, HEADER_SIGN_IN } from './auth';
+import { HEADER_SIGN_IN } from './auth';
 import type { LayoutData } from './layout.types';
 
 @Injectable({ providedIn: 'root' })
@@ -724,18 +698,17 @@ export class LayoutService {
 
   loadLayoutFromParts(): Observable<LayoutData> {
     return forkJoin({
-      dropdowns: this.http.get<NonNullable<LayoutData['header']>['dropdowns']>(
-        '/api/nav/dropdowns',
+      menuGroups: this.http.get<NonNullable<LayoutData['header']>['menu']>(
+        '/api/nav/menu',
       ),
-      links: this.http.get<NonNullable<LayoutData['header']>['links']>('/api/nav/links'),
+      flatLinks: this.http.get<NonNullable<LayoutData['header']>['menu']>(
+        '/api/nav/links',
+      ),
       footer: this.http.get<LayoutData['footer']>('/api/footer'),
     }).pipe(
-      map(({ dropdowns, links, footer }) => ({
+      map(({ menuGroups, flatLinks, footer }) => ({
         header: {
-          logoHref: HEADER_LOGO_HREF,
-          dropdowns,
-          links,
-          signIn: HEADER_SIGN_IN,
+          menu: [...menuGroups, ...flatLinks, HEADER_SIGN_IN],
         },
         footer,
       })),
@@ -771,29 +744,30 @@ import { Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
 import layoutFixture from 'weg-shared-layout/dummy-data.json';
 
-import { HEADER_LOGO_HREF, HEADER_SIGN_IN } from './auth';
+import { HEADER_SIGN_IN } from './auth';
 import type { LayoutData } from './layout.types';
 
 @Injectable({ providedIn: 'root' })
 export class LayoutService {
-  private readonly layoutSubject = new BehaviorSubject(
-    this.withAppHeaderOverrides(layoutFixture),
-  );
+  private readonly layoutSubject = new BehaviorSubject<LayoutData>(layoutFixture);
 
   readonly layout$ = this.layoutSubject.asObservable();
 
   setLayout(data: LayoutData): void {
-    this.layoutSubject.next(this.withAppHeaderOverrides(data));
+    this.layoutSubject.next(this.ensureSignInMenu(data));
   }
 
-  private withAppHeaderOverrides(data: LayoutData): LayoutData {
+  private ensureSignInMenu(data: LayoutData): LayoutData {
+    const menu = data.header?.menu ?? [];
+    const hasSignIn = menu.some(
+      (item) =>
+        !item.items?.length &&
+        item.label?.trim().toLowerCase() === 'sign in',
+    );
+    if (hasSignIn) return data;
     return {
       ...data,
-      header: {
-        ...data.header,
-        logoHref: HEADER_LOGO_HREF,
-        signIn: HEADER_SIGN_IN,
-      },
+      header: { ...data.header, menu: [...menu, HEADER_SIGN_IN] },
     };
   }
 }
@@ -809,11 +783,11 @@ Stencil watches the `layout` **property**. Assign a **new object reference** whe
 // Good
 this.layoutData = {
   ...this.layoutData,
-  header: { ...this.layoutData.header, links: newLinks },
+  header: { ...this.layoutData.header, menu: newMenu },
 };
 
 // Risky — may not re-render
-this.layoutData.header!.links!.push(newLink);
+this.layoutData.header!.menu!.push(newLink);
 ```
 
 With `OnPush` and plain fields, call `ChangeDetectorRef.markForCheck()` after updates.
@@ -926,7 +900,11 @@ const header = fixture.nativeElement.querySelector('weg-header') as HTMLElement 
   layout?: LayoutData;
 };
 
-expect(header.layout?.header?.signIn).toEqual(HEADER_SIGN_IN);
+expect(
+  header.layout?.header?.menu?.some(
+    (item) => item.label === 'Sign in' && item.href === HEADER_SIGN_IN.href,
+  ),
+).toBe(true);
 ```
 
 Full example: [weg-angular-demo `app.spec.ts`](https://github.com/jobsac/weg-angular-demo/blob/main/src/app/app.spec.ts).
@@ -968,7 +946,7 @@ External `https://` links open in a new tab automatically.
 | `'weg-header' is not a known element` | Missing schema | `CUSTOM_ELEMENTS_SCHEMA` on the component that owns the template |
 | Header/footer completely empty | Not registered | `defineCustomElements()` before bootstrap, or tag side-effect imports |
 | Tags render, nav empty | Wrong `layout` | `[layout]="..."` with object `{ header?, footer? }` |
-| Passed array to `[layout]` | Top-level must be object | `{ header: { links: myArray } }` — see [Optional: API returns separate arrays](#optional-api-returns-separate-arrays-not-one-layout-object) |
+| Passed array to `[layout]` | Top-level must be object | `{ header: { menu: myArray } }` — see [Optional: API returns separate arrays](#optional-api-returns-separate-arrays-not-one-layout-object) |
 | Auth always Sign in | `signedIn` not bound / false | Bind session; set `true` when logged in |
 | Generic Manage Account | `userName` missing | Pass first name when `signedIn` is true |
 | Layout changes ignored | In-place mutation | New object reference |
@@ -976,7 +954,7 @@ External `https://` links open in a new tab automatically.
 | Tests fail | Elements undefined | `defineCustomElements()` in `beforeAll` |
 | SSR `document is not defined` | Loader on server | `typeof window !== 'undefined'` guard |
 | Missing social icons | Bad `platform` | Exactly `LinkedIn`, `Instagram`, `TikTok`, `YouTube` |
-| Missing dropdown | Normalization | Non-empty `label` and valid `items` |
+| Missing menu item | Normalization | Non-empty `label` and valid `items` or `href` |
 
 ### DevTools
 
@@ -996,7 +974,7 @@ $0.userName
 | --- | --- |
 | `src/main.ts` | `defineCustomElements()` then bootstrap |
 | `tsconfig.app.json` | `resolveJsonModule: true` |
-| `src/app/auth.ts` | `HEADER_SIGN_IN`, `ACCOUNT_LOGIN_HREF`, `HEADER_LOGO_HREF` |
+| `src/app/auth.ts` | `HEADER_SIGN_IN`, `ACCOUNT_LOGIN_HREF` |
 | `src/app/layout.types.ts` | `export type LayoutData = typeof layoutFixture` |
 | `src/app/layout.service.ts` | HTTP / API mapping (Step 7, optional arrays) |
 | `src/app/app.ts` | Shell: schema, layout, auth handler |

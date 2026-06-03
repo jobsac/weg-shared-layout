@@ -6,15 +6,14 @@ import DUMMY_LAYOUT from '../../assets/dummy-data.json';
 
 const SAMPLE_HEADER_LAYOUT = {
   header: {
-    dropdowns: [
+    menu: [
       {
         label: 'Find a job',
         items: [{ label: 'Graduates', href: '/search?category=graduates' }],
       },
+      { label: 'Career advice', href: '/career-advice' },
+      { label: 'Sign in', href: '/account/login' },
     ],
-    links: [{ label: 'Career advice', href: '/career-advice' }],
-    signIn: { label: 'Sign in', href: '/account/login' },
-    signOut: { label: 'Sign out' },
   },
 };
 
@@ -52,6 +51,8 @@ describe('weg-header', () => {
     expect(text).toContain('Sign out');
     expect(text).not.toContain('Sign in');
     expect(text).not.toContain('Career advice');
+    expect(root.shadowRoot?.querySelector('.find-a-job-link svg')).toBeTruthy();
+    expect(root.shadowRoot?.querySelector('.dashboard-link svg')).toBeTruthy();
   });
 
   it('emits wegAuthClick when auth control is clicked', async () => {
@@ -79,6 +80,7 @@ describe('weg-header', () => {
 
     const signOutLink = root.shadowRoot?.querySelector('.main-nav .sign-out-link') as HTMLAnchorElement | null;
     expect(signOutLink).toBeTruthy();
+    expect(signOutLink?.classList.contains('sign-in-link')).toBe(false);
     signOutLink?.click();
 
     expect(detail).toEqual({ action: 'sign-out' });

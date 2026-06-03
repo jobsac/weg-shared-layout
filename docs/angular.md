@@ -19,7 +19,7 @@ Reference demo: [weg-angular-demo](https://github.com/jobsac/weg-angular-demo).
 | Tag | Purpose |
 | --- | --- |
 | `<weg-header>` | Header — CMS nav (signed out), built-in nav (signed in), auth |
-| `<weg-footer>` | Footer — social, columns, credits, copyright |
+| `<weg-footer>` | Footer — social, menu, credits, copyright |
 
 Both accept the same `layout` payload ([`dummy-data.json`](../src/assets/dummy-data.json) or your API). `<weg-header>` also accepts **`signed-in`**, **`user-name`**, and emits **`wegAuthClick`**.
 
@@ -60,8 +60,6 @@ Add `schemas: [CUSTOM_ELEMENTS_SCHEMA]` to every `@Component` (or `@NgModule`) w
 
 ```ts
 // src/app/auth.ts
-export const HEADER_LOGO_HREF = 'https://www.warwickemploymentgroup.com/';
-
 export const HEADER_SIGN_IN = {
   label: 'Sign in',
   href: 'https://account.warwickemploymentgroup.com/account/login',
@@ -89,7 +87,7 @@ import { Component, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import layoutFixture from 'weg-shared-layout/dummy-data.json';
 
-import { ACCOUNT_LOGIN_HREF, HEADER_LOGO_HREF, HEADER_SIGN_IN } from './auth';
+import { ACCOUNT_LOGIN_HREF, HEADER_SIGN_IN } from './auth';
 
 @Component({
   selector: 'app-root',
@@ -98,14 +96,7 @@ import { ACCOUNT_LOGIN_HREF, HEADER_LOGO_HREF, HEADER_SIGN_IN } from './auth';
   templateUrl: './app.html',
 })
 export class App {
-  layoutData = {
-    ...layoutFixture,
-    header: {
-      ...layoutFixture.header,
-      logoHref: HEADER_LOGO_HREF,
-      signIn: HEADER_SIGN_IN,
-    },
-  };
+  layoutData = layoutFixture;
 
   signedIn = false;
   userName?: string;
@@ -120,8 +111,7 @@ export class App {
       return;
     }
 
-    window.location.href =
-      this.layoutData.header?.signIn?.href ?? HEADER_SIGN_IN.href;
+    window.location.href = HEADER_SIGN_IN.href;
   }
 }
 ```
@@ -152,7 +142,7 @@ import { Component, CUSTOM_ELEMENTS_SCHEMA, signal } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import layoutFixture from 'weg-shared-layout/dummy-data.json';
 
-import { ACCOUNT_LOGIN_HREF, HEADER_LOGO_HREF, HEADER_SIGN_IN } from './auth';
+import { ACCOUNT_LOGIN_HREF, HEADER_SIGN_IN } from './auth';
 import type { LayoutData } from './layout.types';
 
 @Component({
@@ -162,14 +152,7 @@ import type { LayoutData } from './layout.types';
   templateUrl: './app.html',
 })
 export class App {
-  readonly layoutData = signal<LayoutData>({
-    ...layoutFixture,
-    header: {
-      ...layoutFixture.header,
-      logoHref: HEADER_LOGO_HREF,
-      signIn: HEADER_SIGN_IN,
-    },
-  });
+  readonly layoutData = signal<LayoutData>(layoutFixture);
 
   readonly signedIn = signal(false);
   readonly userName = signal<string | undefined>(undefined);
@@ -185,8 +168,7 @@ export class App {
       return;
     }
 
-    window.location.href =
-      this.layoutData().header?.signIn?.href ?? HEADER_SIGN_IN.href;
+    window.location.href = HEADER_SIGN_IN.href;
   }
 }
 ```
@@ -211,7 +193,7 @@ HTTP with signals: **[Step 7B](./angular-integration-guide.md#step-7b--http-with
 
 | Input / output | Binding (5A) | Binding (5B) | Notes |
 | --- | --- | --- | --- |
-| CMS nav | `[layout]="layoutData"` | `[layout]="layoutData()"` | `dropdowns`, `links`, `signIn` when signed out |
+| CMS nav | `[layout]="layoutData"` | `[layout]="layoutData()"` | `header.menu` — groups (`items`) and flat links (`href`) when signed out |
 | Session state | `[signedIn]="signedIn"` | `[signedIn]="signedIn()"` | `true` → built-in signed-in nav |
 | User name | `[userName]="userName"` | `[userName]="userName()"` | Manage Account label when signed in |
 | Auth click | `(wegAuthClick)="onAuthClick($event)"` | `detail.action`: `'sign-in'` \| `'sign-out'` |
@@ -219,7 +201,7 @@ HTTP with signals: **[Step 7B](./angular-integration-guide.md#step-7b--http-with
 
 **Signed-in nav (built in):** Find a job, Dashboard, Manage Account, Sign out.
 
-Logo **image** is bundled. Logo **link** uses `layout.header.logoHref` when signed out.
+Logo **image** uses `layout.header.logoSrc` (bundled if omitted). Logo **link** always goes to WEG home.
 
 ## Footer
 

@@ -18,73 +18,47 @@ Load layout JSON from your CMS/API (e.g. [`GET /api/layout`](https://weg-payload
 
 ### Layout shape (abbreviated)
 
-Full reference: [`src/assets/dummy-data.json`](src/assets/dummy-data.json). This package keeps auth URLs in [`src/constants/weg-urls.ts`](src/constants/weg-urls.ts) for the signed-in nav and docs — **host apps should define their own constants file** (e.g. `auth.ts`) rather than importing from the package.
+Full reference: [`src/assets/dummy-data.json`](src/assets/dummy-data.json). Sign-in is a normal `header.menu` entry labelled **Sign in**; it fires `wegAuthClick`. Signed-in nav is built into `<weg-header>` when `signed-in` is true.
 
 ```json
 {
   "header": {
-    "logoHref": "…",
-    "dropdowns": [{ "label": "Find a job", "items": [{ "label": "Graduates", "href": "…" }] }],
-    "links": [{ "label": "Career advice", "href": "…" }, { "label": "Register", "href": "…" }],
-    "signIn": { "label": "Sign in", "href": "…" }
+    "menu": [
+      { "label": "Find a job", "items": [{ "label": "Graduates", "href": "…" }] },
+      { "label": "Career advice", "href": "…" },
+      { "label": "Sign in", "href": "…" }
+    ]
   },
   "footer": {
+    "menu": [[{ "label": "About WEG", "href": "…" }]],
     "social": [{ "platform": "LinkedIn", "href": "…" }],
-    "columns": [{ "links": [{ "label": "About WEG", "href": "…" }] }],
     "credits": "…",
     "copyright": "…"
   }
 }
 ```
 
-Use **`dummy-data.json`** for full production URLs. In your app, keep sign-in/out URLs in a local constants file:
-
-```ts
-// auth.ts (host app — example)
-export const HEADER_SIGN_IN = {
-  label: 'Sign in',
-  href: 'https://account.warwickemploymentgroup.com/account/login',
-};
-
-export const ACCOUNT_LOGIN_HREF = HEADER_SIGN_IN.href;
-```
-
 | Field | Used when | Notes |
 | --- | --- | --- |
-| `header.logoHref` | Always (signed out) | Logo link target. Defaults to WEG home if omitted. Logo image is bundled. |
-| `header.dropdowns` | Signed out | CMS-managed dropdown menus |
-| `header.links` | Signed out | CMS-managed flat nav links |
-| `header.signIn` | Signed out | Sign in button label + href |
-| `footer.*` | Always | Social, columns, credits, copyright |
+| `header.logoSrc` | Signed out | Optional CMS logo URL; bundled PNG if omitted |
+| `header.menu` | Signed out | Groups use `items`; flat links use `href` |
+| `footer.menu` | Always | `LayoutLink[][]` — one column per inner array |
+| `footer.social` | Always | LinkedIn, Instagram, TikTok, or YouTube |
+| `footer.credits` / `footer.copyright` | Always | Legal copy |
 
 ### Auth (Sign in / Sign out)
 
-**Signed out** (`signed-in` false): renders `dropdowns`, `links`, and `signIn` from `layout`.
+**Signed out**: renders `header.menu`. The Sign in entry fires `wegAuthClick` with action `sign-in`.
 
-**Signed in** (`signed-in` true): **ignores** CMS nav and shows built-in links:
+**Signed in** (`signed-in` true): ignores CMS `header.menu` and shows built-in Find a job, Dashboard, Manage Account, and Sign out.
 
-- Find a job
-- Dashboard
-- Manage Account (profile icon + `user-name`, or "Manage Account" if omitted)
-- Sign out (with icon)
-
-Set **`signed-in`** from your app session state. Pass **`user-name`** with the user's first name for Manage Account.
-
-Listen for **`wegAuthClick`** to handle sign-in routing or sign-out logic. Call `event.preventDefault()` to stop default navigation.
+Set **`signed-in`** from your app session state. Pass **`user-name`** for Manage Account.
 
 ```js
-// auth.ts
-const HEADER_SIGN_IN = {
-  label: 'Sign in',
-  href: 'https://account.warwickemploymentgroup.com/account/login',
-};
-
-header.signedIn = true;
-header.userName = 'Alex';
 header.addEventListener('wegAuthClick', (event) => {
   event.preventDefault();
   if (event.detail.action === 'sign-out') logout();
-  else window.location.href = layout.header.signIn?.href ?? HEADER_SIGN_IN.href;
+  else window.location.href = HEADER_SIGN_IN.href;
 });
 ```
 

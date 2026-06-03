@@ -5,7 +5,7 @@
 | Tag | Purpose |
 | --- | --- |
 | `<weg-header>` | Site header — bundled logo, CMS nav (signed out), built-in nav (signed in), Sign in / Manage Account / Sign out |
-| `<weg-footer>` | Site footer — social links, columns, credits, copyright |
+| `<weg-footer>` | Site footer — social links, menu, credits, copyright |
 
 Both components are **presentational**: they do **not** fetch data. Pass the same `layout` payload to each.
 
@@ -53,17 +53,15 @@ element.layout = layoutObject;
 Or pass a JSON **string** on the `layout` attribute:
 
 ```html
-<weg-header layout='{"header":{"links":[]}}'></weg-header>
+<weg-header layout='{"header":{"menu":[]}}'></weg-header>
 ```
 
 ## Header layout fields (signed out)
 
 | Field | Purpose |
 | --- | --- |
-| `header.logoHref` | Logo link target (defaults to WEG home) |
-| `header.dropdowns` | Dropdown menus from CMS |
-| `header.links` | Flat nav links from CMS |
-| `header.signIn` | Sign in button `{ label, href }` |
+| `header.logoSrc` | Logo image URL (bundled if omitted) |
+| `header.menu` | Unified nav — groups with `items[]`, flat links with `href` (incl. Sign in) |
 
 See [`dummy-data.json`](../src/assets/dummy-data.json) for production URL examples.
 
@@ -82,7 +80,7 @@ export const ACCOUNT_LOGIN_HREF = HEADER_SIGN_IN.href;
 
 ### Signed out
 
-Renders `dropdowns`, `links`, and `signIn` from `layout`.
+Renders `header.menu` from `layout` — dropdown groups, flat links, and the Sign in entry (label **Sign in** fires `wegAuthClick`).
 
 ### Signed in
 
@@ -110,16 +108,16 @@ header.addEventListener('wegAuthClick', (event) => {
     return;
   }
 
-  window.location.href = layout.header.signIn?.href ?? HEADER_SIGN_IN.href;
+  window.location.href = HEADER_SIGN_IN.href;
 });
 ```
 
 | `event.detail.action` | Default behaviour if not prevented |
 | --- | --- |
-| `'sign-in'` | Browser follows `signIn.href` |
+| `'sign-in'` | Browser follows the Sign in menu entry's `href` |
 | `'sign-out'` | Redirects to built-in sign-out URL |
 
-Logo **image** is bundled. Logo **link** uses `layout.header.logoHref` when signed out.
+Logo **image** uses `header.logoSrc` (bundled if omitted). Logo **link** always goes to WEG home.
 
 ## Without a bundler
 

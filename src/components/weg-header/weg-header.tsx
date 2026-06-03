@@ -1,89 +1,71 @@
 import { Component, Prop, State, Watch, Element, Event, EventEmitter, h, Listen } from '@stencil/core';
-import type { LayoutData, LayoutHeaderAuthAction, LayoutHeaderLink } from '../../types/layout-data';
-import { normalizeLinks, parseJsonProp, isNonEmptyString } from '../../utils/layout';
+import type { LayoutData, LayoutHeaderAuthAction, LayoutLink } from '../../types/layout-data';
+import {
+  isMenuGroup,
+  isNonEmptyString,
+  normalizeHeaderMenu,
+  parseJsonProp,
+} from '../../utils/layout';
 import { WEG_HOVER_CAPABLE_MEDIA_QUERY, WEG_MD_MEDIA_QUERY } from '../../constants/breakpoints';
 import { LOGO_SRC } from './logo-data';
-import { DEFAULT_LOGO_HREF, SIGNED_IN_HEADER } from './signed-in-layout';
 
-type HeaderLink = LayoutHeaderLink;
+const WEG_HOME = 'https://www.warwickemploymentgroup.com';
+const ACCOUNT_HOME = 'https://account.warwickemploymentgroup.com';
 
-type HeaderSignOutLink = {
-  label: string;
-  href?: string;
-};
+const DEFAULT_LOGO_HREF = `${WEG_HOME}/`;
+const ACCOUNT_LOGIN_HREF = `${ACCOUNT_HOME}/account/login`;
+const ACCOUNT_MANAGE_HREF = `${ACCOUNT_HOME}/account/manage`;
 
-type HeaderDropdown = {
-  label: string;
-  items: HeaderLink[];
-};
+const SIGNED_IN_MENU: LayoutLink[] = [
+  { label: 'Find a job', href: `${WEG_HOME}/find-a-job` },
+  { label: 'Dashboard', href: `${ACCOUNT_HOME}/dashboard` },
+  { label: 'Manage Account', href: `${ACCOUNT_HOME}/account/manage` },
+  { label: 'Sign out', href: `${ACCOUNT_HOME}/account/login` },
+];
 
 type HeaderData = {
-  logoHref: string;
-  dropdowns: HeaderDropdown[];
-  links: HeaderLink[];
-  signIn: HeaderLink | null;
-  signOut: HeaderSignOutLink | null;
-};
-
-type AuthControl = {
-  label: string;
-  href?: string;
-  action: LayoutHeaderAuthAction;
+  logoSrc?: string;
+  menu: LayoutLink[];
 };
 
 const EMPTY_HEADER: HeaderData = {
-  logoHref: DEFAULT_LOGO_HREF,
-  dropdowns: [],
-  links: [],
-  signIn: null,
-  signOut: null,
+  menu: [],
 };
 
-function normalizeDropdowns(input: unknown): HeaderDropdown[] {
-  if (!Array.isArray(input)) return [];
-  const result: HeaderDropdown[] = [];
-  for (const item of input) {
-    if (!item || typeof item !== 'object') continue;
-    const label = (item as { label?: unknown }).label;
-    const items = normalizeLinks((item as { items?: unknown }).items);
-    if (!isNonEmptyString(label)) continue;
-    if (items.length === 0) continue;
-    result.push({ label: label.trim(), items });
-  }
-  return result;
+function isSignInLink(link: LayoutLink): boolean {
+  const label = link.label.trim().toLowerCase();
+  if (label === 'sign out') return false;
+  if (label === 'sign in') return true;
+  return link.href === ACCOUNT_LOGIN_HREF;
 }
 
-function normalizeSignIn(input: unknown): HeaderLink | null {
-  if (!input || typeof input !== 'object') return null;
-  const label = (input as { label?: unknown }).label;
-  const href = (input as { href?: unknown }).href;
-  if (!isNonEmptyString(label)) return null;
-  if (!isNonEmptyString(href)) return null;
-  return { label: label.trim(), href: href.trim() };
+function isSignOutLink(link: LayoutLink): boolean {
+  return link.label.trim().toLowerCase() === 'sign out';
 }
 
-function normalizeSignOut(input: unknown): HeaderSignOutLink | null {
-  if (!input || typeof input !== 'object') return null;
-  const label = (input as { label?: unknown }).label;
-  const href = (input as { href?: unknown }).href;
-  if (!isNonEmptyString(label)) return null;
-  return {
-    label: label.trim(),
-    href: isNonEmptyString(href) ? href.trim() : undefined,
-  };
+function isManageAccountLink(link: LayoutLink): boolean {
+  if (link.label.trim().toLowerCase() === 'manage account') return true;
+  return link.href === ACCOUNT_MANAGE_HREF;
+}
+
+function isFindJobLink(link: LayoutLink): boolean {
+  if (link.label.trim().toLowerCase() === 'find a job') return true;
+  return link.href === `${WEG_HOME}/find-a-job`;
+}
+
+function isDashboardLink(link: LayoutLink): boolean {
+  if (link.label.trim().toLowerCase() === 'dashboard') return true;
+  return link.href === `${ACCOUNT_HOME}/dashboard`;
 }
 
 function normalizeHeaderData(input: unknown): HeaderData {
   const root = (input && typeof input === 'object' ? input : {}) as LayoutData;
   const header = root.header && typeof root.header === 'object' ? root.header : {};
-  const logoHref = isNonEmptyString(header.logoHref) ? header.logoHref.trim() : DEFAULT_LOGO_HREF;
+  const logoSrc = isNonEmptyString(header.logoSrc) ? header.logoSrc.trim() : undefined;
 
   return {
-    logoHref,
-    dropdowns: normalizeDropdowns(header.dropdowns),
-    links: normalizeLinks(header.links),
-    signIn: normalizeSignIn(header.signIn),
-    signOut: normalizeSignOut(header.signOut),
+    logoSrc,
+    menu: normalizeHeaderMenu(header.menu),
   };
 }
 
@@ -103,6 +85,82 @@ function SignOutIcon() {
     <svg viewBox="0 0 26 24" width="26" height="24" aria-hidden="true" focusable="false" fill="none">
       <path
         d="M19.6667 6.33333L25 11.6667L19.6667 17M25 11.6667H6.33333M14.3333 17V18.3333C14.3333 19.3942 13.9119 20.4116 13.1618 21.1618C12.4116 21.9119 11.3942 22.3333 10.3333 22.3333H5C3.93913 22.3333 2.92172 21.9119 2.17157 21.1618C1.42143 20.4116 1 19.3942 1 18.3333V5C1 3.93913 1.42143 2.92172 2.17157 2.17157C2.92172 1.42143 3.93913 1 5 1H10.3333C11.3942 1 12.4116 1.42143 13.1618 2.17157C13.9119 2.92172 14.3333 3.93913 14.3333 5V6.33333"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      />
+    </svg>
+  );
+}
+
+function FindJobIcon() {
+  return (
+    <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false" fill="none">
+      <path
+        d="M16 20V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      />
+      <rect
+        x="2"
+        y="6"
+        width="20"
+        height="14"
+        rx="2"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      />
+    </svg>
+  );
+}
+
+function DashboardIcon() {
+  return (
+    <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false" fill="none">
+      <rect
+        x="3"
+        y="3"
+        width="7"
+        height="9"
+        rx="1"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      />
+      <rect
+        x="14"
+        y="3"
+        width="7"
+        height="5"
+        rx="1"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      />
+      <rect
+        x="14"
+        y="12"
+        width="7"
+        height="9"
+        rx="1"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      />
+      <rect
+        x="3"
+        y="16"
+        width="7"
+        height="5"
+        rx="1"
         stroke="currentColor"
         stroke-width="2"
         stroke-linecap="round"
@@ -144,10 +202,10 @@ function ToggleIcon({ expanded }: { expanded: boolean }) {
   );
 }
 
-function Logo({ href }: { href: string }) {
+function Logo({ href, src }: { href: string; src: string }) {
   return (
     <a class="logo-link" href={href} aria-label="Home">
-      <img class="logo" src={LOGO_SRC} alt="WEG" width="225" height="83" />
+      <img class="logo" src={src} alt="WEG" width="225" height="83" />
     </a>
   );
 }
@@ -165,11 +223,11 @@ export class WegHeader {
    * ```json
    * {
    *   "header": {
-   *     "logoHref": "https://www.warwickemploymentgroup.com/",
-   *     "dropdowns": [{ "label": "Find a job", "items": [{ "label": "...", "href": "..." }] }],
-   *     "links": [{ "label": "Career advice", "href": "/career-advice" }],
-   *     "signIn": { "label": "Sign in", "href": "/account/login" },
-   *     "signOut": { "label": "Sign out", "href": "/account/login" }
+   *     "menu": [
+   *       { "label": "Find a job", "items": [{ "label": "Graduates", "href": "..." }] },
+   *       { "label": "Career advice", "href": "/career-advice" },
+   *       { "label": "Sign in", "href": "/account/login" }
+   *     ]
    *   }
    * }
    * ```
@@ -177,8 +235,7 @@ export class WegHeader {
   @Prop() layout?: LayoutData | string;
 
   /**
-   * When true, the header shows the signed-in navigation (Find a job, Dashboard,
-   * Manage Account, Sign out) instead of the CMS layout.
+   * When true, the header uses the built-in signed-in menu instead of the CMS layout.
    */
   @Prop({ attribute: 'signed-in', reflect: true }) signedIn = false;
 
@@ -400,20 +457,23 @@ export class WegHeader {
     this.closeDropdown();
   }
 
-  private getActiveHeaderData(): HeaderData {
-    if (!this.signedIn) return this.resolved;
+  private getActiveMenu(): LayoutLink[] {
+    return this.signedIn ? SIGNED_IN_MENU : this.resolved.menu;
+  }
 
-    return {
-      logoHref: SIGNED_IN_HEADER.logoHref,
-      dropdowns: [],
-      links: [...SIGNED_IN_HEADER.links],
-      signIn: null,
-      signOut: SIGNED_IN_HEADER.signOut,
-    };
+  private getLogoSrc(): string {
+    return this.resolved.logoSrc ?? LOGO_SRC;
   }
 
   private getLogoHref(): string {
-    return this.getActiveHeaderData().logoHref;
+    return DEFAULT_LOGO_HREF;
+  }
+
+  private findSignInLink(menu: LayoutLink[]): LayoutLink | null {
+    for (const item of menu) {
+      if (!isMenuGroup(item) && isSignInLink(item)) return item;
+    }
+    return null;
   }
 
   private getManageAccountLabel(): string {
@@ -421,22 +481,100 @@ export class WegHeader {
     return name || 'Manage Account';
   }
 
-  private getAuthControl(): AuthControl | null {
-    if (this.signedIn) return null;
-
-    const signIn = this.resolved.signIn;
-    if (!signIn) return null;
-    return { label: signIn.label, href: signIn.href, action: 'sign-in' };
+  private renderIconNavLink(
+    link: LayoutLink,
+    Icon: () => unknown,
+    className: string,
+    onNavigate?: () => void,
+  ) {
+    return (
+      <li class="main-nav__item main-nav__item--auth" key={link.label}>
+        <a class={{ 'sign-in-link': true, [className]: true }} href={link.href} onClick={() => onNavigate?.()}>
+          <Icon />
+          {link.label}
+        </a>
+      </li>
+    );
   }
 
-  private handleAuthClick(event: MouseEvent, onNavigate?: () => void) {
-    const auth = this.getAuthControl() ?? {
-      label: SIGNED_IN_HEADER.signOut.label,
-      href: SIGNED_IN_HEADER.signOut.href,
-      action: 'sign-out' as const,
-    };
+  private renderFlatNavLink(link: LayoutLink, onNavigate?: () => void) {
+    return (
+      <li class="main-nav__item" key={link.label}>
+        <a class="nav-link" href={link.href} onClick={() => onNavigate?.()}>
+          {link.label}
+        </a>
+      </li>
+    );
+  }
 
-    const emitted = this.wegAuthClick.emit({ action: auth.action });
+  private renderMenuGroup(item: LayoutLink, onNavigate?: () => void) {
+    const items = item.items ?? [];
+    const isOpen = this.openDropdown === item.label;
+    const panelId = this.getDropdownPanelId(item.label);
+    return (
+      <li class="main-nav__item main-nav__item--dropdown" key={item.label}>
+        <div
+          class="nav-dropdown"
+          onMouseEnter={() => this.handleDropdownPointerEnter(item.label)}
+          onMouseLeave={(event) => this.handleDropdownPointerLeave(event)}
+          onFocusout={(event) => this.handleDropdownFocusOut(event, item.label)}
+        >
+          <button
+            type="button"
+            class={{
+              'nav-dropdown__trigger': true,
+              'nav-dropdown__trigger--open': isOpen,
+            }}
+            aria-expanded={isOpen ? 'true' : 'false'}
+            aria-haspopup="true"
+            aria-controls={panelId}
+            id={`${panelId}-trigger`}
+            onClick={(event) => this.handleDropdownTriggerClick(event, item.label)}
+            onKeyDown={(event) => {
+              const container = (event.currentTarget as HTMLElement).closest('.nav-dropdown') as HTMLElement;
+              this.handleDropdownTriggerKeyDown(event, item.label, container);
+            }}
+          >
+            <span class="nav-dropdown__label">{item.label}</span>
+            <ToggleIcon expanded={isOpen} />
+          </button>
+          {isOpen ? (
+            <div
+              class="nav-dropdown__panel"
+              id={panelId}
+              role="region"
+              aria-labelledby={`${panelId}-trigger`}
+              onMouseEnter={() => this.handleDropdownPanelPointerEnter(item.label)}
+              onMouseLeave={(event) => this.handleDropdownPanelPointerLeave(event)}
+            >
+              <div class="nav-dropdown__accent">
+                <div class="nav-dropdown__links">
+                  {items.map((child) => (
+                    <a
+                      class="nav-dropdown__link"
+                      href={child.href}
+                      key={`${item.label}:${child.label}`}
+                      onClick={() => onNavigate?.()}
+                    >
+                      {child.label}
+                    </a>
+                  ))}
+                </div>
+              </div>
+            </div>
+          ) : null}
+        </div>
+      </li>
+    );
+  }
+
+  private handleAuthClick(
+    event: MouseEvent,
+    action: LayoutHeaderAuthAction,
+    href: string | undefined,
+    onNavigate?: () => void,
+  ) {
+    const emitted = this.wegAuthClick.emit({ action });
 
     if (emitted.defaultPrevented) {
       event.preventDefault();
@@ -444,10 +582,10 @@ export class WegHeader {
       return;
     }
 
-    if (auth.action === 'sign-out') {
+    if (action === 'sign-out') {
       event.preventDefault();
-      if (auth.href) {
-        window.location.assign(auth.href);
+      if (href) {
+        window.location.assign(href);
       }
       onNavigate?.();
       return;
@@ -456,166 +594,101 @@ export class WegHeader {
     onNavigate?.();
   }
 
-  private renderAuthControl(options: { iconOnly?: boolean; className?: string; onNavigate?: () => void }) {
-    const auth = this.getAuthControl();
-    if (!auth) return null;
-
-    const sharedClass = {
-      'sign-in-link': !options.iconOnly,
-      'icon-button': !!options.iconOnly,
-      [options.className || '']: !!options.className,
-    };
-
-    const content = [
-      <SignInIcon key="icon" />,
-      !options.iconOnly ? auth.label : null,
-      options.iconOnly ? <span class="sr-only">{auth.label}</span> : null,
-    ];
+  private renderAuthControl(options: {
+    link: LayoutLink;
+    action: LayoutHeaderAuthAction;
+    iconOnly?: boolean;
+    className?: string;
+    onNavigate?: () => void;
+  }) {
+    const { link, action, iconOnly, onNavigate } = options;
+    const Icon = action === 'sign-out' ? SignOutIcon : SignInIcon;
+    const classSuffix = action === 'sign-out' ? 'sign-out-link' : 'sign-in-link';
 
     return (
       <a
-        class={sharedClass}
-        href={auth.href}
-        aria-label={auth.label}
-        onClick={(event) => this.handleAuthClick(event, options.onNavigate)}
+        class={{
+          [classSuffix]: !iconOnly,
+          'icon-button': !!iconOnly,
+          [options.className || '']: !!options.className,
+        }}
+        href={link.href}
+        aria-label={link.label}
+        onClick={(event) => this.handleAuthClick(event, action, link.href, onNavigate)}
       >
-        {content}
+        <Icon />
+        {!iconOnly ? link.label : null}
+        {iconOnly ? <span class="sr-only">{link.label}</span> : null}
       </a>
     );
   }
 
-  private renderSignedInCompactAuth(onNavigate?: () => void) {
-    const manageAccountLabel = this.getManageAccountLabel();
+  private renderManageAccountAnchor(onNavigate?: () => void, iconOnly = false) {
+    const label = this.getManageAccountLabel();
 
     return (
       <a
-        class="icon-button manage-account-link"
-        href={SIGNED_IN_HEADER.manageAccount.href}
-        aria-label={manageAccountLabel}
+        class={{
+          'sign-in-link': !iconOnly,
+          'manage-account-link': true,
+          'icon-button': iconOnly,
+        }}
+        href={ACCOUNT_MANAGE_HREF}
+        aria-label={label}
         onClick={() => onNavigate?.()}
       >
         <SignInIcon />
-        <span class="sr-only">{manageAccountLabel}</span>
+        {!iconOnly ? label : null}
+        {iconOnly ? <span class="sr-only">{label}</span> : null}
       </a>
     );
   }
 
-  private renderNavAuthItems(onNavigate?: () => void) {
-    if (this.signedIn) {
-      const manageAccountLabel = this.getManageAccountLabel();
-      const signOut = SIGNED_IN_HEADER.signOut;
-
-      return [
-        <li class="main-nav__item main-nav__item--auth" key="manage-account">
-          <a
-            class="sign-in-link manage-account-link"
-            href={SIGNED_IN_HEADER.manageAccount.href}
-            aria-label={manageAccountLabel}
-            onClick={() => onNavigate?.()}
-          >
-            <SignInIcon />
-            {manageAccountLabel}
-          </a>
-        </li>,
-        <li class="main-nav__item main-nav__item--auth" key="sign-out">
-          <a
-            class="sign-in-link sign-out-link"
-            href={signOut.href}
-            aria-label={signOut.label}
-            onClick={(event) => this.handleAuthClick(event, onNavigate)}
-          >
-            <SignOutIcon />
-            {signOut.label}
-          </a>
-        </li>,
-      ];
+  private renderNavItem(item: LayoutLink, onNavigate?: () => void) {
+    if (isMenuGroup(item)) {
+      return this.renderMenuGroup(item, onNavigate);
     }
 
-    const auth = this.getAuthControl();
-    if (!auth) return null;
+    if (isSignOutLink(item)) {
+      return (
+        <li class="main-nav__item main-nav__item--auth" key="sign-out">
+          {this.renderAuthControl({ link: item, action: 'sign-out', onNavigate })}
+        </li>
+      );
+    }
 
-    return (
-      <li class="main-nav__item main-nav__item--auth" key="sign-in">
-        {this.renderAuthControl({ onNavigate })}
-      </li>
-    );
+    if (isSignInLink(item)) {
+      return (
+        <li class="main-nav__item main-nav__item--auth" key="sign-in">
+          {this.renderAuthControl({ link: item, action: 'sign-in', onNavigate })}
+        </li>
+      );
+    }
+
+    if (isManageAccountLink(item)) {
+      return (
+        <li class="main-nav__item main-nav__item--auth" key="manage-account">
+          {this.renderManageAccountAnchor(onNavigate)}
+        </li>
+      );
+    }
+
+    if (this.signedIn && isFindJobLink(item)) {
+      return this.renderIconNavLink(item, FindJobIcon, 'find-a-job-link', onNavigate);
+    }
+
+    if (this.signedIn && isDashboardLink(item)) {
+      return this.renderIconNavLink(item, DashboardIcon, 'dashboard-link', onNavigate);
+    }
+
+    return this.renderFlatNavLink(item, onNavigate);
   }
 
   private renderNav(onNavigate?: () => void) {
-    const { dropdowns, links } = this.getActiveHeaderData();
-
     return (
       <nav class="main-nav" aria-label="Main">
         <ul class="main-nav__list">
-          {dropdowns.map((dropdown) => {
-            const isOpen = this.openDropdown === dropdown.label;
-            const panelId = this.getDropdownPanelId(dropdown.label);
-            return (
-              <li class="main-nav__item main-nav__item--dropdown" key={dropdown.label}>
-                <div
-                  class="nav-dropdown"
-                  onMouseEnter={() => this.handleDropdownPointerEnter(dropdown.label)}
-                  onMouseLeave={(event) => this.handleDropdownPointerLeave(event)}
-                  onFocusout={(event) => this.handleDropdownFocusOut(event, dropdown.label)}
-                >
-                  <button
-                    type="button"
-                    class={{
-                      'nav-dropdown__trigger': true,
-                      'nav-dropdown__trigger--open': isOpen,
-                    }}
-                    aria-expanded={isOpen ? 'true' : 'false'}
-                    aria-haspopup="true"
-                    aria-controls={panelId}
-                    id={`${panelId}-trigger`}
-                    onClick={(event) => this.handleDropdownTriggerClick(event, dropdown.label)}
-                    onKeyDown={(event) => {
-                      const container = (event.currentTarget as HTMLElement).closest(
-                        '.nav-dropdown',
-                      ) as HTMLElement;
-                      this.handleDropdownTriggerKeyDown(event, dropdown.label, container);
-                    }}
-                  >
-                    <span class="nav-dropdown__label">{dropdown.label}</span>
-                    <ToggleIcon expanded={isOpen} />
-                  </button>
-                  {isOpen ? (
-                    <div
-                      class="nav-dropdown__panel"
-                      id={panelId}
-                      role="region"
-                      aria-labelledby={`${panelId}-trigger`}
-                      onMouseEnter={() => this.handleDropdownPanelPointerEnter(dropdown.label)}
-                      onMouseLeave={(event) => this.handleDropdownPanelPointerLeave(event)}
-                    >
-                      <div class="nav-dropdown__accent">
-                        <div class="nav-dropdown__links">
-                          {dropdown.items.map((item) => (
-                            <a
-                              class="nav-dropdown__link"
-                              href={item.href}
-                              key={`${dropdown.label}:${item.label}`}
-                              onClick={() => onNavigate?.()}
-                            >
-                              {item.label}
-                            </a>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  ) : null}
-                </div>
-              </li>
-            );
-          })}
-          {links.map((link) => (
-            <li class="main-nav__item" key={link.label}>
-              <a class="nav-link" href={link.href} onClick={() => onNavigate?.()}>
-                {link.label}
-              </a>
-            </li>
-          ))}
-          {this.renderNavAuthItems(onNavigate)}
+          {this.getActiveMenu().map((item) => this.renderNavItem(item, onNavigate))}
         </ul>
       </nav>
     );
@@ -623,13 +696,23 @@ export class WegHeader {
 
   private renderCompactAuth(onNavigate?: () => void) {
     if (this.signedIn) {
-      return this.renderSignedInCompactAuth(onNavigate);
+      return this.renderManageAccountAnchor(onNavigate, true);
     }
-    return this.renderAuthControl({ iconOnly: true, onNavigate });
+
+    const signIn = this.findSignInLink(this.resolved.menu);
+    if (!signIn?.href) return null;
+
+    return this.renderAuthControl({
+      link: signIn,
+      action: 'sign-in',
+      iconOnly: true,
+      onNavigate,
+    });
   }
 
   render() {
     const logoHref = this.getLogoHref();
+    const logoSrc = this.getLogoSrc();
     const closeMenu = () => this.closeMenu();
 
     const mobileMenuActive = this.isMobileMenuActive();
@@ -652,7 +735,7 @@ export class WegHeader {
           >
             {mobileMenuActive ? <CloseIcon /> : <HamburgerIcon />}
           </button>
-          <Logo href={logoHref} />
+          <Logo href={logoHref} src={logoSrc} />
           <div class="header-actions">{this.renderCompactAuth(mobileMenuActive ? closeMenu : undefined)}</div>
           <div
             class="main-nav-panel"

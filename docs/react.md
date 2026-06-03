@@ -7,7 +7,7 @@ Guide for **client-rendered** React apps (Vite, Create React App, etc.). If you 
 | Tag | Purpose |
 | --- | --- |
 | `<weg-header>` | Site header — bundled logo, CMS nav (signed out), built-in nav (signed in), Sign in / Manage Account / Sign out |
-| `<weg-footer>` | Site footer — social links, columns, credits, copyright |
+| `<weg-footer>` | Site footer — social links, menu, credits, copyright |
 
 Both are **presentational** [Stencil](https://stenciljs.com/) Web Components. They **do not fetch data** — your app passes a **`layout`** payload (API, CMS, or [`dummy-data.json`](../src/assets/dummy-data.json)).
 
@@ -89,7 +89,7 @@ export const ACCOUNT_LOGIN_HREF = HEADER_SIGN_IN.href;
 
 ### Signed out
 
-Pass CMS/API layout with `dropdowns`, `links`, and `signIn`. Use [`dummy-data.json`](../src/assets/dummy-data.json) for the full shape. Keep auth URLs in a local file:
+Pass CMS/API layout with unified `header.menu`. Use [`dummy-data.json`](../src/assets/dummy-data.json) for the full shape — dropdown groups use `items`, flat links and Sign in use `href`. Keep auth URLs in a local file:
 
 ```ts
 // auth.ts (host app)
@@ -124,7 +124,7 @@ export function SiteHeader() {
       return;
     }
 
-    window.location.href = layout.header.signIn?.href ?? HEADER_SIGN_IN.href;
+    window.location.href = HEADER_SIGN_IN.href;
   }, []);
 
   return (

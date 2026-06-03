@@ -7,7 +7,7 @@ Guide for **Next.js 13+ App Router** (`app/` directory). For Vite/CRA-style clie
 | Tag | Purpose |
 | --- | --- |
 | `<weg-header>` | Site header — bundled logo, CMS nav (signed out), built-in nav (signed in), Sign in / Manage Account / Sign out |
-| `<weg-footer>` | Site footer — social, columns, legal text |
+| `<weg-footer>` | Site footer — social, menu, legal text |
 
 Both accept **`layout`** (JSON string recommended in Next). `<weg-header>` also accepts **`signed-in`**, **`user-name`**, and emits **`wegAuthClick`**.
 
@@ -79,10 +79,12 @@ defineCustomElements();
 
 type LayoutData = {
   header?: {
-    logoHref?: string;
-    dropdowns?: { label: string; items: { label: string; href: string }[] }[];
-    links?: { label: string; href: string }[];
-    signIn?: { label: string; href: string };
+    logoSrc?: string;
+    menu?: {
+      label: string;
+      href?: string;
+      items?: { label: string; href: string }[];
+    }[];
   };
 };
 
@@ -107,7 +109,7 @@ export function Header({
         return;
       }
 
-      window.location.href = layout.header?.signIn?.href ?? HEADER_SIGN_IN.href;
+      window.location.href = HEADER_SIGN_IN.href;
     },
     [layout, onSignedInChange],
   );
@@ -234,9 +236,8 @@ Wire **`signedIn`** and **`userName`** from your auth provider (session hook / c
 
 | API | Signed out | Signed in |
 | --- | --- | --- |
-| `layout.header.dropdowns` / `links` | CMS nav rendered | Ignored — built-in nav used |
-| `layout.header.signIn` | Sign in button | Not shown |
-| `layout.header.logoHref` | Logo link target | Built-in WEG home URL |
+| `layout.header.menu` | CMS nav rendered (groups + flat links incl. Sign in) | Ignored — built-in nav used |
+| `layout.header.logoSrc` | Logo image URL (bundled if omitted) | Built-in bundled logo |
 | `signed-in` prop | `false` | `true` — session flag from host app |
 | `user-name` prop | — | User's first name on Manage Account |
 | `wegAuthClick` event | `'sign-in'` on Sign in click | `'sign-out'` on Sign out click |
@@ -244,7 +245,7 @@ Wire **`signedIn`** and **`userName`** from your auth provider (session hook / c
 
 **Signed-in nav (built into the component):** Find a job, Dashboard, Manage Account, Sign out.
 
-The logo **image** is bundled. The logo **link** uses `layout.header.logoHref` when signed out.
+The logo **image** uses `layout.header.logoSrc` when signed out (bundled if omitted). The logo **link** always goes to WEG home.
 
 ## Passing `layout` — quick reference
 

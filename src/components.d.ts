@@ -10,17 +10,17 @@ export { LayoutData, LayoutHeaderAuthAction } from "./types/layout-data";
 export namespace Components {
     interface WegFooter {
         /**
-          * Layout payload, supplied by the host application.  In JS / framework templates, pass the object directly (e.g. Angular `[layout]="layoutData"`, React `layout={layoutData}`, vanilla `el.layout = layoutData`).  In plain HTML, pass the same JSON as a string on the `layout` attribute.  Expected shape: ```json {   "footer": {     "social": [{ "platform": "LinkedIn", "href": "https://..." }],     "columns": [{ "links": [{ "label": "About Us", "href": "/about" }] }],     "credits": "...",     "copyright": "..."   } } ```
+          * Layout payload, supplied by the host application.  In JS / framework templates, pass the object directly (e.g. Angular `[layout]="layoutData"`, React `layout={layoutData}`, vanilla `el.layout = layoutData`).  In plain HTML, pass the same JSON as a string on the `layout` attribute.  Expected shape: ```json {   "footer": {     "social": [{ "platform": "LinkedIn", "href": "https://..." }],     "menu": [[{ "label": "About Us", "href": "/about" }]],     "credits": "...",     "copyright": "..."   } } ```
          */
         "layout"?: LayoutData | string;
     }
     interface WegHeader {
         /**
-          * Layout payload, supplied by the host application.  Expected shape: ```json {   "header": {     "logoHref": "https://www.warwickemploymentgroup.com/",     "dropdowns": [{ "label": "Find a job", "items": [{ "label": "...", "href": "..." }] }],     "links": [{ "label": "Career advice", "href": "/career-advice" }],     "signIn": { "label": "Sign in", "href": "/account/login" },     "signOut": { "label": "Sign out", "href": "/account/login" }   } } ```
+          * Layout payload, supplied by the host application.  Expected shape: ```json {   "header": {     "menu": [       { "label": "Find a job", "items": [{ "label": "Graduates", "href": "..." }] },       { "label": "Career advice", "href": "/career-advice" },       { "label": "Sign in", "href": "/account/login" }     ]   } } ```
          */
         "layout"?: LayoutData | string;
         /**
-          * When true, the header shows the signed-in navigation (Find a job, Dashboard, Manage Account, Sign out) instead of the CMS layout.
+          * When true, the header uses the built-in signed-in menu instead of the CMS layout.
           * @default false
          */
         "signedIn": boolean;
@@ -66,13 +66,13 @@ declare global {
 declare namespace LocalJSX {
     interface WegFooter {
         /**
-          * Layout payload, supplied by the host application.  In JS / framework templates, pass the object directly (e.g. Angular `[layout]="layoutData"`, React `layout={layoutData}`, vanilla `el.layout = layoutData`).  In plain HTML, pass the same JSON as a string on the `layout` attribute.  Expected shape: ```json {   "footer": {     "social": [{ "platform": "LinkedIn", "href": "https://..." }],     "columns": [{ "links": [{ "label": "About Us", "href": "/about" }] }],     "credits": "...",     "copyright": "..."   } } ```
+          * Layout payload, supplied by the host application.  In JS / framework templates, pass the object directly (e.g. Angular `[layout]="layoutData"`, React `layout={layoutData}`, vanilla `el.layout = layoutData`).  In plain HTML, pass the same JSON as a string on the `layout` attribute.  Expected shape: ```json {   "footer": {     "social": [{ "platform": "LinkedIn", "href": "https://..." }],     "menu": [[{ "label": "About Us", "href": "/about" }]],     "credits": "...",     "copyright": "..."   } } ```
          */
         "layout"?: LayoutData | string;
     }
     interface WegHeader {
         /**
-          * Layout payload, supplied by the host application.  Expected shape: ```json {   "header": {     "logoHref": "https://www.warwickemploymentgroup.com/",     "dropdowns": [{ "label": "Find a job", "items": [{ "label": "...", "href": "..." }] }],     "links": [{ "label": "Career advice", "href": "/career-advice" }],     "signIn": { "label": "Sign in", "href": "/account/login" },     "signOut": { "label": "Sign out", "href": "/account/login" }   } } ```
+          * Layout payload, supplied by the host application.  Expected shape: ```json {   "header": {     "menu": [       { "label": "Find a job", "items": [{ "label": "Graduates", "href": "..." }] },       { "label": "Career advice", "href": "/career-advice" },       { "label": "Sign in", "href": "/account/login" }     ]   } } ```
          */
         "layout"?: LayoutData | string;
         /**
@@ -80,7 +80,7 @@ declare namespace LocalJSX {
          */
         "onWegAuthClick"?: (event: WegHeaderCustomEvent<{ action: LayoutHeaderAuthAction }>) => void;
         /**
-          * When true, the header shows the signed-in navigation (Find a job, Dashboard, Manage Account, Sign out) instead of the CMS layout.
+          * When true, the header uses the built-in signed-in menu instead of the CMS layout.
           * @default false
          */
         "signedIn"?: boolean;
