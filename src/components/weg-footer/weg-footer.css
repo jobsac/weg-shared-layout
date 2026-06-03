@@ -11,24 +11,24 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 20px;
-  padding-block: 32px;
+  gap: 1.25rem;
+  padding-block: 2rem;
 }
 
 .social {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 16px;
+  gap: 1rem;
 }
 
 .social__link {
-  width: 48px;
-  height: 48px;
+  width: 3rem;
+  height: 3rem;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border-radius: 999px;
+  border-radius: 999rem;
   background: transparent;
   color: inherit;
   text-decoration: none;
@@ -47,17 +47,17 @@
 
 .social__icon {
   display: inline-flex;
-  width: 48px;
-  height: 48px;
+  width: 3rem;
+  height: 3rem;
 }
 
 .footer-link {
   color: #ffffff;
   font-family: 'Open Sans', var(--weg-font-family);
-  font-size: 16px;
+  font-size: 1rem;
   font-style: normal;
   font-weight: 300;
-  line-height: 24px;
+  line-height: 1.5rem;
   display: block;
   width: 100%;
   text-align: center;
@@ -83,8 +83,8 @@
   width: 100%;
   max-width: 860px;
   text-align: center;
-  font-size: 16px;
-  line-height: 24px;
+  font-size: 1rem;
+  line-height: 1.5rem;
 }
 
 .legal__p {
@@ -96,10 +96,10 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 36px;
+  gap: 2.25rem;
   text-align: center;
-  font-size: 16px;
-  line-height: 24px;
+  font-size: 1rem;
+  line-height: 1.5rem;
 }
 
 .columns {
@@ -119,7 +119,7 @@
 }
 
 .columns__col:not(:first-child) {
-  gap: 32px;
+  gap: 2rem;
 }
 
 .columns__divider {
@@ -129,7 +129,7 @@
   width: 100%;
   height: 1px;
   align-self: stretch;
-  margin-top: 32px;
+  margin-top: 2rem;
   margin-bottom: 0;
 }
 
@@ -137,22 +137,22 @@
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  gap: 12px;
+  gap: 0.75rem;
   flex: 1;
   width: 100%;
   min-width: 0;
-  padding: 0 4px;
+  padding: 0 0.25rem;
   text-align: center;
 }
 
 @media (--weg-md) {
   .footer__inner {
-    gap: 36px;
-    padding-block: 56px;
+    gap: 2.25rem;
+    padding-block: 3.5rem;
   }
 
   .social {
-    gap: 28px;
+    gap: 1.75rem;
   }
 
   .footer-link {
@@ -162,13 +162,13 @@
   }
 
   .legal {
-    font-size: 18px;
-    line-height: 28px;
+    font-size: 1.125rem;
+    line-height: 1.75rem;
   }
 
   .standard {
-    font-size: 18px;
-    line-height: 28px;
+    font-size: 1.125rem;
+    line-height: 1.75rem;
   }
 
   .columns {
@@ -191,12 +191,12 @@
   .columns__divider {
     width: 1px;
     height: auto;
-    margin: 0 12px;
+    margin: 0 0.75rem;
   }
 
   .columns__links {
     align-items: flex-start;
-    padding: 0 12px;
+    padding: 0 0.75rem;
     text-align: left;
   }
 }

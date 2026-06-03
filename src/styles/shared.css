@@ -20,13 +20,13 @@
 .container {
   width: 100%;
   margin-inline: auto;
-  padding-block: 12px;
+  padding-block: 0.75rem;
 }
 
 @media (--weg-md) {
   .container {
     padding-inline: 1rem;
-    padding-block: 20px;
+    padding-block: 1.25rem;
   }
 }
 
@@ -39,7 +39,7 @@
 
 @media (--weg-xl) {
   .container {
-    padding-block: 28px;
+    padding-block: 1.75rem;
   }
 }
 
