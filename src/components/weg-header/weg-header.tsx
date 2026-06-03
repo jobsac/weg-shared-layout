@@ -1,7 +1,7 @@
 import { Component, Prop, State, Watch, Element, Event, EventEmitter, h, Listen } from '@stencil/core';
 import type { LayoutData, LayoutHeaderAuthAction, LayoutHeaderLink } from '../../types/layout-data';
 import { normalizeLinks, parseJsonProp, isNonEmptyString } from '../../utils/layout';
-import { WEG_DESKTOP_MEDIA_QUERY, WEG_HOVER_CAPABLE_MEDIA_QUERY } from '../../constants/breakpoints';
+import { WEG_HOVER_CAPABLE_MEDIA_QUERY, WEG_MD_MEDIA_QUERY } from '../../constants/breakpoints';
 import { LOGO_SRC } from './logo-data';
 import { DEFAULT_LOGO_HREF, SIGNED_IN_HEADER } from './signed-in-layout';
 
@@ -219,7 +219,7 @@ export class WegHeader {
     this.resolve();
     this.hoverCapableMediaQuery = window.matchMedia(WEG_HOVER_CAPABLE_MEDIA_QUERY);
     this.hoverCapableMediaQuery.addEventListener('change', this.boundHandleHoverCapabilityChange);
-    this.desktopMediaQuery = window.matchMedia(WEG_DESKTOP_MEDIA_QUERY);
+    this.desktopMediaQuery = window.matchMedia(WEG_MD_MEDIA_QUERY);
     this.desktopMediaQuery.addEventListener('change', this.boundHandleViewportChange);
     this.updateHoverDropdownEnabled();
     this.handleViewportChange();
