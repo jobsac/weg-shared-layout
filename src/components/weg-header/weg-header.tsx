@@ -355,10 +355,6 @@ export class WegHeader {
     this.toggleDropdown(label);
   }
 
-  private handleDropdownFocusIn(label: string) {
-    this.openDropdownMenu(label);
-  }
-
   private handleDropdownFocusOut(event: FocusEvent, label: string) {
     const related = event.relatedTarget as Node | null;
     const container = event.currentTarget as HTMLElement;
@@ -560,7 +556,6 @@ export class WegHeader {
                   class="nav-dropdown"
                   onMouseEnter={() => this.handleDropdownPointerEnter(dropdown.label)}
                   onMouseLeave={(event) => this.handleDropdownPointerLeave(event)}
-                  onFocusin={() => this.handleDropdownFocusIn(dropdown.label)}
                   onFocusout={(event) => this.handleDropdownFocusOut(event, dropdown.label)}
                 >
                   <button

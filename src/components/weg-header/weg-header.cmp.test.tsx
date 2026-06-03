@@ -102,7 +102,7 @@ describe('weg-header', () => {
     expect(root.shadowRoot?.querySelector('.nav-dropdown__panel')).toBeTruthy();
   });
 
-  it('opens desktop dropdown on trigger focus with accessible wiring', async () => {
+  it('opens desktop dropdown on ArrowDown with accessible wiring', async () => {
     await setViewport(DESKTOP_VIEWPORT.width, DESKTOP_VIEWPORT.height);
     const { root } = await render(<weg-header layout={SAMPLE_HEADER_LAYOUT}></weg-header>);
 
@@ -113,10 +113,28 @@ describe('weg-header', () => {
     expect(trigger?.getAttribute('aria-controls')).toBeTruthy();
 
     trigger?.focus();
+    trigger?.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
     await waitForUpdate();
 
     expect(trigger?.getAttribute('aria-expanded')).toBe('true');
     expect(root.shadowRoot?.querySelector('.nav-dropdown__panel')).toBeTruthy();
+  });
+
+  it('opens mobile accordion on first tap', async () => {
+    await setViewport(MOBILE_VIEWPORT.width, MOBILE_VIEWPORT.height);
+    const { root } = await render(<weg-header layout={SAMPLE_HEADER_LAYOUT}></weg-header>);
+
+    const openButton = root.shadowRoot?.querySelector('.menu-toggle') as HTMLButtonElement | null;
+    await userEvent.click(openButton!);
+    await waitForUpdate();
+
+    const accordionButton = root.shadowRoot?.querySelector(
+      'button.nav-dropdown__trigger',
+    ) as HTMLButtonElement | null;
+    expect(accordionButton?.getAttribute('aria-expanded')).toBe('false');
+    await userEvent.click(accordionButton!);
+    await waitForUpdate();
+    expect(accordionButton?.getAttribute('aria-expanded')).toBe('true');
   });
 
   it('closes mobile menu when viewport expands to desktop', async () => {
@@ -186,7 +204,7 @@ describe('weg-header', () => {
       await setViewport(DESKTOP_VIEWPORT.width, DESKTOP_VIEWPORT.height);
       const { root } = await render(<weg-header layout={SAMPLE_HEADER_LAYOUT}></weg-header>);
       const trigger = root.shadowRoot?.querySelector('.nav-dropdown__trigger') as HTMLButtonElement | null;
-      trigger?.focus();
+      await userEvent.click(trigger!);
       await waitForUpdate();
       const results = await runAxe(root);
       expect(results.violations).toEqual([]);
