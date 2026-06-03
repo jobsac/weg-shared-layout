@@ -1,7 +1,23 @@
 import { Config } from '@stencil/core';
+import { postcss } from '@stencil-community/postcss';
+import postcssGlobalData from '@csstools/postcss-global-data';
+import postcssCustomMedia from 'postcss-custom-media';
+import { join } from 'path';
+
+const breakpointsPath = join(__dirname, 'src/styles/breakpoints.css');
 
 export const config: Config = {
   namespace: 'weg-shared-layout',
+  plugins: [
+    postcss({
+      plugins: [
+        postcssGlobalData({
+          files: [breakpointsPath],
+        }),
+        postcssCustomMedia(),
+      ],
+    }),
+  ],
   outputTargets: [
     {
       type: 'dist',

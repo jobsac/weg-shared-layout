@@ -1,12 +1,17 @@
 /**
  * Breakpoint tokens (Tailwind-aligned).
- * Use var(--weg-breakpoint-*) in property values (max-width, min(), etc.).
- * Use @custom-media in @media: @media (--weg-md) { ... }
+ *
+ * - `@custom-media` names: e.g. `@media (--weg-md)` desktop-up, `@media (--weg-below-md)` mobile-only.
+ *   Compiled by PostCSS in stencil.config.ts.
+ * - `--weg-breakpoint-*` variables: use in property values, e.g. `max-width: var(--weg-breakpoint-md)`.
+ *
+ * Import this file in component stylesheets, or rely on shared.css which already imports it.
  */
 @custom-media --weg-sm (width >= 640px);
 @custom-media --weg-md (width >= 768px);
 @custom-media --weg-lg (width >= 1024px);
 @custom-media --weg-xl (width >= 1280px);
+@custom-media --weg-below-md (width < 768px);
 
 :host {
   --weg-breakpoint-sm: 640px;

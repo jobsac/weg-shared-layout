@@ -62,7 +62,7 @@ describe('weg-header', () => {
       event.preventDefault();
     }) as EventListener);
 
-    const authLink = root.shadowRoot?.querySelector('.desktop .sign-in-link') as HTMLAnchorElement | null;
+    const authLink = root.shadowRoot?.querySelector('.main-nav .sign-in-link') as HTMLAnchorElement | null;
     expect(authLink).toBeTruthy();
     authLink?.click();
 
@@ -77,7 +77,7 @@ describe('weg-header', () => {
       event.preventDefault();
     }) as EventListener);
 
-    const signOutLink = root.shadowRoot?.querySelector('.desktop .sign-out-link') as HTMLAnchorElement | null;
+    const signOutLink = root.shadowRoot?.querySelector('.main-nav .sign-out-link') as HTMLAnchorElement | null;
     expect(signOutLink).toBeTruthy();
     signOutLink?.click();
 
@@ -88,7 +88,7 @@ describe('weg-header', () => {
     await setViewport(DESKTOP_VIEWPORT.width, DESKTOP_VIEWPORT.height);
     const { root } = await render(<weg-header layout={SAMPLE_HEADER_LAYOUT}></weg-header>);
 
-    const trigger = root.shadowRoot?.querySelector('.desktop .dropdown-trigger') as HTMLButtonElement | null;
+    const trigger = root.shadowRoot?.querySelector('.nav-dropdown__trigger') as HTMLButtonElement | null;
     expect(trigger).toBeTruthy();
     expect(trigger?.getAttribute('aria-haspopup')).toBe('true');
     expect(trigger?.getAttribute('aria-expanded')).toBe('false');
@@ -98,20 +98,37 @@ describe('weg-header', () => {
     await waitForUpdate();
 
     expect(trigger?.getAttribute('aria-expanded')).toBe('true');
-    expect(root.shadowRoot?.querySelector('.dropdown-panel')).toBeTruthy();
+    expect(root.shadowRoot?.querySelector('.nav-dropdown__panel')).toBeTruthy();
+  });
+
+  it('closes mobile menu when viewport expands to desktop', async () => {
+    await setViewport(MOBILE_VIEWPORT.width, MOBILE_VIEWPORT.height);
+    const { root } = await render(<weg-header layout={SAMPLE_HEADER_LAYOUT}></weg-header>);
+
+    const openButton = root.shadowRoot?.querySelector('.menu-toggle') as HTMLButtonElement | null;
+    await userEvent.click(openButton!);
+    await waitForUpdate();
+    expect(root.shadowRoot?.querySelector('.header--menu-open')).toBeTruthy();
+
+    await setViewport(DESKTOP_VIEWPORT.width, DESKTOP_VIEWPORT.height);
+    await waitForUpdate();
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    expect(root.shadowRoot?.querySelector('.header--menu-open')).toBeFalsy();
+    expect(openButton?.getAttribute('aria-expanded')).toBe('false');
   });
 
   it('toggles mobile accordion aria-expanded', async () => {
     await setViewport(MOBILE_VIEWPORT.width, MOBILE_VIEWPORT.height);
     const { root } = await render(<weg-header layout={SAMPLE_HEADER_LAYOUT}></weg-header>);
 
-    const openButton = root.shadowRoot?.querySelector('.mobile .icon-button') as HTMLButtonElement | null;
+    const openButton = root.shadowRoot?.querySelector('.menu-toggle') as HTMLButtonElement | null;
     expect(openButton).toBeTruthy();
     await userEvent.click(openButton!);
     await waitForUpdate();
 
     const accordionButton = root.shadowRoot?.querySelector(
-      'button.mobile-nav__row',
+      'button.nav-dropdown__trigger',
     ) as HTMLButtonElement | null;
     expect(accordionButton).toBeTruthy();
     expect(accordionButton?.getAttribute('aria-expanded')).toBe('false');
@@ -150,7 +167,7 @@ describe('weg-header', () => {
     it('has no WCAG violations with desktop dropdown open', async () => {
       await setViewport(DESKTOP_VIEWPORT.width, DESKTOP_VIEWPORT.height);
       const { root } = await render(<weg-header layout={SAMPLE_HEADER_LAYOUT}></weg-header>);
-      const trigger = root.shadowRoot?.querySelector('.desktop .dropdown-trigger') as HTMLButtonElement | null;
+      const trigger = root.shadowRoot?.querySelector('.nav-dropdown__trigger') as HTMLButtonElement | null;
       trigger?.focus();
       await waitForUpdate();
       const results = await runAxe(root);
@@ -160,7 +177,7 @@ describe('weg-header', () => {
     it('has no WCAG violations with mobile menu open', async () => {
       await setViewport(MOBILE_VIEWPORT.width, MOBILE_VIEWPORT.height);
       const { root } = await render(<weg-header layout={SAMPLE_HEADER_LAYOUT}></weg-header>);
-      const openButton = root.shadowRoot?.querySelector('.mobile .icon-button') as HTMLButtonElement | null;
+      const openButton = root.shadowRoot?.querySelector('.menu-toggle') as HTMLButtonElement | null;
       await userEvent.click(openButton!);
       await waitForUpdate();
       const results = await runAxe(root);
@@ -170,12 +187,12 @@ describe('weg-header', () => {
     it('has no WCAG violations with mobile accordion expanded', async () => {
       await setViewport(MOBILE_VIEWPORT.width, MOBILE_VIEWPORT.height);
       const { root } = await render(<weg-header layout={SAMPLE_HEADER_LAYOUT}></weg-header>);
-      const openButton = root.shadowRoot?.querySelector('.mobile .icon-button') as HTMLButtonElement | null;
+      const openButton = root.shadowRoot?.querySelector('.menu-toggle') as HTMLButtonElement | null;
       await userEvent.click(openButton!);
       await waitForUpdate();
 
       const accordionButton = root.shadowRoot?.querySelector(
-        'button.mobile-nav__row',
+        'button.nav-dropdown__trigger',
       ) as HTMLButtonElement | null;
       await userEvent.click(accordionButton!);
       await waitForUpdate();

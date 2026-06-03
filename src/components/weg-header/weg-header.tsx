@@ -1,6 +1,7 @@
 import { Component, Prop, State, Watch, Element, Event, EventEmitter, h, Listen } from '@stencil/core';
 import type { LayoutData, LayoutHeaderAuthAction, LayoutHeaderLink } from '../../types/layout-data';
 import { normalizeLinks, parseJsonProp, isNonEmptyString } from '../../utils/layout';
+import { WEG_DESKTOP_MEDIA_QUERY } from '../../constants/breakpoints';
 import { LOGO_SRC } from './logo-data';
 import { DEFAULT_LOGO_HREF, SIGNED_IN_HEADER } from './signed-in-layout';
 
@@ -197,11 +198,12 @@ export class WegHeader {
   @State() private resolved: HeaderData = EMPTY_HEADER;
   @State() private menuOpen = false;
   @State() private openDropdown: string | null = null;
-  @State() private expandedSection: string | null = null;
 
   private boundHandleDocumentClick = this.handleDocumentClick.bind(this);
+  private boundHandleViewportChange = this.handleViewportChange.bind(this);
   private hoverCloseTimer: ReturnType<typeof setTimeout> | null = null;
   private hoverOpenEnabled = false;
+  private desktopMediaQuery?: MediaQueryList;
 
   private resolve() {
     if (this.layout === undefined || this.layout === null) {
@@ -214,6 +216,9 @@ export class WegHeader {
   componentWillLoad() {
     this.resolve();
     this.hoverOpenEnabled = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+    this.desktopMediaQuery = window.matchMedia(WEG_DESKTOP_MEDIA_QUERY);
+    this.desktopMediaQuery.addEventListener('change', this.boundHandleViewportChange);
+    this.handleViewportChange();
   }
 
   connectedCallback() {
@@ -222,7 +227,18 @@ export class WegHeader {
 
   disconnectedCallback() {
     document.removeEventListener('click', this.boundHandleDocumentClick);
+    this.desktopMediaQuery?.removeEventListener('change', this.boundHandleViewportChange);
     this.cancelScheduledDropdownClose();
+  }
+
+  private handleViewportChange() {
+    if (this.desktopMediaQuery?.matches) {
+      this.closeMenu();
+    }
+  }
+
+  private isMobileMenuActive(): boolean {
+    return this.menuOpen && !this.desktopMediaQuery?.matches;
   }
 
   @Watch('layout')
@@ -316,23 +332,27 @@ export class WegHeader {
 
   private focusFirstDropdownLink(itemEl: HTMLElement) {
     setTimeout(() => {
-      const firstLink = itemEl.querySelector('.dropdown-panel__link') as HTMLAnchorElement | null;
+      const firstLink = itemEl.querySelector('.nav-dropdown__link') as HTMLAnchorElement | null;
       firstLink?.focus();
     }, 0);
   }
 
-  private toggleAccordion(label: string) {
-    this.expandedSection = this.expandedSection === label ? null : label;
+  private toggleMenu() {
+    if (this.menuOpen) {
+      this.closeMenu();
+      return;
+    }
+    this.openMenu();
   }
 
   private openMenu() {
     this.menuOpen = true;
-    this.expandedSection = null;
+    this.closeDropdown();
   }
 
   private closeMenu() {
     this.menuOpen = false;
-    this.expandedSection = null;
+    this.closeDropdown();
   }
 
   private getActiveHeaderData(): HeaderData {
@@ -419,230 +439,187 @@ export class WegHeader {
     );
   }
 
-  private renderSignedInAuthControls(options: { iconOnly?: boolean; onNavigate?: () => void }) {
+  private renderSignedInCompactAuth(onNavigate?: () => void) {
     const manageAccountLabel = this.getManageAccountLabel();
-    const signOut = SIGNED_IN_HEADER.signOut;
 
-    if (options.iconOnly) {
-      return (
-        <a
-          class="icon-button manage-account-link"
-          href={SIGNED_IN_HEADER.manageAccount.href}
-          aria-label={manageAccountLabel}
-          onClick={() => options.onNavigate?.()}
-        >
-          <SignInIcon />
-          <span class="sr-only">{manageAccountLabel}</span>
-        </a>
-      );
+    return (
+      <a
+        class="icon-button manage-account-link"
+        href={SIGNED_IN_HEADER.manageAccount.href}
+        aria-label={manageAccountLabel}
+        onClick={() => onNavigate?.()}
+      >
+        <SignInIcon />
+        <span class="sr-only">{manageAccountLabel}</span>
+      </a>
+    );
+  }
+
+  private renderNavAuthItems(onNavigate?: () => void) {
+    if (this.signedIn) {
+      const manageAccountLabel = this.getManageAccountLabel();
+      const signOut = SIGNED_IN_HEADER.signOut;
+
+      return [
+        <li class="main-nav__item main-nav__item--auth" key="manage-account">
+          <a
+            class="sign-in-link manage-account-link"
+            href={SIGNED_IN_HEADER.manageAccount.href}
+            aria-label={manageAccountLabel}
+            onClick={() => onNavigate?.()}
+          >
+            <SignInIcon />
+            {manageAccountLabel}
+          </a>
+        </li>,
+        <li class="main-nav__item main-nav__item--auth" key="sign-out">
+          <a
+            class="sign-in-link sign-out-link"
+            href={signOut.href}
+            aria-label={signOut.label}
+            onClick={(event) => this.handleAuthClick(event, onNavigate)}
+          >
+            <SignOutIcon />
+            {signOut.label}
+          </a>
+        </li>,
+      ];
     }
 
-    return [
-      <li class="desktop-nav__item" key="manage-account">
-        <a
-          class="sign-in-link manage-account-link"
-          href={SIGNED_IN_HEADER.manageAccount.href}
-          aria-label={manageAccountLabel}
-          onClick={() => options.onNavigate?.()}
-        >
-          <SignInIcon />
-          {manageAccountLabel}
-        </a>
-      </li>,
-      <li class="desktop-nav__item" key="sign-out">
-        <a
-          class="sign-in-link sign-out-link"
-          href={signOut.href}
-          aria-label={signOut.label}
-          onClick={(event) => this.handleAuthClick(event, options.onNavigate)}
-        >
-          <SignOutIcon />
-          {signOut.label}
-        </a>
-      </li>,
-    ];
-  }
-
-  private renderDesktop() {
-    const { dropdowns, links } = this.getActiveHeaderData();
+    const auth = this.getAuthControl();
+    if (!auth) return null;
 
     return (
-      <div class="desktop">
-        <Logo href={this.getLogoHref()} />
-        <nav class="desktop-nav" aria-label="Main">
-          <ul class="desktop-nav__list">
-            {dropdowns.map((dropdown) => {
-              const isOpen = this.openDropdown === dropdown.label;
-              const panelId = this.getDropdownPanelId(dropdown.label);
-              return (
-                <li
-                  class="desktop-nav__item desktop-nav__item--dropdown"
-                  key={dropdown.label}
-                  onMouseEnter={() => this.handleDropdownPointerEnter(dropdown.label)}
-                  onMouseLeave={() => this.handleDropdownPointerLeave()}
-                  onFocusin={() => this.handleDropdownFocusIn(dropdown.label)}
-                  onFocusout={(event) => this.handleDropdownFocusOut(event, dropdown.label)}
-                >
-                  <button
-                    type="button"
-                    class={{
-                      'dropdown-trigger': true,
-                      'dropdown-trigger--open': isOpen,
-                    }}
-                    aria-expanded={isOpen ? 'true' : 'false'}
-                    aria-haspopup="true"
-                    aria-controls={panelId}
-                    id={`${panelId}-trigger`}
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      this.toggleDropdown(dropdown.label);
-                    }}
-                    onKeyDown={(event) => {
-                      const itemEl = (event.currentTarget as HTMLElement).closest(
-                        '.desktop-nav__item--dropdown',
-                      ) as HTMLElement;
-                      this.handleDropdownTriggerKeyDown(event, dropdown.label, itemEl);
-                    }}
-                  >
-                    {dropdown.label}
-                    <ToggleIcon expanded={isOpen} />
-                  </button>
-                  {isOpen ? (
-                    <div class="dropdown-panel" id={panelId} role="region" aria-labelledby={`${panelId}-trigger`}>
-                      <div class="dropdown-panel__accent">
-                        <div class="dropdown-panel__links">
-                          {dropdown.items.map((item) => (
-                            <a class="dropdown-panel__link" href={item.href} key={`${dropdown.label}:${item.label}`}>
-                              {item.label}
-                            </a>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  ) : null}
-                </li>
-              );
-            })}
-            {links.map((link) => (
-              <li class="desktop-nav__item" key={link.label}>
-                <a class="nav-link" href={link.href}>
-                  {link.label}
-                </a>
-              </li>
-            ))}
-            {this.signedIn
-              ? this.renderSignedInAuthControls({})
-              : this.getAuthControl()
-                ? <li class="desktop-nav__item">{this.renderAuthControl({})}</li>
-                : null}
-          </ul>
-        </nav>
-      </div>
+      <li class="main-nav__item main-nav__item--auth" key="sign-in">
+        {this.renderAuthControl({ onNavigate })}
+      </li>
     );
   }
 
-  private renderMobileBar() {
-    return (
-      <div class="mobile">
-        <button type="button" class="icon-button" aria-label="Open menu" onClick={() => this.openMenu()}>
-          <HamburgerIcon />
-        </button>
-        <Logo href={this.getLogoHref()} />
-        {this.signedIn
-          ? this.renderSignedInAuthControls({ iconOnly: true })
-          : this.renderAuthControl({ iconOnly: true })}
-      </div>
-    );
-  }
-
-  private renderMobileOverlay() {
-    if (!this.menuOpen) return null;
-
+  private renderNav(onNavigate?: () => void) {
     const { dropdowns, links } = this.getActiveHeaderData();
 
     return (
-      <div class="mobile-overlay" role="dialog" aria-modal="true" aria-label="Menu">
-        <div class="mobile-overlay__header">
-          <button type="button" class="icon-button" aria-label="Close menu" onClick={() => this.closeMenu()}>
-            <CloseIcon />
-          </button>
-          <div class="mobile-overlay__logo">
-            <Logo href={this.getLogoHref()} />
-          </div>
-          {this.signedIn
-            ? this.renderSignedInAuthControls({ iconOnly: true, onNavigate: () => this.closeMenu() })
-            : this.renderAuthControl({ iconOnly: true, onNavigate: () => this.closeMenu() })}
-        </div>
-        <nav class="mobile-nav" aria-label="Main">
+      <nav class="main-nav" aria-label="Main">
+        <ul class="main-nav__list">
           {dropdowns.map((dropdown) => {
-            const isExpanded = this.expandedSection === dropdown.label;
+            const isOpen = this.openDropdown === dropdown.label;
+            const panelId = this.getDropdownPanelId(dropdown.label);
             return (
-              <div class="mobile-nav__section" key={dropdown.label}>
+              <li
+                class="main-nav__item main-nav__item--dropdown"
+                key={dropdown.label}
+                onMouseEnter={() => this.handleDropdownPointerEnter(dropdown.label)}
+                onMouseLeave={() => this.handleDropdownPointerLeave()}
+                onFocusin={() => this.handleDropdownFocusIn(dropdown.label)}
+                onFocusout={(event) => this.handleDropdownFocusOut(event, dropdown.label)}
+              >
                 <button
                   type="button"
-                  class="mobile-nav__row"
-                  aria-expanded={isExpanded ? 'true' : 'false'}
-                  onClick={() => this.toggleAccordion(dropdown.label)}
+                  class={{
+                    'nav-dropdown__trigger': true,
+                    'nav-dropdown__trigger--open': isOpen,
+                  }}
+                  aria-expanded={isOpen ? 'true' : 'false'}
+                  aria-haspopup="true"
+                  aria-controls={panelId}
+                  id={`${panelId}-trigger`}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    this.toggleDropdown(dropdown.label);
+                  }}
+                  onKeyDown={(event) => {
+                    const itemEl = (event.currentTarget as HTMLElement).closest(
+                      '.main-nav__item--dropdown',
+                    ) as HTMLElement;
+                    this.handleDropdownTriggerKeyDown(event, dropdown.label, itemEl);
+                  }}
                 >
-                  <span>{dropdown.label}</span>
-                  <ToggleIcon expanded={isExpanded} />
+                  <span class="nav-dropdown__label">{dropdown.label}</span>
+                  <ToggleIcon expanded={isOpen} />
                 </button>
-                {isExpanded ? (
-                  <div class="mobile-nav__sub">
-                    {dropdown.items.map((item) => (
-                      <a
-                        class="mobile-nav__sub-link"
-                        href={item.href}
-                        key={`${dropdown.label}:${item.label}`}
-                        onClick={() => this.closeMenu()}
-                      >
-                        {item.label}
-                      </a>
-                    ))}
+                {isOpen ? (
+                  <div
+                    class="nav-dropdown__panel"
+                    id={panelId}
+                    role="region"
+                    aria-labelledby={`${panelId}-trigger`}
+                  >
+                    <div class="nav-dropdown__accent">
+                      <div class="nav-dropdown__links">
+                        {dropdown.items.map((item) => (
+                          <a
+                            class="nav-dropdown__link"
+                            href={item.href}
+                            key={`${dropdown.label}:${item.label}`}
+                            onClick={() => onNavigate?.()}
+                          >
+                            {item.label}
+                          </a>
+                        ))}
+                      </div>
+                    </div>
                   </div>
                 ) : null}
-              </div>
+              </li>
             );
           })}
           {links.map((link) => (
-            <div class="mobile-nav__section" key={link.label}>
-              <a class="mobile-nav__row" href={link.href} onClick={() => this.closeMenu()}>
+            <li class="main-nav__item" key={link.label}>
+              <a class="nav-link" href={link.href} onClick={() => onNavigate?.()}>
                 {link.label}
               </a>
-            </div>
+            </li>
           ))}
-          {this.signedIn ? (
-            <div class="mobile-nav__section">
-              <a
-                class="mobile-nav__row manage-account-link"
-                href={SIGNED_IN_HEADER.manageAccount.href}
-                onClick={() => this.closeMenu()}
-              >
-                {this.getManageAccountLabel()}
-              </a>
-              <a
-                class="mobile-nav__row sign-out-link"
-                href={SIGNED_IN_HEADER.signOut.href}
-                onClick={(event) => this.handleAuthClick(event, () => this.closeMenu())}
-              >
-                <SignOutIcon />
-                {SIGNED_IN_HEADER.signOut.label}
-              </a>
-            </div>
-          ) : null}
-        </nav>
-      </div>
+          {this.renderNavAuthItems(onNavigate)}
+        </ul>
+      </nav>
     );
   }
 
+  private renderCompactAuth(onNavigate?: () => void) {
+    if (this.signedIn) {
+      return this.renderSignedInCompactAuth(onNavigate);
+    }
+    return this.renderAuthControl({ iconOnly: true, onNavigate });
+  }
+
   render() {
+    const logoHref = this.getLogoHref();
+    const closeMenu = () => this.closeMenu();
+
+    const mobileMenuActive = this.isMobileMenuActive();
+
     return (
-      <header class="header">
-        <div class="container">
-          {this.renderDesktop()}
-          {this.renderMobileBar()}
+      <header
+        class={{
+          header: true,
+          'header--menu-open': mobileMenuActive,
+        }}
+      >
+        <div class="container header-inner">
+          <button
+            type="button"
+            class="menu-toggle icon-button"
+            aria-label={mobileMenuActive ? 'Close menu' : 'Open menu'}
+            aria-expanded={mobileMenuActive ? 'true' : 'false'}
+            aria-controls="weg-header-main-nav"
+            onClick={() => this.toggleMenu()}
+          >
+            {mobileMenuActive ? <CloseIcon /> : <HamburgerIcon />}
+          </button>
+          <Logo href={logoHref} />
+          <div class="header-actions">{this.renderCompactAuth(mobileMenuActive ? closeMenu : undefined)}</div>
+          <div
+            class="main-nav-panel"
+            id="weg-header-main-nav"
+            role={mobileMenuActive ? 'dialog' : undefined}
+            aria-modal={mobileMenuActive ? 'true' : undefined}
+            aria-label={mobileMenuActive ? 'Menu' : undefined}
+          >
+            {this.renderNav(mobileMenuActive ? closeMenu : undefined)}
+          </div>
         </div>
-        {this.renderMobileOverlay()}
       </header>
     );
   }
