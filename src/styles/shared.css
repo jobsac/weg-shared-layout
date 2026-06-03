@@ -25,11 +25,16 @@
 
 @media (--weg-md) {
   .container {
-    padding-inline: 2rem;
+    padding-inline: 1rem;
     padding-block: 20px;
   }
 }
 
+@media (--weg-lg) {
+  .container {
+    padding-inline: 2rem;
+  }
+}
 
 
 @media (--weg-xl) {
