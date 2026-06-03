@@ -9,17 +9,16 @@ export type LayoutHeaderData = {
   logoSrc?: string;
   menu?: LayoutLink[];
 };
-
 export type LayoutFooterSocialLink = {
   platform: 'LinkedIn' | 'Instagram' | 'TikTok' | 'YouTube';
   href: string;
 };
 
 export type LayoutFooterData = {
-  menu: LayoutLink[][];
-  social: LayoutFooterSocialLink[];
-  credits: string;
-  copyright: string;
+  menu?: LayoutLink[][];
+  social?: LayoutFooterSocialLink[];
+  credits?: string;
+  copyright?: string;
 };
 
 /**
