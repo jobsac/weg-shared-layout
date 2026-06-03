@@ -1,3 +1,5 @@
+@import '../../styles/breakpoints.css';
+
 .header {
   width: 100%;
   border-bottom: 2px solid var(--weg-color-accent);
@@ -334,8 +336,7 @@
   opacity: 0.85;
 }
 
-/* md: matches --weg-breakpoint-md */
-@media (width >= 768px) {
+@media (--weg-md) {
   .header {
     border-bottom-width: 4px;
   }
@@ -357,8 +358,7 @@
   }
 }
 
-/* xl: matches --weg-breakpoint-xl */
-@media (width >= 1280px) {
+@media (--weg-xl) {
   .desktop-nav__list {
     gap: 35px;
   }
