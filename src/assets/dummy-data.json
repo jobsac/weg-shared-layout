@@ -70,10 +70,11 @@
         "href": "https://account.warwickemploymentgroup.com/account/register"
       },
       {
-      "label": "Sign in",
-      "href": "https://account.warwickemploymentgroup.com/account/login"
-    }
-  ],
+        "label": "Sign in",
+        "href": "https://account.warwickemploymentgroup.com/account/login"
+      }
+    ]
+  },
   "footer": {
     "menu": [
       [
