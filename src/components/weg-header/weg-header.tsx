@@ -1,7 +1,7 @@
 import { Component, Prop, State, Watch, Element, Event, EventEmitter, h, Listen } from '@stencil/core';
 import type { LayoutData, LayoutHeaderAuthAction, LayoutHeaderLink } from '../../types/layout-data';
 import { normalizeLinks, parseJsonProp, isNonEmptyString } from '../../utils/layout';
-import { WEG_DESKTOP_MEDIA_QUERY } from '../../constants/breakpoints';
+import { WEG_DESKTOP_MEDIA_QUERY, WEG_HOVER_CAPABLE_MEDIA_QUERY } from '../../constants/breakpoints';
 import { LOGO_SRC } from './logo-data';
 import { DEFAULT_LOGO_HREF, SIGNED_IN_HEADER } from './signed-in-layout';
 
@@ -201,9 +201,11 @@ export class WegHeader {
 
   private boundHandleDocumentClick = this.handleDocumentClick.bind(this);
   private boundHandleViewportChange = this.handleViewportChange.bind(this);
+  private boundHandleHoverCapabilityChange = this.handleHoverCapabilityChange.bind(this);
   private hoverCloseTimer: ReturnType<typeof setTimeout> | null = null;
   private hoverOpenEnabled = false;
   private desktopMediaQuery?: MediaQueryList;
+  private hoverCapableMediaQuery?: MediaQueryList;
 
   private resolve() {
     if (this.layout === undefined || this.layout === null) {
@@ -215,9 +217,11 @@ export class WegHeader {
 
   componentWillLoad() {
     this.resolve();
-    this.hoverOpenEnabled = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+    this.hoverCapableMediaQuery = window.matchMedia(WEG_HOVER_CAPABLE_MEDIA_QUERY);
+    this.hoverCapableMediaQuery.addEventListener('change', this.boundHandleHoverCapabilityChange);
     this.desktopMediaQuery = window.matchMedia(WEG_DESKTOP_MEDIA_QUERY);
     this.desktopMediaQuery.addEventListener('change', this.boundHandleViewportChange);
+    this.updateHoverDropdownEnabled();
     this.handleViewportChange();
   }
 
@@ -228,13 +232,34 @@ export class WegHeader {
   disconnectedCallback() {
     document.removeEventListener('click', this.boundHandleDocumentClick);
     this.desktopMediaQuery?.removeEventListener('change', this.boundHandleViewportChange);
+    this.hoverCapableMediaQuery?.removeEventListener('change', this.boundHandleHoverCapabilityChange);
     this.cancelScheduledDropdownClose();
+  }
+
+  /**
+   * Desktop dropdowns open on hover when viewport is md+ and the device reports hover support.
+   * Uses (hover: hover) only — not (pointer: fine), which breaks in DevTools and hybrid devices.
+   */
+  private updateHoverDropdownEnabled() {
+    const enabled = Boolean(
+      this.desktopMediaQuery?.matches && this.hoverCapableMediaQuery?.matches,
+    );
+    if (this.hoverOpenEnabled && !enabled) {
+      this.cancelScheduledDropdownClose();
+      this.closeDropdown();
+    }
+    this.hoverOpenEnabled = enabled;
+  }
+
+  private handleHoverCapabilityChange() {
+    this.updateHoverDropdownEnabled();
   }
 
   private handleViewportChange() {
     if (this.desktopMediaQuery?.matches) {
       this.closeMenu();
     }
+    this.updateHoverDropdownEnabled();
   }
 
   private isMobileMenuActive(): boolean {
@@ -301,9 +326,33 @@ export class WegHeader {
     this.openDropdownMenu(label);
   }
 
-  private handleDropdownPointerLeave() {
+  private handleDropdownPointerLeave(event: MouseEvent) {
     if (!this.hoverOpenEnabled) return;
+    const related = event.relatedTarget as Node | null;
+    const container = event.currentTarget as HTMLElement;
+    if (related && container.contains(related)) return;
     this.scheduleDropdownClose();
+  }
+
+  private handleDropdownPanelPointerEnter(label: string) {
+    if (!this.hoverOpenEnabled) return;
+    this.cancelScheduledDropdownClose();
+    this.openDropdownMenu(label);
+  }
+
+  private handleDropdownPanelPointerLeave(event: MouseEvent) {
+    if (!this.hoverOpenEnabled) return;
+    const related = event.relatedTarget as Node | null;
+    const panel = event.currentTarget as HTMLElement;
+    const container = panel.closest('.nav-dropdown');
+    if (related && container?.contains(related)) return;
+    this.scheduleDropdownClose();
+  }
+
+  private handleDropdownTriggerClick(event: MouseEvent, label: string) {
+    event.stopPropagation();
+    this.cancelScheduledDropdownClose();
+    this.toggleDropdown(label);
   }
 
   private handleDropdownFocusIn(label: string) {
@@ -312,8 +361,8 @@ export class WegHeader {
 
   private handleDropdownFocusOut(event: FocusEvent, label: string) {
     const related = event.relatedTarget as Node | null;
-    const currentTarget = event.currentTarget as HTMLElement;
-    if (related && currentTarget.contains(related)) return;
+    const container = event.currentTarget as HTMLElement;
+    if (related && container.contains(related)) return;
     if (this.openDropdown === label) {
       this.closeDropdown();
     }
@@ -506,61 +555,61 @@ export class WegHeader {
             const isOpen = this.openDropdown === dropdown.label;
             const panelId = this.getDropdownPanelId(dropdown.label);
             return (
-              <li
-                class="main-nav__item main-nav__item--dropdown"
-                key={dropdown.label}
-                onMouseEnter={() => this.handleDropdownPointerEnter(dropdown.label)}
-                onMouseLeave={() => this.handleDropdownPointerLeave()}
-                onFocusin={() => this.handleDropdownFocusIn(dropdown.label)}
-                onFocusout={(event) => this.handleDropdownFocusOut(event, dropdown.label)}
-              >
-                <button
-                  type="button"
-                  class={{
-                    'nav-dropdown__trigger': true,
-                    'nav-dropdown__trigger--open': isOpen,
-                  }}
-                  aria-expanded={isOpen ? 'true' : 'false'}
-                  aria-haspopup="true"
-                  aria-controls={panelId}
-                  id={`${panelId}-trigger`}
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    this.toggleDropdown(dropdown.label);
-                  }}
-                  onKeyDown={(event) => {
-                    const itemEl = (event.currentTarget as HTMLElement).closest(
-                      '.main-nav__item--dropdown',
-                    ) as HTMLElement;
-                    this.handleDropdownTriggerKeyDown(event, dropdown.label, itemEl);
-                  }}
+              <li class="main-nav__item main-nav__item--dropdown" key={dropdown.label}>
+                <div
+                  class="nav-dropdown"
+                  onMouseEnter={() => this.handleDropdownPointerEnter(dropdown.label)}
+                  onMouseLeave={(event) => this.handleDropdownPointerLeave(event)}
+                  onFocusin={() => this.handleDropdownFocusIn(dropdown.label)}
+                  onFocusout={(event) => this.handleDropdownFocusOut(event, dropdown.label)}
                 >
-                  <span class="nav-dropdown__label">{dropdown.label}</span>
-                  <ToggleIcon expanded={isOpen} />
-                </button>
-                {isOpen ? (
-                  <div
-                    class="nav-dropdown__panel"
-                    id={panelId}
-                    role="region"
-                    aria-labelledby={`${panelId}-trigger`}
+                  <button
+                    type="button"
+                    class={{
+                      'nav-dropdown__trigger': true,
+                      'nav-dropdown__trigger--open': isOpen,
+                    }}
+                    aria-expanded={isOpen ? 'true' : 'false'}
+                    aria-haspopup="true"
+                    aria-controls={panelId}
+                    id={`${panelId}-trigger`}
+                    onClick={(event) => this.handleDropdownTriggerClick(event, dropdown.label)}
+                    onKeyDown={(event) => {
+                      const container = (event.currentTarget as HTMLElement).closest(
+                        '.nav-dropdown',
+                      ) as HTMLElement;
+                      this.handleDropdownTriggerKeyDown(event, dropdown.label, container);
+                    }}
                   >
-                    <div class="nav-dropdown__accent">
-                      <div class="nav-dropdown__links">
-                        {dropdown.items.map((item) => (
-                          <a
-                            class="nav-dropdown__link"
-                            href={item.href}
-                            key={`${dropdown.label}:${item.label}`}
-                            onClick={() => onNavigate?.()}
-                          >
-                            {item.label}
-                          </a>
-                        ))}
+                    <span class="nav-dropdown__label">{dropdown.label}</span>
+                    <ToggleIcon expanded={isOpen} />
+                  </button>
+                  {isOpen ? (
+                    <div
+                      class="nav-dropdown__panel"
+                      id={panelId}
+                      role="region"
+                      aria-labelledby={`${panelId}-trigger`}
+                      onMouseEnter={() => this.handleDropdownPanelPointerEnter(dropdown.label)}
+                      onMouseLeave={(event) => this.handleDropdownPanelPointerLeave(event)}
+                    >
+                      <div class="nav-dropdown__accent">
+                        <div class="nav-dropdown__links">
+                          {dropdown.items.map((item) => (
+                            <a
+                              class="nav-dropdown__link"
+                              href={item.href}
+                              key={`${dropdown.label}:${item.label}`}
+                              onClick={() => onNavigate?.()}
+                            >
+                              {item.label}
+                            </a>
+                          ))}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ) : null}
+                  ) : null}
+                </div>
               </li>
             );
           })}

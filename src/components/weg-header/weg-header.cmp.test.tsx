@@ -84,6 +84,24 @@ describe('weg-header', () => {
     expect(detail).toEqual({ action: 'sign-out' });
   });
 
+  it('opens desktop dropdown on trigger click', async () => {
+    await setViewport(DESKTOP_VIEWPORT.width, DESKTOP_VIEWPORT.height);
+    const { root } = await render(<weg-header layout={DUMMY_LAYOUT}></weg-header>);
+
+    const triggers = root.shadowRoot?.querySelectorAll(
+      '.nav-dropdown__trigger',
+    ) as NodeListOf<HTMLButtonElement> | undefined;
+    expect(triggers?.length).toBe(3);
+
+    const trigger = triggers?.[0] ?? null;
+    expect(trigger?.getAttribute('aria-expanded')).toBe('false');
+    await userEvent.click(trigger!);
+    await waitForUpdate();
+
+    expect(trigger?.getAttribute('aria-expanded')).toBe('true');
+    expect(root.shadowRoot?.querySelector('.nav-dropdown__panel')).toBeTruthy();
+  });
+
   it('opens desktop dropdown on trigger focus with accessible wiring', async () => {
     await setViewport(DESKTOP_VIEWPORT.width, DESKTOP_VIEWPORT.height);
     const { root } = await render(<weg-header layout={SAMPLE_HEADER_LAYOUT}></weg-header>);

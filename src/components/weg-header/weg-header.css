@@ -102,6 +102,10 @@
 }
 
 .main-nav__item--dropdown {
+  position: static;
+}
+
+.nav-dropdown {
   position: relative;
 }
 
@@ -339,6 +343,7 @@
     padding: 8px 12px;
     border-radius: 8px;
     gap: 8px;
+    cursor: pointer;
   }
 
   .nav-dropdown__trigger--open {
