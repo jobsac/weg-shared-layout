@@ -344,17 +344,18 @@
     border-bottom: none;
   }
 
-  .nav-link {
-    display: inline;
-    width: auto;
-    padding: 0;
-  }
-
-  .nav-dropdown__trigger {
+  .nav-link,
+  .nav-dropdown__trigger,
+  .main-nav__item--auth .sign-in-link,
+  .main-nav__item--auth .sign-out-link {
     display: inline-flex;
+    align-items: center;
     width: auto;
     padding: 8px 12px;
     border-radius: 8px;
+  }
+
+  .nav-dropdown__trigger {
     gap: 8px;
     cursor: pointer;
   }
@@ -396,13 +397,6 @@
   .nav-dropdown__link:focus-visible {
     background: #cdcff8;
     opacity: 1;
-  }
-
-  .main-nav__item--auth .sign-in-link,
-  .main-nav__item--auth .sign-out-link {
-    display: inline-flex;
-    width: auto;
-    padding: 0;
   }
 
   .header-actions {
