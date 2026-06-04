@@ -13,7 +13,7 @@ Payload shape: [`dummy-data.json`](../src/assets/dummy-data.json) (see [readme](
 
 ## Install & register
 
-With a bundler that resolves `node_modules` imports:
+With a bundler that resolves `node_modules` and package **`exports`** (TypeScript: `resolveJsonModule` + `moduleResolution` `bundler` or `node16` — see [angular-16-compatibility](./angular-16-compatibility.md)):
 
 ```html
 <weg-header id="header"></weg-header>
@@ -132,7 +132,8 @@ document.getElementById('footer').layout = layout;
 
 ## See also
 
+- **[Documentation index](./README.md)**
 - **[React SPA](./react.md)**
 - **[Next.js App Router](./nextjs.md)**
-- **[Angular](./angular.md)**
+- **[Angular](./angular.md)** · **[Angular 16 demo](../demo/angular16/README.md)**
 - **[Package readme](../readme.md)**

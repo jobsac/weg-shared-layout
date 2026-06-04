@@ -6,6 +6,7 @@ Guide for teams on **Angular 16** who see TypeScript errors from `weg-shared-lay
 | --- | --- |
 | **[angular-integration-guide.md](./angular-integration-guide.md)** | Full integration steps |
 | **[angular.md](./angular.md)** | Quick start |
+| **[demo/angular16/README.md](../demo/angular16/README.md)** | Copy-paste Angular 16 app (npm-style imports) |
 | **This doc** | `stencil-public-runtime.d.ts` / `Mixin<const …>` errors, subpath import resolution, layout typing on TS 4.9 |
 
 ---
@@ -174,27 +175,33 @@ Example local interfaces (equivalent to package shapes; adjust if your API diffe
 ```ts
 export interface LayoutLink {
   label: string;
-  href: string;
+  href?: string;
+  target?: '_blank' | '_self' | '_parent' | '_top';
+  items?: LayoutLink[];
 }
 
 export interface LayoutHeaderData {
-  logoHref?: string;
-  dropdowns?: { label: string; items: LayoutLink[] }[];
-  links?: LayoutLink[];
-  signIn?: LayoutLink;
-  signOut?: { label: string; href?: string };
+  logoSrc?: string;
+  menu?: LayoutLink[];
 }
 
 export type LayoutHeaderAuthAction = 'sign-in' | 'sign-out';
 
+export interface LayoutFooterSocialLink {
+  platform: 'LinkedIn' | 'Instagram' | 'TikTok' | 'YouTube';
+  href: string;
+}
+
+export interface LayoutFooterData {
+  menu?: LayoutLink[][];
+  social?: LayoutFooterSocialLink[];
+  credits?: string;
+  copyright?: string;
+}
+
 export interface LayoutData {
   header?: Partial<LayoutHeaderData>;
-  footer?: Partial<{
-    social: unknown;
-    columns: unknown;
-    credits: unknown;
-    copyright: unknown;
-  }>;
+  footer?: Partial<LayoutFooterData>;
 }
 ```
 
@@ -228,8 +235,16 @@ Pair with **`defineCustomElements()`** in `main.ts` and **`CUSTOM_ELEMENTS_SCHEM
 
 ---
 
+## In-repo Angular 16 demo
+
+Runnable app: **[demo/angular16/README.md](../demo/angular16/README.md)** — same imports as a published npm install (`weg-shared-layout/dummy-data.json`, `weg-shared-layout/loader`); only the `package.json` dependency line differs (`file:../..` vs `^0.0.x`). Run with `npm run demo:angular16` from repo root.
+
+---
+
 ## Related
 
+- [Documentation index](./README.md)
 - [Angular integration guide](./angular-integration-guide.md)
 - [Angular quick start](./angular.md)
+- [In-repo Angular 16 demo](../demo/angular16/README.md)
 - [Publishing](./publishing.md)

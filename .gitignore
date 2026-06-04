@@ -1,4 +1,7 @@
 node_modules/
+demo/**/node_modules/
+demo/**/dist/
+demo/**/.angular/
 
 # Stencil build outputs
 dist/

@@ -1,0 +1,21 @@
+<weg-header
+  [layout]="headerLayout"
+  [signedIn]="signedIn"
+  [userName]="userName"
+  (wegAuthClick)="onAuthClick($event)"
+></weg-header>
+
+<main class="demo">
+  <h1>weg-shared-layout — Angular 16</h1>
+  <p>
+    Header and footer use the local package (<code>file:../..</code>) with
+    <code>dummy-data.json</code>.
+  </p>
+  <button type="button" class="demo-toggle" (click)="toggleSignedIn()">
+    {{ signedIn ? 'Switch to signed out' : 'Switch to signed in' }}
+  </button>
+</main>
+
+<router-outlet></router-outlet>
+
+<weg-footer [layout]="layoutData"></weg-footer>

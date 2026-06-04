@@ -2,13 +2,16 @@
 
 Short quick start for Angular 16+. For the full **step-by-step** guide (HTTP, API mapping, testing, SSR, troubleshooting), see **[angular-integration-guide.md](./angular-integration-guide.md)**.
 
-Reference demo: [weg-angular-demo](https://github.com/jobsac/weg-angular-demo).
+| Demo | When |
+| --- | --- |
+| **[demo/angular16/README.md](../demo/angular16/README.md)** | Angular **16** — same imports as `npm i` (in-repo: `file:../..`) |
+| [weg-angular-demo](https://github.com/jobsac/weg-angular-demo) | Newer Angular (signals) |
 
 ## Integration checklist
 
 - [ ] `npm i weg-shared-layout`
 - [ ] `defineCustomElements()` in `main.ts` **before** bootstrap
-- [ ] `resolveJsonModule` in `tsconfig.app.json` (if importing JSON)
+- [ ] `skipLibCheck`, `resolveJsonModule`, `moduleResolution: "bundler"` (or `node16`) — see [Step 3 in integration guide](./angular-integration-guide.md#step-3--typescript-import-layout-json)
 - [ ] `auth.ts` with `HEADER_SIGN_IN` / `ACCOUNT_LOGIN_HREF` (host app constants)
 - [ ] `CUSTOM_ELEMENTS_SCHEMA` on the shell component that uses the tags
 - [ ] `[layout]="layoutObject"` on `<weg-header>` and `<weg-footer>`
@@ -45,18 +48,41 @@ defineCustomElements();
 bootstrapApplication(App, appConfig).catch((err) => console.error(err));
 ```
 
-**Alternative** — side-effect imports (one of these approaches, not both):
+**Alternative** — side-effect imports (one of these approaches, not both; needs `moduleResolution` `bundler` / `node16`):
 
 ```ts
 import 'weg-shared-layout/weg-header';
 import 'weg-shared-layout/weg-footer';
 ```
 
-## 3. Allow custom elements in templates
+## 3. Layout types + TypeScript
+
+```ts
+// src/app/layout.types.ts
+import layoutFixture from 'weg-shared-layout/dummy-data.json';
+
+export type LayoutData = typeof layoutFixture;
+```
+
+```json
+// tsconfig.json (or tsconfig.app.json) — required for JSON + package subpaths
+{
+  "compilerOptions": {
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "moduleResolution": "bundler"
+  },
+  "include": ["src/**/*.ts"]
+}
+```
+
+Angular 16 pitfalls (Stencil `.d.ts`, classic `node` resolution): **[angular-16-compatibility.md](./angular-16-compatibility.md)**.
+
+## 4. Allow custom elements in templates
 
 Add `schemas: [CUSTOM_ELEMENTS_SCHEMA]` to every `@Component` (or `@NgModule`) whose template uses `<weg-header>` or `<weg-footer>`. Does **not** cascade to `router-outlet` children.
 
-## 4. Auth constants
+## 5. Auth constants
 
 ```ts
 // src/app/auth.ts
@@ -68,18 +94,18 @@ export const HEADER_SIGN_IN = {
 export const ACCOUNT_LOGIN_HREF = HEADER_SIGN_IN.href;
 ```
 
-## 5. Layout shell — pick one
+## 6. Layout shell — pick one
 
 Use **`[layout]="..."`** so Angular sets the JavaScript `layout` property, not an HTML attribute.
 
 | Variant | Angular | Template bindings |
 | --- | --- | --- |
-| **5A** Plain properties | 16+ | `[layout]="layoutData"` |
-| **5B** Signals | 16.1+ | `[layout]="layoutData()"` |
+| **6A** Plain properties | 16+ | `[layout]="layoutData"` |
+| **6B** Signals | 16.1+ | `[layout]="layoutData()"` |
 
 Full HTTP examples: integration guide **[Step 7A / 7B](./angular-integration-guide.md#step-7--load-layout-from-your-api)**.
 
-### 5A — Plain properties (Angular 16+)
+### 6A — Plain properties (Angular 16+)
 
 ```ts
 // src/app/app.ts
@@ -130,11 +156,9 @@ export class App {
 <weg-footer [layout]="layoutData"></weg-footer>
 ```
 
-Enable `resolveJsonModule` in `tsconfig.app.json` if you import `dummy-data.json`.
-
 In production, load the same shape from your API — see **[Step 7A](./angular-integration-guide.md#step-7a--http-with-rxjs--async-pipe-pairs-with-6a)**. If your API returns separate arrays, see **[mapping section](./angular-integration-guide.md#optional-api-returns-separate-arrays-not-one-layout-object)**.
 
-### 5B — Signals (Angular 16.1+)
+### 6B — Signals (Angular 16.1+)
 
 ```ts
 // src/app/app.ts
@@ -191,7 +215,7 @@ HTTP with signals: **[Step 7B](./angular-integration-guide.md#step-7b--http-with
 
 ## Header: `signed-in`, `user-name`, `wegAuthClick`
 
-| Input / output | Binding (5A) | Binding (5B) | Notes |
+| Input / output | Binding (6A) | Binding (6B) | Notes |
 | --- | --- | --- | --- |
 | CMS nav | `[layout]="layoutData"` | `[layout]="layoutData()"` | `header.menu` — groups (`items`) and flat links (`href`) when signed out |
 | Session state | `[signedIn]="signedIn"` | `[signedIn]="signedIn()"` | `true` → built-in signed-in nav |
@@ -224,6 +248,8 @@ More detail: **[integration guide § Troubleshooting](./angular-integration-guid
 
 ## See also
 
+- **[Documentation index](./README.md)**
+- **[In-repo Angular 16 demo](../demo/angular16/README.md)**
 - **[Angular 16 / TS 4.9 compatibility](./angular-16-compatibility.md)** — `stencil-public-runtime` errors, subpath imports
 - **[Angular integration guide (step-by-step)](./angular-integration-guide.md)**
 - **[React SPA](./react.md)**

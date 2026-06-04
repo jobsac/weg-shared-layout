@@ -7,7 +7,8 @@ Step-by-step guide for **Angular 16+** (standalone or NgModule). Covers static f
 | **This guide** | First integration, production setup, API mapping, testing, SSR |
 | **[angular.md](./angular.md)** | Short copy-paste quick start (same steps, fewer words) |
 | **[angular-16-compatibility.md](./angular-16-compatibility.md)** | TS 4.9 / `stencil-public-runtime` errors, subpath import / `moduleResolution` |
-| **[weg-angular-demo](https://github.com/jobsac/weg-angular-demo)** | Runnable reference app |
+| **[demo/angular16/README.md](../demo/angular16/README.md)** | In-repo Angular 16 app — **same imports as npm install** (copy-paste guide) |
+| **[weg-angular-demo](https://github.com/jobsac/weg-angular-demo)** | Runnable reference app (newer Angular) |
 
 ---
 
@@ -35,7 +36,7 @@ Copy this list while integrating:
 
 - [ ] **Step 1** — `npm i weg-shared-layout`
 - [ ] **Step 2** — `defineCustomElements()` in `main.ts` **before** bootstrap
-- [ ] **Step 3** — `resolveJsonModule` in `tsconfig.app.json` (if importing JSON)
+- [ ] **Step 3** — TypeScript: `resolveJsonModule`, `skipLibCheck`, `moduleResolution` (`bundler` or `node16`) — see [Step 3](#step-3--typescript-import-layout-json)
 - [ ] **Step 4** — `src/app/auth.ts` with sign-in URL constants (host app, not from package)
 - [ ] **Step 5** — `CUSTOM_ELEMENTS_SCHEMA` on the shell `@Component` (or `@NgModule`) that owns `<weg-header>` / `<weg-footer>`
 - [ ] **Step 6** — Shell template with **`[layout]`** property binding (not `layout="..."`)
@@ -74,6 +75,9 @@ The components do not depend on signals, RxJS, or standalone vs NgModule — onl
 | **Property binding** | `[layout]="obj"` — not `layout="{{ obj }}"` |
 | **`CUSTOM_ELEMENTS_SCHEMA`** | On every component template that uses the tags; **does not** cascade to routed children |
 | **One-time registration** | `defineCustomElements()` once per browser load (recommended) |
+| **TypeScript 5.0+** (Angular 16.1+) | Recommended for JSON/subpath imports; use `skipLibCheck` if staying on 4.9 — [angular-16-compatibility](./angular-16-compatibility.md) |
+
+**Runnable Angular 16 example (same imports as npm):** [demo/angular16/README.md](../demo/angular16/README.md).
 
 ---
 
@@ -117,19 +121,32 @@ import 'weg-shared-layout/weg-footer';
 
 If header/footer are empty but tags appear in the DOM, registration did not run or ran too late.
 
+Side-effect imports need **`moduleResolution": "bundler"`** (or `"node16"`). If you cannot change that, use the **loader only** — see [angular-16-compatibility.md](./angular-16-compatibility.md).
+
 ---
 
 ### Step 3 — TypeScript: import layout JSON
 
-In `tsconfig.app.json` (or `tsconfig.json`):
+In **`tsconfig.json`** and/or **`tsconfig.app.json`** (Angular 16 + TypeScript 5.1 example — matches [demo/angular16](../demo/angular16/README.md)):
 
 ```json
 {
   "compilerOptions": {
-    "resolveJsonModule": true
-  }
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "moduleResolution": "bundler"
+  },
+  "include": ["src/**/*.ts"]
 }
 ```
+
+| Option | Why |
+| --- | --- |
+| `skipLibCheck` | Skips Stencil `stencil-public-runtime.d.ts` (TS 5 syntax) when on TS 4.9 |
+| `resolveJsonModule` | Allows `import … from 'weg-shared-layout/dummy-data.json'` |
+| `moduleResolution: "bundler"` | Resolves package `exports` (`loader`, `dummy-data.json`) |
+
+Use **`node16`** instead of **`bundler`** if required by your toolchain. Classic **`node`** does not resolve subpaths reliably.
 
 Create a shared layout type in `src/app/layout.types.ts`:
 
@@ -148,6 +165,14 @@ import layoutFixture from 'weg-shared-layout/dummy-data.json';
 ```
 
 Production: same shape from your API (e.g. [`GET /api/layout`](https://weg-payload-test.vercel.app/api/layout)).
+
+Types without JSON import:
+
+```ts
+import type { LayoutData } from 'weg-shared-layout/layout-data';
+```
+
+(requires `./layout-data` in package `exports` — see published version.)
 
 ---
 
@@ -732,7 +757,7 @@ Bind the result the same way as Step 7.
 | HTTP layout | `layout$` + `\| async` | `layout = toSignal(loadLayout())` |
 | Update signed in | `this.signedIn = true` | `this.signedIn.set(true)` |
 
-Full code for both variants: **Step 6** and **Step 7** above, and [angular.md §5](./angular.md#5-layout-shell--pick-one).
+Full code for both variants: **Step 6** and **Step 7** above, and [angular.md §6](./angular.md#6-layout-shell--pick-one).
 
 ---
 
@@ -976,7 +1001,7 @@ $0.userName
 | File | Role |
 | --- | --- |
 | `src/main.ts` | `defineCustomElements()` then bootstrap |
-| `tsconfig.app.json` | `resolveJsonModule: true` |
+| `tsconfig.json` / `tsconfig.app.json` | `skipLibCheck`, `resolveJsonModule`, `moduleResolution: bundler` (or `node16`) |
 | `src/app/auth.ts` | `HEADER_SIGN_IN`, `ACCOUNT_LOGIN_HREF` |
 | `src/app/layout.types.ts` | `export type LayoutData = typeof layoutFixture` |
 | `src/app/layout.service.ts` | HTTP / API mapping (Step 7, optional arrays) |
@@ -1000,9 +1025,11 @@ $0.userName
 
 ### Related docs
 
+- [Documentation index](./README.md)
 - [Angular 16 / TypeScript 4.9 compatibility](./angular-16-compatibility.md)
+- [In-repo Angular 16 demo](../demo/angular16/README.md)
 - [Quick start (angular.md)](./angular.md)
 - [Package readme](../readme.md)
 - [Plain HTML / vanilla JS](./vanilla.md)
 - [React SPA](./react.md)
-- [Reference demo app](https://github.com/jobsac/weg-angular-demo)
+- [External reference app (newer Angular)](https://github.com/jobsac/weg-angular-demo)

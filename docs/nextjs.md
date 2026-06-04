@@ -28,6 +28,7 @@ Both accept **`layout`** (JSON string recommended in Next). `<weg-header>` also 
 | **Next.js 13+** | App Router (`app/layout.tsx`) |
 | **`transpilePackages`** | Next must compile `weg-shared-layout` |
 | **`suppressHydrationWarning`** | Recommended on both tags (SSR placeholder vs client shadow DOM) |
+| **TypeScript** | `resolveJsonModule` if importing `weg-shared-layout/dummy-data.json` on the server |
 
 ## Install
 
@@ -77,16 +78,9 @@ import 'weg-shared-layout/weg-header';
 
 defineCustomElements();
 
-type LayoutData = {
-  header?: {
-    logoSrc?: string;
-    menu?: {
-      label: string;
-      href?: string;
-      items?: { label: string; href: string }[];
-    }[];
-  };
-};
+import type { LayoutData } from 'weg-shared-layout/layout-data';
+// Or: import layoutFixture from 'weg-shared-layout/dummy-data.json';
+//      type LayoutData = typeof layoutFixture;
 
 export function Header({
   layout,
@@ -258,6 +252,19 @@ The logo **image** uses `layout.header.logoSrc` when signed out (bundled if omit
 
 ## TypeScript
 
+### Server / client JSON imports
+
+```json
+{
+  "compilerOptions": {
+    "resolveJsonModule": true,
+    "moduleResolution": "bundler"
+  }
+}
+```
+
+### JSX module augmentation
+
 ```ts
 // src/types/weg-shared-layout-jsx.d.ts
 import type { JSX as WegSharedLayoutJSX } from 'weg-shared-layout';
@@ -300,7 +307,8 @@ declare module 'react' {
 
 ## See also
 
+- **[Documentation index](./README.md)**
 - **[React SPA](./react.md)**
-- **[Angular](./angular.md)**
+- **[Angular](./angular.md)** · **[Angular 16 demo](../demo/angular16/README.md)**
 - **[Plain HTML / vanilla JS](./vanilla.md)**
 - **[Package readme](../readme.md)**

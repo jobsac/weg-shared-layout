@@ -19,7 +19,7 @@ Both are **presentational** [Stencil](https://stenciljs.com/) Web Components. Th
 | --- | --- |
 | **React 19+** | React 19 maps custom-element props to DOM **properties** when possible. Older React often sets props as string **attributes**, which breaks object payloads. |
 | **Bundler** | Must resolve `node_modules` ESM/CJS from `weg-shared-layout`. |
-| **TypeScript (optional)** | Module augmentation below; enable `resolveJsonModule` if you import `dummy-data.json`. |
+| **TypeScript (optional)** | `resolveJsonModule` + `moduleResolution` `bundler` / `node16` for JSON/subpath imports; module augmentation below. |
 
 ## Install
 
@@ -39,7 +39,7 @@ import { defineCustomElements } from 'weg-shared-layout/loader';
 defineCustomElements();
 ```
 
-Side-effect import the tags your app uses:
+**Alternative** — side-effect imports per tag (requires modern `moduleResolution`; see [angular-16-compatibility](./angular-16-compatibility.md#error-2-cannot-find-module-weg-shared-layoutweg-header)):
 
 ```ts
 import 'weg-shared-layout/weg-header';
@@ -89,17 +89,7 @@ export const ACCOUNT_LOGIN_HREF = HEADER_SIGN_IN.href;
 
 ### Signed out
 
-Pass CMS/API layout with unified `header.menu`. Use [`dummy-data.json`](../src/assets/dummy-data.json) for the full shape — dropdown groups use `items`, flat links and Sign in use `href`. Keep auth URLs in a local file:
-
-```ts
-// auth.ts (host app)
-export const HEADER_SIGN_IN = {
-  label: 'Sign in',
-  href: 'https://account.warwickemploymentgroup.com/account/login',
-};
-
-export const ACCOUNT_LOGIN_HREF = HEADER_SIGN_IN.href;
-```
+Pass CMS/API layout with unified **`header.menu`**. Use [`dummy-data.json`](../src/assets/dummy-data.json) for the full shape — nav groups use `items`, flat links and Sign in use `href`.
 
 ### Signed in
 
@@ -213,7 +203,27 @@ export function SiteLayout({ children }: { children: React.ReactNode }) {
 
 Replace the URL with your CMS/API. Keep the object shape aligned with `dummy-data.json`.
 
-## TypeScript: module augmentation
+## TypeScript
+
+### JSON + package subpaths
+
+```json
+{
+  "compilerOptions": {
+    "resolveJsonModule": true,
+    "moduleResolution": "bundler"
+  }
+}
+```
+
+```ts
+import layoutFixture from 'weg-shared-layout/dummy-data.json';
+export type LayoutData = typeof layoutFixture;
+```
+
+Or types only: `import type { LayoutData } from 'weg-shared-layout/layout-data'`.
+
+### JSX module augmentation
 
 Add once (e.g. `src/types/weg-shared-layout-jsx.d.ts`):
 
@@ -255,7 +265,8 @@ declare module 'react' {
 
 ## See also
 
+- **[Documentation index](./README.md)**
 - **[Next.js App Router](./nextjs.md)**
-- **[Angular](./angular.md)**
+- **[Angular](./angular.md)** · **[Angular 16 demo](../demo/angular16/README.md)**
 - **[Plain HTML / vanilla JS](./vanilla.md)**
 - **[Package readme](../readme.md)**
