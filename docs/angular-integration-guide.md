@@ -6,6 +6,7 @@ Step-by-step guide for **Angular 16+** (standalone or NgModule). Covers static f
 | --- | --- |
 | **This guide** | First integration, production setup, API mapping, testing, SSR |
 | **[angular.md](./angular.md)** | Short copy-paste quick start (same steps, fewer words) |
+| **[angular-16-compatibility.md](./angular-16-compatibility.md)** | TS 4.9 / `stencil-public-runtime` errors, subpath import / `moduleResolution` |
 | **[weg-angular-demo](https://github.com/jobsac/weg-angular-demo)** | Runnable reference app |
 
 ---
@@ -955,6 +956,8 @@ External `https://` links open in a new tab automatically.
 | SSR `document is not defined` | Loader on server | `typeof window !== 'undefined'` guard |
 | Missing social icons | Bad `platform` | Exactly `LinkedIn`, `Instagram`, `TikTok`, `YouTube` |
 | Missing menu item | Normalization | Non-empty `label` and valid `items` or `href` |
+| `Mixin<const …>` / TS1139 in `stencil-public-runtime.d.ts` | TS 4.9 parsing Stencil 5 syntax | `skipLibCheck: true` and/or TypeScript 5.0+ — see **[angular-16-compatibility](./angular-16-compatibility.md)** |
+| Cannot resolve `weg-shared-layout/weg-header` | `moduleResolution: "node"` | Use `defineCustomElements` from `weg-shared-layout/loader`, or set `bundler` / `node16` — see **[angular-16-compatibility](./angular-16-compatibility.md)** |
 
 ### DevTools
 
@@ -997,6 +1000,7 @@ $0.userName
 
 ### Related docs
 
+- [Angular 16 / TypeScript 4.9 compatibility](./angular-16-compatibility.md)
 - [Quick start (angular.md)](./angular.md)
 - [Package readme](../readme.md)
 - [Plain HTML / vanilla JS](./vanilla.md)

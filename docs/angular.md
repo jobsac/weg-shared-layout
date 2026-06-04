@@ -217,11 +217,14 @@ Logo **image** uses `layout.header.logoSrc` (bundled if omitted). Logo **link** 
 | Auth always Sign in | `[signedIn]` not bound or still `false` |
 | Manage Account generic | `[userName]` not set when signed in |
 | SSR: `document is not defined` | Guard `defineCustomElements()` with `typeof window !== 'undefined'` |
+| `stencil-public-runtime.d.ts` / `Mixin<const …>` errors | TypeScript 4.9 vs Stencil 5 `.d.ts` | **[angular-16-compatibility.md](./angular-16-compatibility.md)** |
+| Cannot resolve `weg-shared-layout/weg-header` | Old `moduleResolution` | Loader in `main.ts` or `bundler` / `node16` — **[angular-16-compatibility.md](./angular-16-compatibility.md)** |
 
 More detail: **[integration guide § Troubleshooting](./angular-integration-guide.md#troubleshooting)**.
 
 ## See also
 
+- **[Angular 16 / TS 4.9 compatibility](./angular-16-compatibility.md)** — `stencil-public-runtime` errors, subpath imports
 - **[Angular integration guide (step-by-step)](./angular-integration-guide.md)**
 - **[React SPA](./react.md)**
 - **[Next.js App Router](./nextjs.md)**

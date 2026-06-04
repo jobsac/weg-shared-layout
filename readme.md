@@ -71,6 +71,7 @@ header.addEventListener('wegAuthClick', (event) => {
 | --- | --- |
 | Angular (quick start) | [docs/angular.md](./docs/angular.md) |
 | Angular (step-by-step integration) | [docs/angular-integration-guide.md](./docs/angular-integration-guide.md) |
+| Angular 16 / TypeScript 4.9 | [docs/angular-16-compatibility.md](./docs/angular-16-compatibility.md) |
 | React (SPA, client-only) | [docs/react.md](./docs/react.md) |
 | Next.js (App Router) | [docs/nextjs.md](./docs/nextjs.md) |
 | Plain HTML / vanilla JS | [docs/vanilla.md](./docs/vanilla.md) |
