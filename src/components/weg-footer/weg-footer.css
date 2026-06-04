@@ -13,12 +13,14 @@
   align-items: center;
   gap: 1.25rem;
   padding-block: 2rem;
+  padding-inline: 0.5rem;
 }
 
 @media (--weg-md) {
   .footer__inner {
     gap: 2.25rem;
     padding-block: 3.5rem;
+    padding-inline: 2rem;
   }
 }
 
@@ -172,16 +174,51 @@
   gap: 0.75rem;
   width: 100%;
   min-width: 0;
-  padding: 0 0.25rem;
   text-align: center;
 }
 
+/* sm: 6 footer columns → 3 × 2 grid */
+@media (--weg-sm) {
+  .columns {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1.5rem 3rem;
+  }
+
+  .columns__col:not(:first-child) {
+    gap: 0;
+  }
+
+  .columns__col:nth-child(-n + 3):not(:first-child) .columns__divider {
+    display: none;
+  }
+
+  .columns__col:nth-child(n + 4) .columns__divider {
+    display: block;
+    width: 100%;
+    height: 1px;
+    margin: 0 0 1.5rem;
+  }
+
+  .footer-link {
+    display: inline;
+    width: auto;
+    text-align: left;
+  }
+
+  .columns__links {
+    align-items: flex-start;
+    text-align: left;
+  }
+}
+
+/* md: 6 footer columns → single row */
 @media (--weg-md) {
   .columns {
     display: flex;
     flex-direction: row;
     align-items: stretch;
     justify-content: center;
+    gap: 0;
   }
 
   .columns__col {
@@ -194,16 +231,17 @@
     gap: 0;
   }
 
-  .columns__divider {
+  .columns__col:nth-child(-n + 3):not(:first-child) .columns__divider,
+  .columns__col:nth-child(n + 4) .columns__divider {
+    display: block;
     width: 1px;
     height: auto;
-    margin: 0 0.75rem;
+    margin: 0 1.5rem;
   }
 
   .columns__links {
     flex: 1;
     align-items: flex-start;
-    padding: 0 0.75rem;
     text-align: left;
   }
 }
