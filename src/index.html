@@ -8,10 +8,10 @@
     <script nomodule src="/build/weg-shared-layout.js"></script>
   </head>
   <body style="margin: 0;">
-    <weg-header id="header"></weg-header>
-    <p style="border:20px solid darkred;margin:0;padding:20px;text-align:center">Signed out header</p>
     <weg-header signed-in user-name="John Doe"></weg-header>
     <p style="border:20px solid darkgreen;margin:0;padding:20px;text-align:center">Signed in header</p>
+    <weg-header id="header"></weg-header>
+    <p style="border:20px solid darkred;margin:0;padding:20px;text-align:center">Signed out header</p>
     <weg-footer id="footer"></weg-footer>
     <script type="module">
       const res = await fetch('/assets/dummy-data.json');
