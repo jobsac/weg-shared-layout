@@ -20,6 +20,12 @@
   .footer__inner {
     gap: 2.25rem;
     padding-block: 3.5rem;
+    padding-inline: 1rem;
+  }
+}
+
+@media (--weg-lg) {
+  .footer__inner {
     padding-inline: 2rem;
   }
 }
@@ -29,6 +35,7 @@
   align-items: center;
   justify-content: center;
   gap: 1rem;
+  flex-wrap: wrap;
 }
 
 @media (--weg-md) {
