@@ -15,11 +15,24 @@
   padding-block: 2rem;
 }
 
+@media (--weg-md) {
+  .footer__inner {
+    gap: 2.25rem;
+    padding-block: 3.5rem;
+  }
+}
+
 .social {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 1rem;
+}
+
+@media (--weg-md) {
+  .social {
+    gap: 1.75rem;
+  }
 }
 
 .social__link {
@@ -70,6 +83,14 @@
   outline: none;
 }
 
+@media (--weg-md) {
+  .footer-link {
+    display: inline;
+    width: auto;
+    text-align: left;
+  }
+}
+
 .footer-link:hover {
   opacity: 0.9;
 }
@@ -87,6 +108,13 @@
   line-height: 1.5rem;
 }
 
+@media (--weg-md) {
+  .legal {
+    font-size: 1.125rem;
+    line-height: 1.75rem;
+  }
+}
+
 .legal__p {
   margin: 0;
 }
@@ -102,20 +130,26 @@
   line-height: 1.5rem;
 }
 
+@media (--weg-md) {
+  .standard {
+    font-size: 1.125rem;
+    line-height: 1.75rem;
+  }
+}
+
 .columns {
   width: 100%;
   display: grid;
-  gap: 0;
   grid-template-columns: 1fr;
+  gap: 0;
 }
 
 .columns__col {
   display: flex;
-  flex: 1 1 0;
-  min-width: 0;
-  width: 100%;
-  align-items: stretch;
   flex-direction: column;
+  align-items: stretch;
+  width: 100%;
+  min-width: 0;
 }
 
 .columns__col:not(:first-child) {
@@ -124,13 +158,11 @@
 
 .columns__divider {
   display: block;
-  background: rgba(255, 255, 255, 0.35);
   flex-shrink: 0;
   width: 100%;
   height: 1px;
-  align-self: stretch;
   margin-top: 2rem;
-  margin-bottom: 0;
+  background: rgba(255, 255, 255, 0.35);
 }
 
 .columns__links {
@@ -138,7 +170,6 @@
   flex-direction: column;
   align-items: stretch;
   gap: 0.75rem;
-  flex: 1;
   width: 100%;
   min-width: 0;
   padding: 0 0.25rem;
@@ -146,40 +177,15 @@
 }
 
 @media (--weg-md) {
-  .footer__inner {
-    gap: 2.25rem;
-    padding-block: 3.5rem;
-  }
-
-  .social {
-    gap: 1.75rem;
-  }
-
-  .footer-link {
-    display: inline;
-    width: auto;
-    text-align: left;
-  }
-
-  .legal {
-    font-size: 1.125rem;
-    line-height: 1.75rem;
-  }
-
-  .standard {
-    font-size: 1.125rem;
-    line-height: 1.75rem;
-  }
-
   .columns {
     display: flex;
     flex-direction: row;
     align-items: stretch;
     justify-content: center;
-    gap: 0;
   }
 
   .columns__col {
+    flex: 1 1 0;
     flex-direction: row;
     align-items: stretch;
   }
@@ -195,6 +201,7 @@
   }
 
   .columns__links {
+    flex: 1;
     align-items: flex-start;
     padding: 0 0.75rem;
     text-align: left;
