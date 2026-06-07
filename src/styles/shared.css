@@ -1,4 +1,5 @@
 @import './breakpoints.css';
+@import './container.css';
 
 *,
 *::before,
@@ -11,36 +12,6 @@
   --weg-font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, 'Apple Color Emoji',
     'Segoe UI Emoji';
   --weg-color-accent: #948eeb;
-}
-
-/**
- * Container widths and horizontal padding match wegcms-v2 globals.css.
- * @see wegcms-v2/src/app/(frontend)/globals.css
- */
-.container {
-  width: 100%;
-  margin-inline: auto;
-  padding-block: 0.75rem;
-}
-
-@media (--weg-md) {
-  .container {
-    padding-inline: 1rem;
-    padding-block: 1.25rem;
-  }
-}
-
-@media (--weg-lg) {
-  .container {
-    padding-inline: 2rem;
-  }
-}
-
-
-@media (--weg-xl) {
-  .container {
-    padding-block: 1.75rem;
-  }
 }
 
 .sr-only {

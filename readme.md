@@ -73,6 +73,7 @@ header.addEventListener('wegAuthClick', (event) => {
 | `weg-shared-layout/dummy-data.json` | Sample layout + `typeof` for app types |
 | `weg-shared-layout/layout-data` | Types only (`LayoutData`, …) |
 | `weg-shared-layout/weg-header` / `weg-footer` | Side-effect tag registration |
+| `weg-shared-layout/styles/container.css` | Shared `.container` width and gutter utility |
 
 ## Documentation
 

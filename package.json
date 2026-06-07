@@ -1,6 +1,6 @@
 {
   "name": "weg-shared-layout",
-  "version": "0.0.27",
+  "version": "0.0.28",
   "description": "Shared layout Web Components built with Stencil",
   "main": "dist/index.cjs.js",
   "module": "dist/index.js",
@@ -30,7 +30,8 @@
     "./dummy-data.json": "./src/assets/dummy-data.json",
     "./layout-data": {
       "types": "./dist/types/types/layout-data.d.ts"
-    }
+    },
+    "./styles/container.css": "./src/styles/container.css"
   },
   "repository": {
     "type": "git",
@@ -45,7 +46,8 @@
     "docs/",
     "loader/",
     "src/assets/dummy-data.json",
-    "src/constants/"
+    "src/constants/",
+    "src/styles/container.css"
   ],
   "scripts": {
     "prepack": "npm run build",
