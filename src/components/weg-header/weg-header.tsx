@@ -724,7 +724,7 @@ export class WegHeader {
           'header--menu-open': mobileMenuActive,
         }}
       >
-        <div class="container header-inner">
+        <div class="header-inner">
           <button
             type="button"
             class="menu-toggle icon-button"
