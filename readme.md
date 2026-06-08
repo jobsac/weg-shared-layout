@@ -62,7 +62,7 @@ header.addEventListener('wegAuthClick', (event) => {
 });
 ```
 
-- **From npm:** `import layout from 'weg-shared-layout/dummy-data.json'` — in TypeScript set `resolveJsonModule` and `moduleResolution` to `bundler` or `node16` (see [docs/angular-16-compatibility.md](./docs/angular-16-compatibility.md)).
+- **From npm:** `import layout from 'weg-shared-layout/dummy-data.json'` — in TypeScript set `resolveJsonModule` and `moduleResolution` to `bundler` or `node16` (see [docs/angular.md](./docs/angular.md)).
 - **In this repo:** [`src/assets/dummy-data.json`](src/assets/dummy-data.json)
 
 ### Package imports (TypeScript / bundlers)
@@ -81,10 +81,8 @@ Full index: **[docs/README.md](./docs/README.md)**.
 
 | Guide | Doc |
 | --- | --- |
-| Angular (quick start) | [docs/angular.md](./docs/angular.md) |
-| Angular (step-by-step integration) | [docs/angular-integration-guide.md](./docs/angular-integration-guide.md) |
-| Angular 16 / TypeScript 4.9 | [docs/angular-16-compatibility.md](./docs/angular-16-compatibility.md) |
-| Angular 16 demo (in-repo, npm-style imports) | [demo/angular16/README.md](./demo/angular16/README.md) |
+| Angular 16 | [docs/angular.md](./docs/angular.md) |
+| Angular 16 demo (runnable) | [demo/angular16/README.md](./demo/angular16/README.md) |
 | React (SPA, client-only) | [docs/react.md](./docs/react.md) |
 | Next.js (App Router) | [docs/nextjs.md](./docs/nextjs.md) |
 | Plain HTML / vanilla JS | [docs/vanilla.md](./docs/vanilla.md) |

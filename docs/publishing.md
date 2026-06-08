@@ -58,7 +58,7 @@ Use `npm publish --dry-run` if you want to exercise the full pack pipeline witho
 
 ## What consumers import
 
-Documented in [docs/README.md](./README.md): `loader`, `dummy-data.json`, `layout-data` (types), and per-tag subpaths. Angular 16 apps need modern `moduleResolution` or the loader-only pattern — [angular-16-compatibility.md](./angular-16-compatibility.md).
+Documented in [docs/README.md](./README.md): `loader`, `dummy-data.json`, `layout-data` (types), and per-tag subpaths. Angular 16 apps need modern `moduleResolution` or the loader-only pattern — [angular.md](./angular.md).
 
 ## CI
 

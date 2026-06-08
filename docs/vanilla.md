@@ -13,7 +13,7 @@ Payload shape: [`dummy-data.json`](../src/assets/dummy-data.json) (see [readme](
 
 ## Install & register
 
-With a bundler that resolves `node_modules` and package **`exports`** (TypeScript: `resolveJsonModule` + `moduleResolution` `bundler` or `node16` — see [angular-16-compatibility](./angular-16-compatibility.md)):
+With a bundler that resolves `node_modules` and package **`exports`** (TypeScript: `resolveJsonModule` + `moduleResolution` `bundler` or `node16` — see [angular.md](./angular.md)):
 
 ```html
 <weg-header id="header"></weg-header>

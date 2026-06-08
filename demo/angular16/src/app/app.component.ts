@@ -1,7 +1,7 @@
 import { Component, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 
-import { HEADER_SIGN_IN, HEADER_SIGN_OUT_HREF } from './auth';
+import { ACCOUNT_LOGIN_HREF, HEADER_SIGN_IN } from './auth';
 import { LayoutService } from './layout.service';
 import type { LayoutData } from './layout.types';
 
@@ -39,7 +39,7 @@ export class AppComponent {
     if (customEvent.detail.action === 'sign-out') {
       this.signedIn = false;
       this.userName = undefined;
-      window.location.href = HEADER_SIGN_OUT_HREF;
+      window.location.href = ACCOUNT_LOGIN_HREF;
       return;
     }
 

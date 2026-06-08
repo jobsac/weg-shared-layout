@@ -39,7 +39,7 @@ import { defineCustomElements } from 'weg-shared-layout/loader';
 defineCustomElements();
 ```
 
-**Alternative** — side-effect imports per tag (requires modern `moduleResolution`; see [angular-16-compatibility](./angular-16-compatibility.md#error-2-cannot-find-module-weg-shared-layoutweg-header)):
+**Alternative** — side-effect imports per tag (requires modern `moduleResolution`; see [angular.md § Troubleshooting](./angular.md#troubleshooting)):
 
 ```ts
 import 'weg-shared-layout/weg-header';

@@ -1,71 +1,42 @@
-# Angular
+# Angular 16 integration
 
-Short quick start for Angular 16+. For the full **step-by-step** guide (HTTP, API mapping, testing, SSR, troubleshooting), see **[angular-integration-guide.md](./angular-integration-guide.md)**.
+Step-by-step guide for **Angular 16** (standalone or NgModule). Uses plain component properties — no signals.
 
-| Demo | When |
-| --- | --- |
-| **[demo/angular16/README.md](../demo/angular16/README.md)** | Angular **16** — same imports as `npm i` (in-repo: `file:../..`) |
-| [weg-angular-demo](https://github.com/jobsac/weg-angular-demo) | Newer Angular (signals) |
+Runnable reference: **[demo/angular16](../demo/angular16/README.md)** (`npm run demo:angular16` from repo root).
 
-## Integration checklist
+Newer Angular (signals): [weg-angular-demo](https://github.com/jobsac/weg-angular-demo) — same layout ideas, different syntax.
 
-- [ ] `npm i weg-shared-layout`
-- [ ] `defineCustomElements()` in `main.ts` **before** bootstrap
-- [ ] `skipLibCheck`, `resolveJsonModule`, `moduleResolution: "bundler"` (or `node16`) — see [Step 3 in integration guide](./angular-integration-guide.md#step-3--typescript-import-layout-json)
-- [ ] `auth.ts` with `HEADER_SIGN_IN` / `ACCOUNT_LOGIN_HREF` (host app constants)
-- [ ] `CUSTOM_ELEMENTS_SCHEMA` on the shell component that uses the tags
-- [ ] `[layout]="layoutObject"` on `<weg-header>` and `<weg-footer>`
-- [ ] Header: `[signedIn]`, `[userName]`, `(wegAuthClick)` when using auth
+---
 
-## Components
+## Checklist
 
-| Tag | Purpose |
-| --- | --- |
-| `<weg-header>` | Header — CMS nav (signed out), built-in nav (signed in), auth |
-| `<weg-footer>` | Footer — social, menu, credits, copyright |
+Copy this while integrating:
 
-Both accept the same `layout` payload ([`dummy-data.json`](../src/assets/dummy-data.json) or your API). `<weg-header>` also accepts **`signed-in`**, **`user-name`**, and emits **`wegAuthClick`**.
+- [ ] **Step 1** — `npm i weg-shared-layout`
+- [ ] **Step 2** — `tsconfig`: `skipLibCheck`, `resolveJsonModule`, `moduleResolution`
+- [ ] **Step 3** — `defineCustomElements()` in `main.ts` **before** bootstrap
+- [ ] **Step 4** — `layout.types.ts` from package fixture
+- [ ] **Step 5** — `auth.ts` with sign-in URL constants (your app, not the package)
+- [ ] **Step 6** — `CUSTOM_ELEMENTS_SCHEMA` on the shell component
+- [ ] **Step 7** — Template with **`[layout]`** property binding
+- [ ] **Step 8** — Header: `[signedIn]`, `[userName]`, `(wegAuthClick)`
+- [ ] **Step 9** — Verify in DevTools: `$0.layout` is an object on `<weg-header>`
 
-## 1. Install
+---
+
+## Step 1 — Install
 
 ```bash
 npm i weg-shared-layout
 ```
 
-## 2. Register custom elements (once, before bootstrap)
+---
 
-**Recommended** — loader in `src/main.ts`:
+## Step 2 — TypeScript config
 
-```ts
-import { bootstrapApplication } from '@angular/platform-browser';
-import { defineCustomElements } from 'weg-shared-layout/loader';
-
-import { appConfig } from './app/app.config';
-import { App } from './app/app';
-
-defineCustomElements();
-
-bootstrapApplication(App, appConfig).catch((err) => console.error(err));
-```
-
-**Alternative** — side-effect imports (one of these approaches, not both; needs `moduleResolution` `bundler` / `node16`):
-
-```ts
-import 'weg-shared-layout/weg-header';
-import 'weg-shared-layout/weg-footer';
-```
-
-## 3. Layout types + TypeScript
-
-```ts
-// src/app/layout.types.ts
-import layoutFixture from 'weg-shared-layout/dummy-data.json';
-
-export type LayoutData = typeof layoutFixture;
-```
+In **`tsconfig.json`** and/or **`tsconfig.app.json`**:
 
 ```json
-// tsconfig.json (or tsconfig.app.json) — required for JSON + package subpaths
 {
   "compilerOptions": {
     "skipLibCheck": true,
@@ -76,13 +47,58 @@ export type LayoutData = typeof layoutFixture;
 }
 ```
 
-Angular 16 pitfalls (Stencil `.d.ts`, classic `node` resolution): **[angular-16-compatibility.md](./angular-16-compatibility.md)**.
+| Option | Why |
+| --- | --- |
+| `skipLibCheck` | Skips Stencil `stencil-public-runtime.d.ts` (TS 5 syntax) when on TS 4.9 |
+| `resolveJsonModule` | Allows `import … from 'weg-shared-layout/dummy-data.json'` |
+| `moduleResolution: "bundler"` | Resolves package `exports` (`loader`, `dummy-data.json`) |
 
-## 4. Allow custom elements in templates
+Use **`node16`** instead of **`bundler`** if you must stay on TypeScript 4.9. Classic **`node`** does not resolve subpaths reliably.
 
-Add `schemas: [CUSTOM_ELEMENTS_SCHEMA]` to every `@Component` (or `@NgModule`) whose template uses `<weg-header>` or `<weg-footer>`. Does **not** cascade to `router-outlet` children.
+---
 
-## 5. Auth constants
+## Step 3 — Register custom elements
+
+Call the Stencil loader in **`src/main.ts`** once, **before** bootstrap:
+
+```ts
+import { bootstrapApplication } from '@angular/platform-browser';
+import { defineCustomElements } from 'weg-shared-layout/loader';
+
+import { AppComponent } from './app/app.component';
+import { appConfig } from './app/app.config';
+
+defineCustomElements();
+
+bootstrapApplication(AppComponent, appConfig).catch((err) => console.error(err));
+```
+
+If header/footer tags appear but nav is empty, registration did not run or ran too late.
+
+**NgModule apps:** same `defineCustomElements()` call, then `platformBrowserDynamic().bootstrapModule(AppModule)`.
+
+---
+
+## Step 4 — Layout types
+
+```ts
+// src/app/layout.types.ts
+import layoutFixture from 'weg-shared-layout/dummy-data.json';
+
+export type LayoutData = typeof layoutFixture;
+```
+
+Alternative (types only, no JSON import):
+
+```ts
+import type { LayoutData } from 'weg-shared-layout/layout-data';
+```
+
+---
+
+## Step 5 — Auth URLs
+
+Host apps own sign-in/out URLs — do not import these from the package.
 
 ```ts
 // src/app/auth.ts
@@ -94,35 +110,30 @@ export const HEADER_SIGN_IN = {
 export const ACCOUNT_LOGIN_HREF = HEADER_SIGN_IN.href;
 ```
 
-## 6. Layout shell — pick one
+---
 
-Use **`[layout]="..."`** so Angular sets the JavaScript `layout` property, not an HTML attribute.
+## Step 6 — Shell component
 
-| Variant | Angular | Template bindings |
-| --- | --- | --- |
-| **6A** Plain properties | 16+ | `[layout]="layoutData"` |
-| **6B** Signals | 16.1+ | `[layout]="layoutData()"` |
-
-Full HTTP examples: integration guide **[Step 7A / 7B](./angular-integration-guide.md#step-7--load-layout-from-your-api)**.
-
-### 6A — Plain properties (Angular 16+)
+Add `CUSTOM_ELEMENTS_SCHEMA` to the component whose template contains `<weg-header>` / `<weg-footer>`. It does **not** cascade to routed children.
 
 ```ts
-// src/app/app.ts
+// src/app/app.component.ts
 import { Component, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import layoutFixture from 'weg-shared-layout/dummy-data.json';
 
 import { ACCOUNT_LOGIN_HREF, HEADER_SIGN_IN } from './auth';
+import type { LayoutData } from './layout.types';
 
 @Component({
   selector: 'app-root',
+  standalone: true,
   imports: [RouterOutlet],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
-  templateUrl: './app.html',
+  templateUrl: './app.component.html',
 })
-export class App {
-  layoutData = layoutFixture;
+export class AppComponent {
+  layoutData: LayoutData = layoutFixture;
 
   signedIn = false;
   userName?: string;
@@ -142,8 +153,14 @@ export class App {
 }
 ```
 
+---
+
+## Step 7 — Template
+
+Use **`[layout]="..."`** so Angular sets the JavaScript property, not an HTML attribute.
+
 ```html
-<!-- src/app/app.html -->
+<!-- src/app/app.component.html -->
 <weg-header
   [layout]="layoutData"
   [signedIn]="signedIn"
@@ -151,43 +168,98 @@ export class App {
   (wegAuthClick)="onAuthClick($event)"
 ></weg-header>
 
-<router-outlet />
+<main>
+  <router-outlet></router-outlet>
+</main>
 
 <weg-footer [layout]="layoutData"></weg-footer>
 ```
 
-In production, load the same shape from your API — see **[Step 7A](./angular-integration-guide.md#step-7a--http-with-rxjs--async-pipe-pairs-with-6a)**. If your API returns separate arrays, see **[mapping section](./angular-integration-guide.md#optional-api-returns-separate-arrays-not-one-layout-object)**.
+| Binding | Purpose |
+| --- | --- |
+| `[layout]` | CMS nav when signed out; same object for header and footer |
+| `[signedIn]` | `true` → built-in signed-in nav (ignores CMS `header.menu`) |
+| `[userName]` | First name on Manage Account when signed in |
+| `(wegAuthClick)` | `detail.action`: `'sign-in'` \| `'sign-out'` — call `preventDefault()` when you handle navigation |
 
-### 6B — Signals (Angular 16.1+)
+Run the app — you should see header nav and footer.
+
+---
+
+## Step 8 — Load layout from your API (optional)
+
+When ready, replace the static fixture with HTTP. Register `provideHttpClient()` in `app.config.ts`.
+
+**`src/app/layout.service.ts`:**
 
 ```ts
-// src/app/app.ts
-import { Component, CUSTOM_ELEMENTS_SCHEMA, signal } from '@angular/core';
+import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { map, Observable } from 'rxjs';
+
+import { HEADER_SIGN_IN } from './auth';
+import type { LayoutData } from './layout.types';
+
+@Injectable({ providedIn: 'root' })
+export class LayoutService {
+  constructor(private http: HttpClient) {}
+
+  loadLayout(): Observable<LayoutData> {
+    return this.http.get<LayoutData>('/api/layout').pipe(
+      map((data) => this.ensureSignInMenu(data)),
+    );
+  }
+
+  private ensureSignInMenu(data: LayoutData): LayoutData {
+    const menu = data.header?.menu ?? [];
+    const hasSignIn = menu.some(
+      (item) =>
+        !item.items?.length &&
+        item.label?.trim().toLowerCase() === 'sign in',
+    );
+    if (hasSignIn) return data;
+    return {
+      ...data,
+      header: { ...data.header, menu: [...menu, HEADER_SIGN_IN] },
+    };
+  }
+}
+```
+
+**`src/app/app.component.ts`** (HTTP variant):
+
+```ts
+import { AsyncPipe } from '@angular/common';
+import { Component, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
-import layoutFixture from 'weg-shared-layout/dummy-data.json';
+import { Observable } from 'rxjs';
 
 import { ACCOUNT_LOGIN_HREF, HEADER_SIGN_IN } from './auth';
 import type { LayoutData } from './layout.types';
+import { LayoutService } from './layout.service';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet],
+  standalone: true,
+  imports: [AsyncPipe, RouterOutlet],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
-  templateUrl: './app.html',
+  templateUrl: './app.component.html',
 })
-export class App {
-  readonly layoutData = signal<LayoutData>(layoutFixture);
+export class AppComponent {
+  layout$: Observable<LayoutData>;
+  signedIn = false;
+  userName?: string;
 
-  readonly signedIn = signal(false);
-  readonly userName = signal<string | undefined>(undefined);
+  constructor(layoutService: LayoutService) {
+    this.layout$ = layoutService.loadLayout();
+  }
 
   onAuthClick(event: Event): void {
     const customEvent = event as CustomEvent<{ action: 'sign-in' | 'sign-out' }>;
     customEvent.preventDefault();
 
     if (customEvent.detail.action === 'sign-out') {
-      this.signedIn.set(false);
-      this.userName.set(undefined);
+      this.signedIn = false;
       window.location.href = ACCOUNT_LOGIN_HREF;
       return;
     }
@@ -197,62 +269,134 @@ export class App {
 }
 ```
 
+**`src/app/app.component.html`** (Angular 16 — use `*ngIf`, not `@if`):
+
 ```html
-<!-- src/app/app.html -->
-<weg-header
-  [layout]="layoutData()"
-  [signedIn]="signedIn()"
-  [userName]="userName()"
-  (wegAuthClick)="onAuthClick($event)"
-></weg-header>
+<ng-container *ngIf="layout$ | async as layout">
+  <weg-header
+    [layout]="layout"
+    [signedIn]="signedIn"
+    [userName]="userName"
+    (wegAuthClick)="onAuthClick($event)"
+  ></weg-header>
 
-<router-outlet />
+  <main>
+    <router-outlet></router-outlet>
+  </main>
 
-<weg-footer [layout]="layoutData()"></weg-footer>
+  <weg-footer [layout]="layout"></weg-footer>
+</ng-container>
 ```
 
-HTTP with signals: **[Step 7B](./angular-integration-guide.md#step-7b--http-with-signals--tosignal-pairs-with-6b)** (`toSignal` + same `LayoutService`).
+Add `CommonModule` or `NgIf` + `AsyncPipe` to `imports` if not already present.
 
-## Header: `signed-in`, `user-name`, `wegAuthClick`
+---
 
-| Input / output | Binding (6A) | Binding (6B) | Notes |
-| --- | --- | --- | --- |
-| CMS nav | `[layout]="layoutData"` | `[layout]="layoutData()"` | `header.menu` — groups (`items`) and flat links (`href`) when signed out |
-| Session state | `[signedIn]="signedIn"` | `[signedIn]="signedIn()"` | `true` → built-in signed-in nav |
-| User name | `[userName]="userName"` | `[userName]="userName()"` | Manage Account label when signed in |
-| Auth click | `(wegAuthClick)="onAuthClick($event)"` | `detail.action`: `'sign-in'` \| `'sign-out'` |
-| Prevent default | `preventDefault()` in handler | Stops component default navigation |
+## Step 9 — Verify
 
-**Signed-in nav (built in):** Find a job, Dashboard, Manage Account, Sign out.
+1. Open DevTools → Elements → select `<weg-header>`.
+2. In the console:
 
-Logo **image** uses `layout.header.logoSrc` (bundled if omitted). Logo **link** always goes to WEG home.
+```js
+$0.layout      // must be a plain object, not undefined
+$0.signedIn    // boolean
+$0.userName    // string or undefined
+```
 
-## Footer
+If `layout` looks like `"[object Object]"`, you used attribute binding instead of `[layout]`.
 
-`<weg-footer>` only needs `[layout]`. See [`dummy-data.json`](../src/assets/dummy-data.json) for `footer` shape.
+---
+
+## Layout shape
+
+Both tags accept one **`layout`** object with `header` and `footer` keys — **not** a bare array at the top level.
+
+Full reference: [`dummy-data.json`](../src/assets/dummy-data.json) or [`GET /api/layout`](https://weg-payload-test.vercel.app/api/layout).
+
+```json
+{
+  "header": {
+    "menu": [
+      { "label": "Find a job", "items": [{ "label": "Graduates", "href": "…" }] },
+      { "label": "Career advice", "href": "…" },
+      { "label": "Sign in", "href": "…" }
+    ]
+  },
+  "footer": {
+    "menu": [[{ "label": "About WEG", "href": "…" }]],
+    "social": [{ "platform": "LinkedIn", "href": "…" }],
+    "credits": "…",
+    "copyright": "…"
+  }
+}
+```
+
+### API returns separate arrays?
+
+If your API does not return one `{ header, footer }` object, merge in a service:
+
+```ts
+forkJoin({
+  menuGroups: this.http.get<LayoutData['header']>('/api/nav/menu'),
+  flatLinks: this.http.get<LayoutData['header']>('/api/nav/links'),
+  footer: this.http.get<LayoutData['footer']>('/api/footer'),
+}).pipe(
+  map(({ menuGroups, flatLinks, footer }) => ({
+    header: { menu: [...menuGroups, ...flatLinks, HEADER_SIGN_IN] },
+    footer,
+  })),
+);
+```
+
+---
 
 ## Troubleshooting
 
-| Symptom | Cause / fix |
+| Symptom | Fix |
 | --- | --- |
-| `'weg-header'` / `'weg-footer'` is not a known element | `CUSTOM_ELEMENTS_SCHEMA` on the template's component |
-| Header/footer empty | `defineCustomElements()` before bootstrap, or missing `[layout]` |
-| Nav empty after passing an array | `[layout]` must be `{ header, footer }`, not a bare array |
-| Auth always Sign in | `[signedIn]` not bound or still `false` |
-| Manage Account generic | `[userName]` not set when signed in |
-| SSR: `document is not defined` | Guard `defineCustomElements()` with `typeof window !== 'undefined'` |
-| `stencil-public-runtime.d.ts` / `Mixin<const …>` errors | TypeScript 4.9 vs Stencil 5 `.d.ts` | **[angular-16-compatibility.md](./angular-16-compatibility.md)** |
-| Cannot resolve `weg-shared-layout/weg-header` | Old `moduleResolution` | Loader in `main.ts` or `bundler` / `node16` — **[angular-16-compatibility.md](./angular-16-compatibility.md)** |
+| `'weg-header'` is not a known element | `CUSTOM_ELEMENTS_SCHEMA` on the component that owns the template |
+| Header/footer empty | `defineCustomElements()` before bootstrap |
+| Nav empty after passing data | `[layout]` must be `{ header, footer }`, not a bare array |
+| Auth always Sign in | Bind `[signedIn]` from session state |
+| Generic Manage Account | Pass `[userName]` when signed in |
+| `Mixin<const …>` / TS1139 in `stencil-public-runtime.d.ts` | Add `skipLibCheck: true` and/or upgrade to TypeScript 5.0+ |
+| Cannot resolve `weg-shared-layout/loader` | Set `moduleResolution` to `bundler` or `node16` |
+| SSR: `document is not defined` | Guard: `if (typeof window !== 'undefined') defineCustomElements()` |
 
-More detail: **[integration guide § Troubleshooting](./angular-integration-guide.md#troubleshooting)**.
+### TypeScript 4.9 + Stencil errors
+
+Stencil ships `.d.ts` files with TypeScript 5 syntax. On Angular 16 with TS 4.9:
+
+1. Add **`skipLibCheck: true`** (recommended), or
+2. Upgrade to **TypeScript 5.0–5.1** (supported by Angular 16.1+): `npm i -D typescript@~5.1.6`
+
+For typing only, avoid pulling Stencil runtime declarations:
+
+```ts
+import type { LayoutData } from 'weg-shared-layout/layout-data';
+// or
+export type LayoutData = typeof layoutFixture; // from dummy-data.json
+```
+
+---
+
+## File map
+
+| File | Role |
+| --- | --- |
+| `src/main.ts` | `defineCustomElements()` then bootstrap |
+| `tsconfig.json` | `skipLibCheck`, `resolveJsonModule`, `moduleResolution` |
+| `src/app/layout.types.ts` | `export type LayoutData = typeof layoutFixture` |
+| `src/app/auth.ts` | `HEADER_SIGN_IN`, `ACCOUNT_LOGIN_HREF` |
+| `src/app/layout.service.ts` | HTTP / API mapping (optional) |
+| `src/app/app.component.ts` | Shell: schema, layout, auth handler |
+| `src/app/app.component.html` | `<weg-header>`, `<router-outlet>`, `<weg-footer>` |
+
+---
 
 ## See also
 
-- **[Documentation index](./README.md)**
-- **[In-repo Angular 16 demo](../demo/angular16/README.md)**
-- **[Angular 16 / TS 4.9 compatibility](./angular-16-compatibility.md)** — `stencil-public-runtime` errors, subpath imports
-- **[Angular integration guide (step-by-step)](./angular-integration-guide.md)**
-- **[React SPA](./react.md)**
-- **[Next.js App Router](./nextjs.md)**
-- **[Plain HTML / vanilla JS](./vanilla.md)**
-- **[Package readme](../readme.md)**
+- [Documentation index](./README.md)
+- [In-repo Angular 16 demo](../demo/angular16/README.md)
+- [Package readme](../readme.md)
+- [React SPA](./react.md) · [Next.js](./nextjs.md) · [Vanilla JS](./vanilla.md)
