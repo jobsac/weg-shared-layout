@@ -1,6 +1,6 @@
 {
   "name": "weg-shared-layout",
-  "version": "0.0.34",
+  "version": "0.0.35",
   "description": "Shared layout Web Components built with Stencil",
   "main": "dist/index.cjs.js",
   "module": "dist/index.js",
@@ -61,16 +61,16 @@
     "demo:angular16": "npm run build && npm run start --prefix demo/angular16"
   },
   "devDependencies": {
-    "@csstools/postcss-global-data": "^4.0.0",
-    "@stencil-community/postcss": "^2.2.0",
-    "@stencil/core": "^4.27.1 || ^5.0.0-0",
-    "@stencil/vitest": "^1.8.3",
-    "@types/node": "^22.13.5",
-    "@vitest/browser-playwright": "^4.0.0",
-    "axe-core": "^4.11.4",
-    "playwright": "^1.52.0",
-    "postcss-custom-media": "^12.0.1",
-    "vitest": "^4.0.0"
+    "@csstools/postcss-global-data": "~4.0.0",
+    "@stencil-community/postcss": "~2.2.0",
+    "@stencil/core": "~4.27.1 || ~5.0.0-0",
+    "@stencil/vitest": "~1.8.3",
+    "@types/node": "~22.13.5",
+    "@vitest/browser-playwright": "~4.0.0",
+    "axe-core": "~4.11.4",
+    "playwright": "~1.52.0",
+    "postcss-custom-media": "~12.0.1",
+    "vitest": "~4.0.0"
   },
   "license": "MIT",
   "author": "WEG",
