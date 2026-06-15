@@ -25,6 +25,7 @@ const SIGNED_IN_MENU: LayoutLink[] = [
 
 type HeaderData = {
   logoSrc?: string;
+  logoHref?: string;
   menu: LayoutLink[];
 };
 
@@ -62,9 +63,11 @@ function normalizeHeaderData(input: unknown): HeaderData {
   const root = (input && typeof input === 'object' ? input : {}) as LayoutData;
   const header = root.header && typeof root.header === 'object' ? root.header : {};
   const logoSrc = isNonEmptyString(header.logoSrc) ? header.logoSrc.trim() : undefined;
+  const logoHref = isNonEmptyString(header.logoHref) ? header.logoHref.trim() : undefined;
 
   return {
     logoSrc,
+    logoHref,
     menu: normalizeHeaderMenu(header.menu),
   };
 }
@@ -466,7 +469,7 @@ export class WegHeader {
   }
 
   private getLogoHref(): string {
-    return DEFAULT_LOGO_HREF;
+    return this.resolved.logoHref ?? DEFAULT_LOGO_HREF;
   }
 
   private findSignInLink(menu: LayoutLink[]): LayoutLink | null {

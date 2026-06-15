@@ -61,6 +61,7 @@ Or pass a JSON **string** on the `layout` attribute:
 | Field | Purpose |
 | --- | --- |
 | `header.logoSrc` | Logo image URL (bundled if omitted) |
+| `header.logoHref` | Logo link URL (WEG homepage if omitted) |
 | `header.menu` | Unified nav — groups with `items[]`, flat links with `href` (incl. Sign in) |
 
 See [`dummy-data.json`](../src/assets/dummy-data.json) for production URL examples.
@@ -117,7 +118,7 @@ header.addEventListener('wegAuthClick', (event) => {
 | `'sign-in'` | Browser follows the Sign in menu entry's `href` |
 | `'sign-out'` | Redirects to built-in sign-out URL |
 
-Logo **image** uses `header.logoSrc` (bundled if omitted). Logo **link** always goes to WEG home.
+Logo **image** uses `header.logoSrc` (bundled if omitted). Logo **link** uses `header.logoHref` when provided; otherwise it goes to the WEG homepage.
 
 ## Without a bundler
 

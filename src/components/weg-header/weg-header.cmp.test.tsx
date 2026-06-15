@@ -25,6 +25,21 @@ describe('weg-header', () => {
     expect(header).toBeTruthy();
   });
 
+  it('uses header.logoHref when provided', async () => {
+    const { root } = await render(
+      <weg-header
+        layout={{
+          header: {
+            logoHref: 'https://example.com/custom-home',
+            menu: [],
+          },
+        }}
+      ></weg-header>,
+    );
+    const logoLink = root.shadowRoot?.querySelector('.logo-link') as HTMLAnchorElement | null;
+    expect(logoLink?.href).toBe('https://example.com/custom-home');
+  });
+
   it('parses JSON string layout prop', async () => {
     const { root } = await render(<weg-header layout={JSON.stringify(SAMPLE_HEADER_LAYOUT)}></weg-header>);
     const text = root.shadowRoot?.textContent ?? '';

@@ -232,6 +232,7 @@ Wire **`signedIn`** and **`userName`** from your auth provider (session hook / c
 | --- | --- | --- |
 | `layout.header.menu` | CMS nav rendered (groups + flat links incl. Sign in) | Ignored — built-in nav used |
 | `layout.header.logoSrc` | Logo image URL (bundled if omitted) | Built-in bundled logo |
+| `layout.header.logoHref` | Logo link URL | WEG homepage |
 | `signed-in` prop | `false` | `true` — session flag from host app |
 | `user-name` prop | — | User's first name on Manage Account |
 | `wegAuthClick` event | `'sign-in'` on Sign in click | `'sign-out'` on Sign out click |
@@ -239,7 +240,7 @@ Wire **`signedIn`** and **`userName`** from your auth provider (session hook / c
 
 **Signed-in nav (built into the component):** Find a job, Dashboard, Manage Account, Sign out.
 
-The logo **image** uses `layout.header.logoSrc` when signed out (bundled if omitted). The logo **link** always goes to WEG home.
+The logo **image** uses `layout.header.logoSrc` when signed out (bundled if omitted). The logo **link** uses `layout.header.logoHref` when provided; otherwise it defaults to the WEG homepage.
 
 ## Passing `layout` — quick reference
 

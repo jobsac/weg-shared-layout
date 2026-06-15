@@ -7,6 +7,7 @@ export type LayoutLink = {
 
 export type LayoutHeaderData = {
   logoSrc?: string;
+  logoHref?: string;
   menu?: LayoutLink[];
 };
 

@@ -41,6 +41,7 @@ Full reference: [`src/assets/dummy-data.json`](src/assets/dummy-data.json). Sign
 | Field | Used when | Notes |
 | --- | --- | --- |
 | `header.logoSrc` | Signed out | Optional CMS logo URL; bundled PNG if omitted |
+| `header.logoHref` | Always | Optional logo link URL; WEG homepage if omitted |
 | `header.menu` | Signed out | Groups use `items`; flat links use `href` |
 | `footer.menu` | Always | `LayoutLink[][]` — one column per inner array |
 | `footer.social` | Always | LinkedIn, Instagram, TikTok, or YouTube |
