@@ -16,10 +16,10 @@ Copy this while integrating:
 - [ ] **Step 2** — `tsconfig`: `skipLibCheck`, `resolveJsonModule`, `moduleResolution`
 - [ ] **Step 3** — `defineCustomElements()` in `main.ts` **before** bootstrap
 - [ ] **Step 4** — `layout.types.ts` from package fixture
-- [ ] **Step 5** — `auth.ts` with sign-in URL constants (your app, not the package)
+- [ ] **Step 5** — `auth.ts` with sign-out URL (optional; only if handling `wegAuthClick`)
 - [ ] **Step 6** — `CUSTOM_ELEMENTS_SCHEMA` on the shell component
 - [ ] **Step 7** — Template with **`[layout]`** property binding
-- [ ] **Step 8** — Header: `[signedIn]`, `[userName]`, `(wegAuthClick)`
+- [ ] **Step 8** — Header: `[signedIn]`, `[userName]`, `[accountBaseUrl]` (optional), `(wegAuthClick)`
 - [ ] **Step 9** — Verify in DevTools: `$0.layout` is an object on `<weg-header>`
 
 ---
@@ -96,18 +96,13 @@ import type { LayoutData } from 'weg-shared-layout/layout-data';
 
 ---
 
-## Step 5 — Auth URLs
+## Step 5 — Sign-out URL (optional)
 
-Host apps own sign-in/out URLs — do not import these from the package.
+Sign-in is a normal nav link in your CMS layout — no host constants needed. Only define a sign-out redirect if you handle `wegAuthClick`:
 
 ```ts
 // src/app/auth.ts
-export const HEADER_SIGN_IN = {
-  label: 'Sign in',
-  href: 'https://account.warwickemploymentgroup.com/account/login',
-};
-
-export const ACCOUNT_LOGIN_HREF = HEADER_SIGN_IN.href;
+export const ACCOUNT_SIGN_OUT_HREF = 'https://account.warwickemploymentgroup.com/account/login';
 ```
 
 ---
@@ -122,7 +117,7 @@ import { Component, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import layoutFixture from 'weg-shared-layout/dummy-data.json';
 
-import { ACCOUNT_LOGIN_HREF, HEADER_SIGN_IN } from './auth';
+import { ACCOUNT_SIGN_OUT_HREF } from './auth';
 import type { LayoutData } from './layout.types';
 
 @Component({
@@ -140,15 +135,11 @@ export class AppComponent {
 
   onAuthClick(event: Event): void {
     const customEvent = event as CustomEvent<{ action: 'sign-in' | 'sign-out' }>;
+    if (customEvent.detail.action !== 'sign-out') return;
+
     customEvent.preventDefault();
-
-    if (customEvent.detail.action === 'sign-out') {
-      this.signedIn = false;
-      window.location.href = ACCOUNT_LOGIN_HREF;
-      return;
-    }
-
-    window.location.href = HEADER_SIGN_IN.href;
+    this.signedIn = false;
+    window.location.href = ACCOUNT_SIGN_OUT_HREF;
   }
 }
 ```
@@ -180,7 +171,8 @@ Use **`[layout]="..."`** so Angular sets the JavaScript property, not an HTML at
 | `[layout]` | CMS nav when signed out; same object for header and footer |
 | `[signedIn]` | `true` → built-in signed-in nav (ignores CMS `header.menu`) |
 | `[userName]` | First name on Manage Account when signed in |
-| `(wegAuthClick)` | `detail.action`: `'sign-in'` \| `'sign-out'` — call `preventDefault()` when you handle navigation |
+| `[accountBaseUrl]` | Account portal origin for signed-in links (optional; production default when omitted) |
+| `(wegAuthClick)` | Optional — handle `sign-out` only; sign-in follows the link `href` |
 
 Run the app — you should see header nav and footer.
 
@@ -197,8 +189,12 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { map, Observable } from 'rxjs';
 
-import { HEADER_SIGN_IN } from './auth';
 import type { LayoutData } from './layout.types';
+
+const DEFAULT_SIGN_IN = {
+  label: 'Sign in',
+  href: 'https://account.warwickemploymentgroup.com/account/login',
+};
 
 @Injectable({ providedIn: 'root' })
 export class LayoutService {
@@ -220,7 +216,7 @@ export class LayoutService {
     if (hasSignIn) return data;
     return {
       ...data,
-      header: { ...data.header, menu: [...menu, HEADER_SIGN_IN] },
+      header: { ...data.header, menu: [...menu, DEFAULT_SIGN_IN] },
     };
   }
 }
@@ -234,7 +230,7 @@ import { Component, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { Observable } from 'rxjs';
 
-import { ACCOUNT_LOGIN_HREF, HEADER_SIGN_IN } from './auth';
+import { ACCOUNT_SIGN_OUT_HREF } from './auth';
 import type { LayoutData } from './layout.types';
 import { LayoutService } from './layout.service';
 
@@ -256,15 +252,11 @@ export class AppComponent {
 
   onAuthClick(event: Event): void {
     const customEvent = event as CustomEvent<{ action: 'sign-in' | 'sign-out' }>;
+    if (customEvent.detail.action !== 'sign-out') return;
+
     customEvent.preventDefault();
-
-    if (customEvent.detail.action === 'sign-out') {
-      this.signedIn = false;
-      window.location.href = ACCOUNT_LOGIN_HREF;
-      return;
-    }
-
-    window.location.href = HEADER_SIGN_IN.href;
+    this.signedIn = false;
+    window.location.href = ACCOUNT_SIGN_OUT_HREF;
   }
 }
 ```
@@ -342,7 +334,7 @@ forkJoin({
   footer: this.http.get<LayoutData['footer']>('/api/footer'),
 }).pipe(
   map(({ menuGroups, flatLinks, footer }) => ({
-    header: { menu: [...menuGroups, ...flatLinks, HEADER_SIGN_IN] },
+    header: { menu: [...menuGroups, ...flatLinks, DEFAULT_SIGN_IN] },
     footer,
   })),
 );
@@ -359,6 +351,7 @@ forkJoin({
 | Nav empty after passing data | `[layout]` must be `{ header, footer }`, not a bare array |
 | Auth always Sign in | Bind `[signedIn]` from session state |
 | Generic Manage Account | Pass `[userName]` when signed in |
+| Staging account portal | Pass `[accountBaseUrl]` (e.g. `https://account-staging.example.com`) |
 | `Mixin<const …>` / TS1139 in `stencil-public-runtime.d.ts` | Add `skipLibCheck: true` and/or upgrade to TypeScript 5.0+ |
 | Cannot resolve `weg-shared-layout/loader` | Set `moduleResolution` to `bundler` or `node16` |
 | SSR: `document is not defined` | Guard: `if (typeof window !== 'undefined') defineCustomElements()` |
@@ -387,7 +380,7 @@ export type LayoutData = typeof layoutFixture; // from dummy-data.json
 | `src/main.ts` | `defineCustomElements()` then bootstrap |
 | `tsconfig.json` | `skipLibCheck`, `resolveJsonModule`, `moduleResolution` |
 | `src/app/layout.types.ts` | `export type LayoutData = typeof layoutFixture` |
-| `src/app/auth.ts` | `HEADER_SIGN_IN`, `ACCOUNT_LOGIN_HREF` |
+| `src/app/auth.ts` | `ACCOUNT_SIGN_OUT_HREF` (optional) |
 | `src/app/layout.service.ts` | HTTP / API mapping (optional) |
 | `src/app/app.component.ts` | Shell: schema, layout, auth handler |
 | `src/app/app.component.html` | `<weg-header>`, `<router-outlet>`, `<weg-footer>` |

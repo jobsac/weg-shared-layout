@@ -10,6 +10,7 @@
   <p>
     Header and footer load layout from
     <code>weg-shared-layout/dummy-data.json</code> (same import path as npm install).
+    Sign-in is a normal nav link; the header recognizes it by label or login URL.
   </p>
   <button type="button" class="demo-toggle" (click)="toggleSignedIn()">
     {{ signedIn ? 'Switch to signed out' : 'Switch to signed in' }}

@@ -42,7 +42,7 @@ Re-run `npm install` in `demo/angular16` only if `package.json` `exports` or ver
 
 | | Your Angular 16 app | This demo |
 | --- | --- | --- |
-| Dependency | `"weg-shared-layout": "^0.0.32"` from npm | `"weg-shared-layout": "file:../.."` |
+| Dependency | `"weg-shared-layout": "^0.0.38"` from npm | `"weg-shared-layout": "file:../.."` |
 | Library build | Prebuilt in npm tarball | Run `npm run build` at repo root first |
 | Source code | Same imports and tsconfig | Identical |
 
@@ -55,5 +55,6 @@ Re-run `npm install` in `demo/angular16` only if `package.json` `exports` or ver
 | `src/main.ts` | `defineCustomElements()` from `weg-shared-layout/loader` |
 | `src/app/layout.types.ts` | `typeof` import from `weg-shared-layout/dummy-data.json` |
 | `src/app/layout.service.ts` | Fixture data (swap for `HttpClient` in production) |
+| `src/app/auth.ts` | Sign-out redirect URL constant |
 | `src/app/app.component.*` | `[layout]`, auth bindings, plain fields (no signals) |
 | `tsconfig.json` | `skipLibCheck`, `resolveJsonModule`, `moduleResolution: bundler` |

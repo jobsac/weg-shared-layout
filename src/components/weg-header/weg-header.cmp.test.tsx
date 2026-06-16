@@ -12,7 +12,7 @@ const SAMPLE_HEADER_LAYOUT = {
         items: [{ label: 'Graduates', href: '/search?category=graduates' }],
       },
       { label: 'Career advice', href: '/career-advice' },
-      { label: 'Sign in', href: '/account/login', authAction: 'sign-in' },
+      { label: 'Sign in', href: '/account/login' },
     ],
   },
 };

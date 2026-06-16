@@ -9,7 +9,7 @@ Guide for **Next.js 13+ App Router** (`app/` directory). For Vite/CRA-style clie
 | `<weg-header>` | Site header — bundled logo, CMS nav (signed out), built-in nav (signed in), Sign in / Manage Account / Sign out |
 | `<weg-footer>` | Site footer — social, menu, legal text |
 
-Both accept **`layout`** (JSON string recommended in Next). `<weg-header>` also accepts **`signed-in`**, **`user-name`**, and emits **`wegAuthClick`**.
+Both accept **`layout`** (JSON string recommended in Next). `<weg-header>` also accepts **`signed-in`**, **`user-name`**, **`account-base-url`**, and emits **`wegAuthClick`**.
 
 ## Why Next.js is different
 
@@ -51,18 +51,13 @@ const nextConfig: NextConfig = {
 export default nextConfig;
 ```
 
-## 2. Auth constants (host app)
+## 2. Sign-out URL (optional)
 
-Keep sign-in/out URLs in your app — not imported from `weg-shared-layout`:
+Sign-in comes from your CMS `header.menu` like any other link. Only define a redirect for custom sign-out handling:
 
 ```ts
 // src/auth.ts
-export const HEADER_SIGN_IN = {
-  label: 'Sign in',
-  href: 'https://account.warwickemploymentgroup.com/account/login',
-};
-
-export const ACCOUNT_LOGIN_HREF = HEADER_SIGN_IN.href;
+export const ACCOUNT_SIGN_OUT_HREF = 'https://account.warwickemploymentgroup.com/account/login';
 ```
 
 ## 3. Client layout components
@@ -73,7 +68,7 @@ export const ACCOUNT_LOGIN_HREF = HEADER_SIGN_IN.href;
 
 import { useCallback } from 'react';
 import { defineCustomElements } from 'weg-shared-layout/loader';
-import { ACCOUNT_LOGIN_HREF, HEADER_SIGN_IN } from '@/auth';
+import { ACCOUNT_SIGN_OUT_HREF } from '@/auth';
 import 'weg-shared-layout/weg-header';
 
 defineCustomElements();
@@ -95,17 +90,13 @@ export function Header({
 }) {
   const onAuthClick = useCallback(
     (event: CustomEvent<{ action: 'sign-in' | 'sign-out' }>) => {
+      if (event.detail.action !== 'sign-out') return;
+
       event.preventDefault();
-
-      if (event.detail.action === 'sign-out') {
-        onSignedInChange?.(false);
-        window.location.href = ACCOUNT_LOGIN_HREF;
-        return;
-      }
-
-      window.location.href = HEADER_SIGN_IN.href;
+      onSignedInChange?.(false);
+      window.location.href = ACCOUNT_SIGN_OUT_HREF;
     },
-    [layout, onSignedInChange],
+    [onSignedInChange],
   );
 
   return (
@@ -230,12 +221,13 @@ Wire **`signedIn`** and **`userName`** from your auth provider (session hook / c
 
 | API | Signed out | Signed in |
 | --- | --- | --- |
-| `layout.header.menu` | CMS nav rendered (groups + flat links incl. Sign in) | Ignored — built-in nav used |
+| `layout.header.menu` | CMS nav rendered (groups + flat links incl. sign-in) | Ignored — built-in nav used |
 | `layout.header.logoSrc` | Logo image URL (bundled if omitted) | Built-in bundled logo |
 | `layout.header.logoHref` | Logo link URL | WEG homepage |
 | `signed-in` prop | `false` | `true` — session flag from host app |
 | `user-name` prop | — | User's first name on Manage Account |
-| `wegAuthClick` event | `'sign-in'` on Sign in click | `'sign-out'` on Sign out click |
+| `account-base-url` prop | — | Account portal origin for signed-in links (optional) |
+| `wegAuthClick` event | Sign-in follows link `href` | `'sign-out'` — handle in host if needed |
 | `event.preventDefault()` | Skip default navigation | Skip default redirect |
 
 **Signed-in nav (built into the component):** Find a job, Dashboard, Manage Account, Sign out.
@@ -300,7 +292,7 @@ declare module 'react' {
 - [ ] `weg-shared-layout` installed
 - [ ] `transpilePackages` in `next.config`
 - [ ] Client `Header.tsx` / `Footer.tsx` with loader, tag imports, `JSON.stringify`, `suppressHydrationWarning`
-- [ ] Auth: `signed-in`, `user-name`, and `wegAuthClick` handler on header
+- [ ] Auth: `signed-in`, `user-name`, `account-base-url` (optional), and `wegAuthClick` handler on header
 - [ ] Server `layout.tsx` imports client chrome only (no `defineCustomElements` on server)
 - [ ] Layout fetched or imported server-side, passed as serializable props
 - [ ] TypeScript augmentation for `'weg-header'` and `'weg-footer'`

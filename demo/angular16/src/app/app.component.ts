@@ -1,7 +1,7 @@
 import { Component, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 
-import { ACCOUNT_LOGIN_HREF, HEADER_SIGN_IN } from './auth';
+import { ACCOUNT_SIGN_OUT_HREF } from './auth';
 import { LayoutService } from './layout.service';
 import type { LayoutData } from './layout.types';
 
@@ -34,18 +34,11 @@ export class AppComponent {
 
   onAuthClick(event: Event): void {
     const customEvent = event as CustomEvent<{ action: 'sign-in' | 'sign-out' }>;
+    if (customEvent.detail.action !== 'sign-out') return;
+
     customEvent.preventDefault();
-
-    if (customEvent.detail.action === 'sign-out') {
-      this.signedIn = false;
-      this.userName = undefined;
-      window.location.href = ACCOUNT_LOGIN_HREF;
-      return;
-    }
-
-    const signInHref = this.headerLayout.header?.menu?.find(
-      (item: { label: string; href?: string }) => item.label === 'Sign in',
-    )?.href;
-    window.location.href = signInHref ?? HEADER_SIGN_IN.href;
+    this.signedIn = false;
+    this.userName = undefined;
+    window.location.href = ACCOUNT_SIGN_OUT_HREF;
   }
 }

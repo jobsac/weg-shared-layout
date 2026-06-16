@@ -18,7 +18,7 @@ Load layout JSON from your CMS/API (e.g. [`GET /api/layout`](https://weg-payload
 
 ### Layout shape (abbreviated)
 
-Full reference: [`src/assets/dummy-data.json`](src/assets/dummy-data.json). Sign-in is a normal `header.menu` entry labelled **Sign in**; it fires `wegAuthClick`. Signed-in nav is built into `<weg-header>` when `signed-in` is true.
+Full reference: [`src/assets/dummy-data.json`](src/assets/dummy-data.json). Sign-in is a normal `header.menu` link (label **Sign in** or login `href`); `<weg-header>` recognizes it automatically. Signed-in nav is built into `<weg-header>` when `signed-in` is true.
 
 ```json
 {
@@ -49,17 +49,17 @@ Full reference: [`src/assets/dummy-data.json`](src/assets/dummy-data.json). Sign
 
 ### Auth (Sign in / Sign out)
 
-**Signed out**: renders `header.menu`. The Sign in entry fires `wegAuthClick` with action `sign-in`.
+**Signed out**: renders `header.menu`. Sign-in is a normal link — add `{ "label": "Sign in", "href": "…" }` like Register or Career advice. The header recognizes it by label or login URL and follows `href` on click.
 
 **Signed in** (`signed-in` true): ignores CMS `header.menu` and shows built-in Find a job, Dashboard, Manage Account, and Sign out.
 
-Set **`signed-in`** from your app session state. Pass **`user-name`** for Manage Account.
+Set **`signed-in`** from your app session state. Pass **`user-name`** for Manage Account. Pass **`account-base-url`** when account links should point at a non-production portal (defaults to production when omitted). Handle **`wegAuthClick`** only when you need custom sign-out behaviour.
 
 ```js
 header.addEventListener('wegAuthClick', (event) => {
+  if (event.detail.action !== 'sign-out') return;
   event.preventDefault();
-  if (event.detail.action === 'sign-out') logout();
-  else window.location.href = HEADER_SIGN_IN.href;
+  logout();
 });
 ```
 

@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=5.0" />
-    <title>WCMS Component Playground</title>
+    <title>weg-shared-layout playground</title>
     <script type="module" src="/build/weg-shared-layout.esm.js"></script>
     <script nomodule src="/build/weg-shared-layout.js"></script>
   </head>
@@ -16,8 +16,14 @@
     <script type="module">
       const res = await fetch('/assets/dummy-data.json');
       const layout = await res.json();
-      document.getElementById('header').layout = layout;
+      const header = document.getElementById('header');
+      header.layout = layout;
       document.getElementById('footer').layout = layout;
+
+      header.addEventListener('wegAuthClick', (event) => {
+        event.preventDefault();
+        console.log('wegAuthClick', event.detail.action);
+      });
     </script>
   </body>
 </html>

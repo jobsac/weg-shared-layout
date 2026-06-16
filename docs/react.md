@@ -11,7 +11,7 @@ Guide for **client-rendered** React apps (Vite, Create React App, etc.). If you 
 
 Both are **presentational** [Stencil](https://stenciljs.com/) Web Components. They **do not fetch data** — your app passes a **`layout`** payload (API, CMS, or [`dummy-data.json`](../src/assets/dummy-data.json)).
 
-`<weg-header>` additionally accepts **`signed-in`**, **`user-name`**, and emits **`wegAuthClick`**.
+`<weg-header>` additionally accepts **`signed-in`**, **`user-name`**, **`account-base-url`**, and emits **`wegAuthClick`**.
 
 ## Requirements
 
@@ -75,29 +75,22 @@ export function SiteLayout({ children }: { children: React.ReactNode }) {
 
 ## 3. Header auth
 
-Define auth URLs once in your app:
-
-```ts
-// auth.ts
-export const HEADER_SIGN_IN = {
-  label: 'Sign in',
-  href: 'https://account.warwickemploymentgroup.com/account/login',
-};
-
-export const ACCOUNT_LOGIN_HREF = HEADER_SIGN_IN.href;
-```
-
-### Signed out
-
-Pass CMS/API layout with unified **`header.menu`**. Use [`dummy-data.json`](../src/assets/dummy-data.json) for the full shape — nav groups use `items`, flat links and Sign in use `href`.
+Sign-in is a normal `header.menu` link — add it in your CMS like Register. The header recognizes **Sign in** by label or login URL and navigates to `href`.
 
 ### Signed in
 
-Set **`signed-in`** and optionally **`user-name`**. The component **ignores CMS nav** and shows built-in links: Find a job, Dashboard, Manage Account, Sign out.
+Set **`signed-in`** and optionally **`user-name`**. The component **ignores CMS nav** and shows built-in links: Find a job, Dashboard, Manage Account, Sign out. Pass **`account-base-url`** when account links should use a non-production portal.
+
+Handle **`wegAuthClick`** only for custom sign-out behaviour:
+
+```ts
+// auth.ts
+export const ACCOUNT_SIGN_OUT_HREF = 'https://account.warwickemploymentgroup.com/account/login';
+```
 
 ```tsx
 import { useCallback, useState } from 'react';
-import { ACCOUNT_LOGIN_HREF, HEADER_SIGN_IN } from './auth';
+import { ACCOUNT_SIGN_OUT_HREF } from './auth';
 import 'weg-shared-layout/weg-header';
 import layout from 'weg-shared-layout/dummy-data.json';
 
@@ -106,15 +99,11 @@ export function SiteHeader() {
   const userName = signedIn ? 'Alex' : undefined;
 
   const onAuthClick = useCallback((event: CustomEvent<{ action: 'sign-in' | 'sign-out' }>) => {
+    if (event.detail.action !== 'sign-out') return;
+
     event.preventDefault();
-
-    if (event.detail.action === 'sign-out') {
-      setSignedIn(false);
-      window.location.href = ACCOUNT_LOGIN_HREF;
-      return;
-    }
-
-    window.location.href = HEADER_SIGN_IN.href;
+    setSignedIn(false);
+    window.location.href = ACCOUNT_SIGN_OUT_HREF;
   }, []);
 
   return (
@@ -132,7 +121,8 @@ export function SiteHeader() {
 | --- | --- |
 | `signedIn={boolean}` | Switches to signed-in nav when `true` |
 | `userName={string}` | First name beside profile icon on Manage Account |
-| `onWegAuthClick` | Host handles routing / logout; call `event.preventDefault()` to override defaults |
+| `accountBaseUrl={string}` | Account portal origin for signed-in links (optional) |
+| `onWegAuthClick` | Optional — handle `sign-out`; sign-in follows link `href` |
 
 **Ref fallback for the event** (if `onWegAuthClick` does not bind in your React version):
 

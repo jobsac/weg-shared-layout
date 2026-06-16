@@ -23,7 +23,6 @@ With a bundler that resolves `node_modules` and package **`exports`** (TypeScrip
 <script type="module">
   import { defineCustomElements } from 'weg-shared-layout/loader';
   import layout from 'weg-shared-layout/dummy-data.json';
-  import { ACCOUNT_LOGIN_HREF, HEADER_SIGN_IN } from './auth.js';
 
   defineCustomElements();
 
@@ -68,54 +67,40 @@ See [`dummy-data.json`](../src/assets/dummy-data.json) for production URL exampl
 
 ## Header auth (Sign in / Sign out)
 
-Define auth URLs in `./auth.js`:
-
-```js
-export const HEADER_SIGN_IN = {
-  label: 'Sign in',
-  href: 'https://account.warwickemploymentgroup.com/account/login',
-};
-
-export const ACCOUNT_LOGIN_HREF = HEADER_SIGN_IN.href;
-```
-
 ### Signed out
 
-Renders `header.menu` from `layout` — dropdown groups, flat links, and the Sign in entry (label **Sign in** fires `wegAuthClick`).
+Renders `header.menu` from `layout`. Add sign-in as a normal link — `{ "label": "Sign in", "href": "…" }` — like Register. The header recognizes it by label or login URL and follows `href` on click.
 
 ### Signed in
 
-Set **`signedIn`** and optionally **`userName`**. CMS nav is ignored; built-in links are shown (Find a job, Dashboard, Manage Account, Sign out).
+Set **`signedIn`** and optionally **`userName`**. CMS nav is ignored; built-in links are shown (Find a job, Dashboard, Manage Account, Sign out). Set **`accountBaseUrl`** when account links should use a non-production portal.
 
 ```js
 header.signedIn = true;
 header.userName = 'Alex';
+// header.accountBaseUrl = 'https://account-staging.example.com';
 // or
 header.setAttribute('signed-in', '');
 header.setAttribute('user-name', 'Alex');
 ```
 
-Listen for **`wegAuthClick`**:
+Listen for **`wegAuthClick`** only when you need custom sign-out handling:
 
 ```js
-import { ACCOUNT_LOGIN_HREF, HEADER_SIGN_IN } from './auth.js';
+import { ACCOUNT_SIGN_OUT_HREF } from './auth.js';
 
 header.addEventListener('wegAuthClick', (event) => {
+  if (event.detail.action !== 'sign-out') return;
+
   event.preventDefault();
-
-  if (event.detail.action === 'sign-out') {
-    header.signedIn = false;
-    window.location.href = ACCOUNT_LOGIN_HREF;
-    return;
-  }
-
-  window.location.href = HEADER_SIGN_IN.href;
+  header.signedIn = false;
+  window.location.href = ACCOUNT_SIGN_OUT_HREF;
 });
 ```
 
 | `event.detail.action` | Default behaviour if not prevented |
 | --- | --- |
-| `'sign-in'` | Browser follows the Sign in menu entry's `href` |
+| `'sign-in'` | Browser follows the link's `href` |
 | `'sign-out'` | Redirects to built-in sign-out URL |
 
 Logo **image** uses `header.logoSrc` (bundled if omitted). Logo **link** uses `header.logoHref` when provided; otherwise it goes to the WEG homepage.
