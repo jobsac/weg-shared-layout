@@ -1,6 +1,7 @@
 import { Component, Prop, State, Watch, Element, Event, EventEmitter, h, Listen } from '@stencil/core';
 import type { LayoutData, LayoutHeaderAuthAction, LayoutLink } from '../../types/layout-data';
 import {
+  findAuthMenuLink,
   isMenuGroup,
   isNonEmptyString,
   normalizeHeaderMenu,
@@ -496,6 +497,9 @@ export class WegHeader {
   }
 
   private findSignInLink(menu: LayoutLink[]): LayoutLink | null {
+    const byAction = findAuthMenuLink(menu, 'sign-in');
+    if (byAction) return byAction;
+
     const accountHome = this.getAccountHome();
     for (const item of menu) {
       if (!isMenuGroup(item) && isSignInLink(item, accountHome)) return item;

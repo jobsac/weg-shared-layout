@@ -1,4 +1,4 @@
-import type { LayoutLink } from '../types/layout-data';
+import type { LayoutHeaderAuthAction, LayoutLink } from '../types/layout-data';
 
 const LINK_TARGETS = new Set(['_blank', '_self', '_parent', '_top']);
 
@@ -81,6 +81,17 @@ export function normalizeLinks(
 
 export function normalizeHeaderMenu(input: unknown): LayoutLink[] {
   return normalizeLinks(input, { requireHref: false });
+}
+
+export function findAuthMenuLink(
+  menu: LayoutLink[],
+  action: LayoutHeaderAuthAction,
+): LayoutLink | null {
+  for (const item of menu) {
+    if (isMenuGroup(item)) continue;
+    if (item.authAction === action) return item;
+  }
+  return null;
 }
 
 export function normalizeMenu(input: unknown): LayoutLink[][] {

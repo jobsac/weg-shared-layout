@@ -70,7 +70,8 @@
       },
       {
         "label": "Sign in",
-        "href": "https://account.warwickemploymentgroup.com/account/login"
+        "href": "https://account.warwickemploymentgroup.com/account/login",
+        "authAction": "sign-in"
       }
     ]
   },
