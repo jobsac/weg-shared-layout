@@ -16,6 +16,10 @@ export namespace Components {
     }
     interface WegHeader {
         /**
+          * Account portal origin for sign-in, register, dashboard, and manage-account links. Defaults to production when omitted.
+         */
+        "accountBaseUrl"?: string;
+        /**
           * Layout payload, supplied by the host application.  Expected shape: ```json {   "header": {     "menu": [       { "label": "Find a job", "items": [{ "label": "Graduates", "href": "..." }] },       { "label": "Career advice", "href": "/career-advice" },       { "label": "Sign in", "href": "/account/login" }     ]   } } ```
          */
         "layout"?: LayoutData | string;
@@ -72,6 +76,10 @@ declare namespace LocalJSX {
     }
     interface WegHeader {
         /**
+          * Account portal origin for sign-in, register, dashboard, and manage-account links. Defaults to production when omitted.
+         */
+        "accountBaseUrl"?: string;
+        /**
           * Layout payload, supplied by the host application.  Expected shape: ```json {   "header": {     "menu": [       { "label": "Find a job", "items": [{ "label": "Graduates", "href": "..." }] },       { "label": "Career advice", "href": "/career-advice" },       { "label": "Sign in", "href": "/account/login" }     ]   } } ```
          */
         "layout"?: LayoutData | string;
@@ -97,6 +105,7 @@ declare namespace LocalJSX {
         "layout": LayoutData | string;
         "signedIn": boolean;
         "userName": string;
+        "accountBaseUrl": string;
     }
 
     interface IntrinsicElements {

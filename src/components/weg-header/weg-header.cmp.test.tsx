@@ -70,6 +70,26 @@ describe('weg-header', () => {
     expect(root.shadowRoot?.querySelector('.dashboard-link svg')).toBeTruthy();
   });
 
+  it('uses account-base-url for signed-in navigation links', async () => {
+    const accountBase = 'https://dev-account.warwickemploymentgroup.com';
+    const { root } = await render(
+      <weg-header
+        layout={SAMPLE_HEADER_LAYOUT}
+        account-base-url={accountBase}
+        signed-in
+        user-name="Alex"
+      ></weg-header>,
+    );
+
+    const dashboardLink = root.shadowRoot?.querySelector('.dashboard-link') as HTMLAnchorElement | null;
+    const manageLink = root.shadowRoot?.querySelector('.manage-account-link') as HTMLAnchorElement | null;
+    const signOutLink = root.shadowRoot?.querySelector('.sign-out-link') as HTMLAnchorElement | null;
+
+    expect(dashboardLink?.href).toBe(`${accountBase}/dashboard`);
+    expect(manageLink?.href).toBe(`${accountBase}/account/manage`);
+    expect(signOutLink?.href).toBe(`${accountBase}/account/login`);
+  });
+
   it('emits wegAuthClick when auth control is clicked', async () => {
     const { root } = await render(<weg-header layout={SAMPLE_HEADER_LAYOUT}></weg-header>);
     let detail: { action: string } | undefined;

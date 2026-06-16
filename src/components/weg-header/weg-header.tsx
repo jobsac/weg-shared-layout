@@ -10,18 +10,28 @@ import { WEG_HOVER_CAPABLE_MEDIA_QUERY, WEG_MD_MEDIA_QUERY } from '../../constan
 import { LOGO_SRC } from './logo-data';
 
 const WEG_HOME = 'https://www.warwickemploymentgroup.com';
-const ACCOUNT_HOME = 'https://account.warwickemploymentgroup.com';
+const DEFAULT_ACCOUNT_HOME = 'https://account.warwickemploymentgroup.com';
 
 const DEFAULT_LOGO_HREF = `${WEG_HOME}/`;
-const ACCOUNT_LOGIN_HREF = `${ACCOUNT_HOME}/account/login`;
-const ACCOUNT_MANAGE_HREF = `${ACCOUNT_HOME}/account/manage`;
 
-const SIGNED_IN_MENU: LayoutLink[] = [
-  { label: 'Find a job', href: `${WEG_HOME}/find-a-job` },
-  { label: 'Dashboard', href: `${ACCOUNT_HOME}/dashboard` },
-  { label: 'Manage Account', href: `${ACCOUNT_HOME}/account/manage` },
-  { label: 'Sign out', href: `${ACCOUNT_HOME}/account/login` },
-];
+function normalizeAccountBase(input?: string): string {
+  const base = input?.trim() || DEFAULT_ACCOUNT_HOME;
+  return base.replace(/\/$/, '');
+}
+
+function accountPath(accountHome: string, path: string): string {
+  const normalizedPath = path.startsWith('/') ? path : `/${path}`;
+  return `${normalizeAccountBase(accountHome)}${normalizedPath}`;
+}
+
+function buildSignedInMenu(accountHome: string): LayoutLink[] {
+  return [
+    { label: 'Find a job', href: `${WEG_HOME}/find-a-job` },
+    { label: 'Dashboard', href: accountPath(accountHome, '/dashboard') },
+    { label: 'Manage Account', href: accountPath(accountHome, '/account/manage') },
+    { label: 'Sign out', href: accountPath(accountHome, '/account/login') },
+  ];
+}
 
 type HeaderData = {
   logoSrc?: string;
@@ -33,20 +43,20 @@ const EMPTY_HEADER: HeaderData = {
   menu: [],
 };
 
-function isSignInLink(link: LayoutLink): boolean {
+function isSignInLink(link: LayoutLink, accountHome: string): boolean {
   const label = link.label.trim().toLowerCase();
   if (label === 'sign out') return false;
   if (label === 'sign in') return true;
-  return link.href === ACCOUNT_LOGIN_HREF;
+  return link.href === accountPath(accountHome, '/account/login');
 }
 
 function isSignOutLink(link: LayoutLink): boolean {
   return link.label.trim().toLowerCase() === 'sign out';
 }
 
-function isManageAccountLink(link: LayoutLink): boolean {
+function isManageAccountLink(link: LayoutLink, accountHome: string): boolean {
   if (link.label.trim().toLowerCase() === 'manage account') return true;
-  return link.href === ACCOUNT_MANAGE_HREF;
+  return link.href === accountPath(accountHome, '/account/manage');
 }
 
 function isFindJobLink(link: LayoutLink): boolean {
@@ -54,9 +64,9 @@ function isFindJobLink(link: LayoutLink): boolean {
   return link.href === `${WEG_HOME}/find-a-job`;
 }
 
-function isDashboardLink(link: LayoutLink): boolean {
+function isDashboardLink(link: LayoutLink, accountHome: string): boolean {
   if (link.label.trim().toLowerCase() === 'dashboard') return true;
-  return link.href === `${ACCOUNT_HOME}/dashboard`;
+  return link.href === accountPath(accountHome, '/dashboard');
 }
 
 function normalizeHeaderData(input: unknown): HeaderData {
@@ -246,6 +256,12 @@ export class WegHeader {
    * Signed-in user's first name, shown beside the profile icon on Manage Account.
    */
   @Prop({ attribute: 'user-name' }) userName?: string;
+
+  /**
+   * Account portal origin for sign-in, register, dashboard, and manage-account links.
+   * Defaults to production when omitted.
+   */
+  @Prop({ attribute: 'account-base-url' }) accountBaseUrl?: string;
 
   /**
    * Fired when the user clicks Sign in or Sign out.
@@ -460,8 +476,12 @@ export class WegHeader {
     this.closeDropdown();
   }
 
+  private getAccountHome(): string {
+    return normalizeAccountBase(this.accountBaseUrl);
+  }
+
   private getActiveMenu(): LayoutLink[] {
-    return this.signedIn ? SIGNED_IN_MENU : this.resolved.menu;
+    return this.signedIn ? buildSignedInMenu(this.getAccountHome()) : this.resolved.menu;
   }
 
   private getLogoSrc(): string {
@@ -473,8 +493,9 @@ export class WegHeader {
   }
 
   private findSignInLink(menu: LayoutLink[]): LayoutLink | null {
+    const accountHome = this.getAccountHome();
     for (const item of menu) {
-      if (!isMenuGroup(item) && isSignInLink(item)) return item;
+      if (!isMenuGroup(item) && isSignInLink(item, accountHome)) return item;
     }
     return null;
   }
@@ -636,7 +657,7 @@ export class WegHeader {
           'manage-account-link': true,
           'icon-button': iconOnly,
         }}
-        href={ACCOUNT_MANAGE_HREF}
+        href={accountPath(this.getAccountHome(), '/account/manage')}
         aria-label={label}
         onClick={() => onNavigate?.()}
       >
@@ -648,6 +669,8 @@ export class WegHeader {
   }
 
   private renderNavItem(item: LayoutLink, onNavigate?: () => void) {
+    const accountHome = this.getAccountHome();
+
     if (isMenuGroup(item)) {
       return this.renderMenuGroup(item, onNavigate);
     }
@@ -660,7 +683,7 @@ export class WegHeader {
       );
     }
 
-    if (isSignInLink(item)) {
+    if (isSignInLink(item, accountHome)) {
       return (
         <li class="main-nav__item main-nav__item--auth" key="sign-in">
           {this.renderAuthControl({ link: item, action: 'sign-in', onNavigate })}
@@ -668,7 +691,7 @@ export class WegHeader {
       );
     }
 
-    if (isManageAccountLink(item)) {
+    if (isManageAccountLink(item, accountHome)) {
       return (
         <li class="main-nav__item main-nav__item--auth" key="manage-account">
           {this.renderManageAccountAnchor(onNavigate)}
@@ -680,7 +703,7 @@ export class WegHeader {
       return this.renderIconNavLink(item, FindJobIcon, 'find-a-job-link', onNavigate);
     }
 
-    if (this.signedIn && isDashboardLink(item)) {
+    if (this.signedIn && isDashboardLink(item, accountHome)) {
       return this.renderIconNavLink(item, DashboardIcon, 'dashboard-link', onNavigate);
     }
 
