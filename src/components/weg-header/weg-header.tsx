@@ -44,6 +44,8 @@ const EMPTY_HEADER: HeaderData = {
 };
 
 function isSignInLink(link: LayoutLink, accountHome: string): boolean {
+  if (link.authAction === 'sign-in') return true;
+  if (link.authAction === 'sign-out') return false;
   const label = link.label.trim().toLowerCase();
   if (label === 'sign out') return false;
   if (label === 'sign in') return true;
@@ -51,6 +53,7 @@ function isSignInLink(link: LayoutLink, accountHome: string): boolean {
 }
 
 function isSignOutLink(link: LayoutLink): boolean {
+  if (link.authAction === 'sign-out') return true;
   return link.label.trim().toLowerCase() === 'sign out';
 }
 

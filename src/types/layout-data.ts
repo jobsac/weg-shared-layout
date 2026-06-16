@@ -3,6 +3,7 @@ export type LayoutLink = {
   href?: string;
   target?: '_blank' | '_self' | '_parent' | '_top';
   items?: LayoutLink[];
+  authAction?: LayoutHeaderAuthAction;
 };
 
 export type LayoutHeaderData = {

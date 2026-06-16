@@ -105,6 +105,23 @@ describe('weg-header', () => {
     expect(detail).toEqual({ action: 'sign-in' });
   });
 
+  it('renders auth icon for authAction sign-in without relying on label', async () => {
+    const { root } = await render(
+      <weg-header
+        layout={{
+          header: {
+            menu: [{ label: 'Log in', href: '/account/login', authAction: 'sign-in' }],
+          },
+        }}
+      ></weg-header>,
+    );
+
+    const authLink = root.shadowRoot?.querySelector('.main-nav .sign-in-link') as HTMLAnchorElement | null;
+    expect(authLink).toBeTruthy();
+    expect(authLink?.textContent).toContain('Log in');
+    expect(root.shadowRoot?.querySelector('.main-nav .sign-in-link svg')).toBeTruthy();
+  });
+
   it('emits sign-out action when signed in', async () => {
     const { root } = await render(<weg-header layout={SAMPLE_HEADER_LAYOUT} signed-in></weg-header>);
     let detail: { action: string } | undefined;

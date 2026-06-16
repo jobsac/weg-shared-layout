@@ -55,6 +55,10 @@ export function normalizeLayoutLink(
     const link: LayoutLink = { label: label.trim(), href: href.trim() };
     const target = readLinkTarget(raw);
     if (target) link.target = target;
+    const authAction = raw.authAction;
+    if (authAction === 'sign-in' || authAction === 'sign-out') {
+      link.authAction = authAction;
+    }
     return link;
   }
 
