@@ -1,7 +1,7 @@
 import { Component, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 
-import { ACCOUNT_SIGN_OUT_HREF } from './auth';
+import { POST_LOGOUT_HREF } from './auth';
 import { LayoutService } from './layout.service';
 import type { LayoutData } from './layout.types';
 
@@ -39,6 +39,6 @@ export class AppComponent {
     customEvent.preventDefault();
     this.signedIn = false;
     this.userName = undefined;
-    window.location.href = ACCOUNT_SIGN_OUT_HREF;
+    window.location.assign(POST_LOGOUT_HREF);
   }
 }

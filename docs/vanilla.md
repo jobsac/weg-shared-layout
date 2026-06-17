@@ -84,24 +84,23 @@ header.setAttribute('signed-in', '');
 header.setAttribute('user-name', 'Alex');
 ```
 
-Listen for **`wegAuthClick`** only when you need custom sign-out handling:
+Listen for **`wegAuthClick`** to handle sign-out (call your logout API, then redirect):
 
 ```js
-import { ACCOUNT_SIGN_OUT_HREF } from './auth.js';
-
-header.addEventListener('wegAuthClick', (event) => {
+header.addEventListener('wegAuthClick', async (event) => {
   if (event.detail.action !== 'sign-out') return;
 
   event.preventDefault();
   header.signedIn = false;
-  window.location.href = ACCOUNT_SIGN_OUT_HREF;
+  await logout();
+  window.location.assign('/');
 });
 ```
 
 | `event.detail.action` | Default behaviour if not prevented |
 | --- | --- |
 | `'sign-in'` | Browser follows the link's `href` |
-| `'sign-out'` | Redirects to built-in sign-out URL |
+| `'sign-out'` | Emits event only — no navigation (host handles logout) |
 
 Logo **image** uses `header.logoSrc` (bundled if omitted). Logo **link** uses `header.logoHref` when provided; otherwise it goes to the WEG homepage.
 

@@ -81,16 +81,10 @@ Sign-in is a normal `header.menu` link — add it in your CMS like Register. The
 
 Set **`signed-in`** and optionally **`user-name`**. The component **ignores CMS nav** and shows built-in links: Find a job, Dashboard, Manage Account, Sign out. Pass **`account-base-url`** when account links should use a non-production portal.
 
-Handle **`wegAuthClick`** only for custom sign-out behaviour:
-
-```ts
-// auth.ts
-export const ACCOUNT_SIGN_OUT_HREF = 'https://account.warwickemploymentgroup.com/account/login';
-```
+Handle **`wegAuthClick`** for sign-out (call your logout API, then redirect):
 
 ```tsx
 import { useCallback, useState } from 'react';
-import { ACCOUNT_SIGN_OUT_HREF } from './auth';
 import 'weg-shared-layout/weg-header';
 import layout from 'weg-shared-layout/dummy-data.json';
 
@@ -98,12 +92,13 @@ export function SiteHeader() {
   const [signedIn, setSignedIn] = useState(false);
   const userName = signedIn ? 'Alex' : undefined;
 
-  const onAuthClick = useCallback((event: CustomEvent<{ action: 'sign-in' | 'sign-out' }>) => {
+  const onAuthClick = useCallback(async (event: CustomEvent<{ action: 'sign-in' | 'sign-out' }>) => {
     if (event.detail.action !== 'sign-out') return;
 
     event.preventDefault();
+    await logout();
     setSignedIn(false);
-    window.location.href = ACCOUNT_SIGN_OUT_HREF;
+    window.location.assign('/');
   }, []);
 
   return (
@@ -122,7 +117,7 @@ export function SiteHeader() {
 | `signedIn={boolean}` | Switches to signed-in nav when `true` |
 | `userName={string}` | First name beside profile icon on Manage Account |
 | `accountBaseUrl={string}` | Account portal origin for signed-in links (optional) |
-| `onWegAuthClick` | Optional — handle `sign-out`; sign-in follows link `href` |
+| `onWegAuthClick` | Required for sign-out — call logout API and redirect; sign-in follows link `href` |
 
 **Ref fallback for the event** (if `onWegAuthClick` does not bind in your React version):
 

@@ -51,14 +51,9 @@ const nextConfig: NextConfig = {
 export default nextConfig;
 ```
 
-## 2. Sign-out URL (optional)
+## 2. Sign-out handling
 
-Sign-in comes from your CMS `header.menu` like any other link. Only define a redirect for custom sign-out handling:
-
-```ts
-// src/auth.ts
-export const ACCOUNT_SIGN_OUT_HREF = 'https://account.warwickemploymentgroup.com/account/login';
-```
+Sign-in comes from your CMS `header.menu` like any other link. Handle sign-out via **`wegAuthClick`** — call your logout API, then redirect (e.g. to `/`).
 
 ## 3. Client layout components
 
@@ -68,7 +63,6 @@ export const ACCOUNT_SIGN_OUT_HREF = 'https://account.warwickemploymentgroup.com
 
 import { useCallback } from 'react';
 import { defineCustomElements } from 'weg-shared-layout/loader';
-import { ACCOUNT_SIGN_OUT_HREF } from '@/auth';
 import 'weg-shared-layout/weg-header';
 
 defineCustomElements();
@@ -89,12 +83,13 @@ export function Header({
   onSignedInChange?: (signedIn: boolean) => void;
 }) {
   const onAuthClick = useCallback(
-    (event: CustomEvent<{ action: 'sign-in' | 'sign-out' }>) => {
+    async (event: CustomEvent<{ action: 'sign-in' | 'sign-out' }>) => {
       if (event.detail.action !== 'sign-out') return;
 
       event.preventDefault();
+      await logout();
       onSignedInChange?.(false);
-      window.location.href = ACCOUNT_SIGN_OUT_HREF;
+      window.location.assign('/');
     },
     [onSignedInChange],
   );
@@ -227,8 +222,8 @@ Wire **`signedIn`** and **`userName`** from your auth provider (session hook / c
 | `signed-in` prop | `false` | `true` — session flag from host app |
 | `user-name` prop | — | User's first name on Manage Account |
 | `account-base-url` prop | — | Account portal origin for signed-in links (optional) |
-| `wegAuthClick` event | Sign-in follows link `href` | `'sign-out'` — handle in host if needed |
-| `event.preventDefault()` | Skip default navigation | Skip default redirect |
+| `wegAuthClick` event | Sign-in follows link `href` | `'sign-out'` — host handles logout and redirect |
+| `event.preventDefault()` | Skip default navigation | Required — sign-out has no built-in redirect |
 
 **Signed-in nav (built into the component):** Find a job, Dashboard, Manage Account, Sign out.
 

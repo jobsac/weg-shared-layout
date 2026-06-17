@@ -1,4 +1,4 @@
-import { render, h, describe, it, expect } from '@stencil/vitest';
+import { render, h, describe, it, expect, vi } from '@stencil/vitest';
 import { userEvent } from 'vitest/browser';
 import { runAxe } from '../../../test-utils/axe';
 import { DESKTOP_VIEWPORT, MOBILE_VIEWPORT, setViewport, waitForUpdate } from '../../../test-utils/viewport';
@@ -87,7 +87,7 @@ describe('weg-header', () => {
 
     expect(dashboardLink?.href).toBe(`${accountBase}/dashboard`);
     expect(manageLink?.href).toBe(`${accountBase}/account/manage`);
-    expect(signOutLink?.href).toBe(`${accountBase}/account/login`);
+    expect(signOutLink?.getAttribute('href')).toBe('#');
   });
 
   it('emits wegAuthClick when auth control is clicked', async () => {
@@ -136,6 +136,21 @@ describe('weg-header', () => {
     signOutLink?.click();
 
     expect(detail).toEqual({ action: 'sign-out' });
+  });
+
+  it('does not navigate on sign-out when host prevents default', async () => {
+    const assign = vi.spyOn(window.location, 'assign').mockImplementation(() => {});
+    const { root } = await render(<weg-header layout={SAMPLE_HEADER_LAYOUT} signed-in></weg-header>);
+
+    root.addEventListener('wegAuthClick', ((event: Event) => {
+      event.preventDefault();
+    }) as EventListener);
+
+    const signOutLink = root.shadowRoot?.querySelector('.main-nav .sign-out-link') as HTMLAnchorElement | null;
+    signOutLink?.click();
+
+    expect(assign).not.toHaveBeenCalled();
+    assign.mockRestore();
   });
 
   it('opens desktop dropdown on trigger click', async () => {

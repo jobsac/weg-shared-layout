@@ -14,6 +14,8 @@ const WEG_HOME = 'https://www.warwickemploymentgroup.com';
 const DEFAULT_ACCOUNT_HOME = 'https://account.warwickemploymentgroup.com';
 
 const DEFAULT_LOGO_HREF = `${WEG_HOME}/`;
+/** Placeholder href — sign-out is handled via `wegAuthClick`, not navigation. */
+const SIGN_OUT_HREF = '#';
 
 function normalizeAccountBase(input?: string): string {
   const base = input?.trim() || DEFAULT_ACCOUNT_HOME;
@@ -30,7 +32,7 @@ function buildSignedInMenu(accountHome: string): LayoutLink[] {
     { label: 'Find a job', href: `${WEG_HOME}/find-a-job` },
     { label: 'Dashboard', href: accountPath(accountHome, '/dashboard') },
     { label: 'Manage Account', href: accountPath(accountHome, '/account/manage') },
-    { label: 'Sign out', href: accountPath(accountHome, '/account/login') },
+    { label: 'Sign out', href: SIGN_OUT_HREF },
   ];
 }
 
@@ -602,7 +604,7 @@ export class WegHeader {
   private handleAuthClick(
     event: MouseEvent,
     action: LayoutHeaderAuthAction,
-    href: string | undefined,
+    _href: string | undefined,
     onNavigate?: () => void,
   ) {
     const emitted = this.wegAuthClick.emit({ action });
@@ -615,9 +617,6 @@ export class WegHeader {
 
     if (action === 'sign-out') {
       event.preventDefault();
-      if (href) {
-        window.location.assign(href);
-      }
       onNavigate?.();
       return;
     }

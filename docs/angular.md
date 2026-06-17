@@ -96,14 +96,9 @@ import type { LayoutData } from 'weg-shared-layout/layout-data';
 
 ---
 
-## Step 5 — Sign-out URL (optional)
+## Step 5 — Sign-out handling
 
-Sign-in is a normal nav link in your CMS layout — no host constants needed. Only define a sign-out redirect if you handle `wegAuthClick`:
-
-```ts
-// src/app/auth.ts
-export const ACCOUNT_SIGN_OUT_HREF = 'https://account.warwickemploymentgroup.com/account/login';
-```
+Sign-in is a normal nav link in your CMS layout. Handle sign-out via **`wegAuthClick`** — call your logout API, then redirect (e.g. to `/`).
 
 ---
 
@@ -117,7 +112,6 @@ import { Component, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import layoutFixture from 'weg-shared-layout/dummy-data.json';
 
-import { ACCOUNT_SIGN_OUT_HREF } from './auth';
 import type { LayoutData } from './layout.types';
 
 @Component({
@@ -139,7 +133,13 @@ export class AppComponent {
 
     customEvent.preventDefault();
     this.signedIn = false;
-    window.location.href = ACCOUNT_SIGN_OUT_HREF;
+    void this.logout().then(() => {
+      window.location.assign('/');
+    });
+  }
+
+  private async logout(): Promise<void> {
+    // Call your account API logout endpoint
   }
 }
 ```
@@ -172,7 +172,7 @@ Use **`[layout]="..."`** so Angular sets the JavaScript property, not an HTML at
 | `[signedIn]` | `true` → built-in signed-in nav (ignores CMS `header.menu`) |
 | `[userName]` | First name on Manage Account when signed in |
 | `[accountBaseUrl]` | Account portal origin for signed-in links (optional; production default when omitted) |
-| `(wegAuthClick)` | Optional — handle `sign-out` only; sign-in follows the link `href` |
+| `(wegAuthClick)` | Required for sign-out — call logout API and redirect; sign-in follows the link `href` |
 
 Run the app — you should see header nav and footer.
 
@@ -230,7 +230,6 @@ import { Component, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { Observable } from 'rxjs';
 
-import { ACCOUNT_SIGN_OUT_HREF } from './auth';
 import type { LayoutData } from './layout.types';
 import { LayoutService } from './layout.service';
 
@@ -256,7 +255,13 @@ export class AppComponent {
 
     customEvent.preventDefault();
     this.signedIn = false;
-    window.location.href = ACCOUNT_SIGN_OUT_HREF;
+    void this.logout().then(() => {
+      window.location.assign('/');
+    });
+  }
+
+  private async logout(): Promise<void> {
+    // Call your account API logout endpoint
   }
 }
 ```
@@ -380,7 +385,7 @@ export type LayoutData = typeof layoutFixture; // from dummy-data.json
 | `src/main.ts` | `defineCustomElements()` then bootstrap |
 | `tsconfig.json` | `skipLibCheck`, `resolveJsonModule`, `moduleResolution` |
 | `src/app/layout.types.ts` | `export type LayoutData = typeof layoutFixture` |
-| `src/app/auth.ts` | `ACCOUNT_SIGN_OUT_HREF` (optional) |
+| `src/app/auth.ts` | `POST_LOGOUT_HREF` (optional) |
 | `src/app/layout.service.ts` | HTTP / API mapping (optional) |
 | `src/app/app.component.ts` | Shell: schema, layout, auth handler |
 | `src/app/app.component.html` | `<weg-header>`, `<router-outlet>`, `<weg-footer>` |
