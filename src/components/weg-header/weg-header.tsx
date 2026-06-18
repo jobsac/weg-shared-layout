@@ -29,7 +29,6 @@ const MAIN_NAV_LABEL = 'Main navigation';
 const OPEN_MAIN_NAV_LABEL = 'Open main navigation';
 const CLOSE_MAIN_NAV_LABEL = 'Close main navigation';
 const SKIP_TO_CONTENT_LABEL = 'Skip to main content';
-const SKIP_TO_CONTENT_TARGET_ID = 'main-content';
 
 function focusScrollTarget(element: HTMLElement) {
   if (!element.hasAttribute('tabindex')) {
@@ -1135,15 +1134,16 @@ export class WegHeader {
   private handleSkipToContent(event: MouseEvent) {
     event.preventDefault();
 
-    const mainContent =
-      document.querySelector('main') ?? document.getElementById(SKIP_TO_CONTENT_TARGET_ID);
-    if (mainContent instanceof HTMLElement) {
-      focusScrollTarget(mainContent);
+    const contentRoot = this.el.nextElementSibling;
+    if (contentRoot instanceof HTMLElement) {
+      focusScrollTarget(contentRoot);
     }
 
-    const headings = document.querySelectorAll('h1');
-    if (headings.length > 0 && headings[0] instanceof HTMLElement) {
-      focusScrollTarget(headings[0]);
+    const heading =
+      (contentRoot instanceof HTMLElement ? contentRoot.querySelector('h1') : null) ??
+      document.querySelector('h1');
+    if (heading instanceof HTMLElement) {
+      focusScrollTarget(heading);
     }
   }
 
@@ -1155,10 +1155,10 @@ export class WegHeader {
     const mobileMenuActive = this.isMobileMenuActive();
 
     return (
-      <div class="weg-header-shell">
+      <>
         <a
           class="skip-to-content"
-          href={`#${SKIP_TO_CONTENT_TARGET_ID}`}
+          href="#"
           title={SKIP_TO_CONTENT_LABEL}
           onClick={(event) => this.handleSkipToContent(event)}
         >
@@ -1197,7 +1197,7 @@ export class WegHeader {
             </div>
           </div>
         </header>
-      </div>
+      </>
     );
   }
 }

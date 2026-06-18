@@ -24,7 +24,7 @@ describe('weg-header', () => {
     const header = root.shadowRoot?.querySelector('.header');
     expect(header).toBeTruthy();
     const skipLink = root.shadowRoot?.querySelector('.skip-to-content') as HTMLAnchorElement | null;
-    expect(skipLink?.getAttribute('href')).toBe('#main-content');
+    expect(skipLink?.getAttribute('href')).toBe('#');
     expect(skipLink?.textContent).toBe('Skip to main content');
   });
 
@@ -430,24 +430,24 @@ describe('weg-header', () => {
     expect(liveRegion?.textContent).toBe('Find a job submenu collapsed.');
   });
 
-  it('focuses main content and the first h1 when skip link is activated', async () => {
-    const main = document.createElement('main');
-    main.id = 'main-content';
+  it('focuses the next sibling and its first h1 when skip link is activated', async () => {
+    const { root } = await render(<weg-header layout={SAMPLE_HEADER_LAYOUT}></weg-header>);
+
+    const content = document.createElement('div');
+    content.className = 'page-content';
     const heading = document.createElement('h1');
     heading.textContent = 'Page title';
-    main.append(heading);
-    document.body.append(main);
+    content.append(heading);
+    root.insertAdjacentElement('afterend', content);
 
-    const { root } = await render(<weg-header layout={SAMPLE_HEADER_LAYOUT}></weg-header>);
     const skipLink = root.shadowRoot?.querySelector('.skip-to-content') as HTMLAnchorElement | null;
-
     skipLink?.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
 
-    expect(main.getAttribute('tabindex')).toBe('-1');
+    expect(content.getAttribute('tabindex')).toBe('-1');
     expect(heading.getAttribute('tabindex')).toBe('-1');
     expect(document.activeElement).toBe(heading);
 
-    main.remove();
+    content.remove();
   });
 
   describe('accessibility', () => {
