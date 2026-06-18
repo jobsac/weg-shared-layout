@@ -346,6 +346,9 @@
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
 }
 
 .nav-dropdown__link {

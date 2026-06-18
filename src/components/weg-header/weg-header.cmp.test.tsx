@@ -173,7 +173,7 @@ describe('weg-header', () => {
   });
 
   it('does not navigate on sign-out when host prevents default', async () => {
-    const assign = vi.spyOn(window.location, 'assign').mockImplementation(() => {});
+    const hrefBefore = window.location.href;
     const { root } = await render(<weg-header layout={SAMPLE_HEADER_LAYOUT} signed-in></weg-header>);
 
     root.addEventListener('wegAuthClick', ((event: Event) => {
@@ -183,8 +183,7 @@ describe('weg-header', () => {
     const signOutLink = root.shadowRoot?.querySelector('.main-nav .sign-out-link') as HTMLAnchorElement | null;
     signOutLink?.click();
 
-    expect(assign).not.toHaveBeenCalled();
-    assign.mockRestore();
+    expect(window.location.href).toBe(hrefBefore);
   });
 
   it('opens desktop dropdown on trigger click', async () => {
@@ -198,7 +197,7 @@ describe('weg-header', () => {
 
     const trigger = triggers?.[0] ?? null;
     expect(trigger?.getAttribute('aria-expanded')).toBe('false');
-    await userEvent.click(trigger!);
+    trigger?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     await waitForUpdate();
 
     expect(trigger?.getAttribute('aria-expanded')).toBe('true');
@@ -309,6 +308,123 @@ describe('weg-header', () => {
     await userEvent.click(accordionButton!);
     await waitForUpdate();
     expect(accordionButton?.getAttribute('aria-expanded')).toBe('true');
+  });
+
+  it('uses descriptive main navigation labels on the mobile menu toggle', async () => {
+    await setViewport(MOBILE_VIEWPORT.width, MOBILE_VIEWPORT.height);
+    const { root } = await render(<weg-header layout={SAMPLE_HEADER_LAYOUT}></weg-header>);
+
+    const openButton = root.shadowRoot?.querySelector('.menu-toggle') as HTMLButtonElement | null;
+    expect(openButton?.getAttribute('aria-label')).toBe('Open main navigation');
+
+    await userEvent.click(openButton!);
+    await waitForUpdate();
+
+    expect(openButton?.getAttribute('aria-label')).toBe('Close main navigation');
+    expect(root.shadowRoot?.querySelector('.main-nav-panel')?.getAttribute('aria-label')).toBe(
+      'Main navigation',
+    );
+    expect(root.shadowRoot?.querySelector('.main-nav')?.getAttribute('aria-label')).toBe('Main navigation');
+  });
+
+  it('announces main navigation open and close via live region', async () => {
+    await setViewport(MOBILE_VIEWPORT.width, MOBILE_VIEWPORT.height);
+    const { root } = await render(<weg-header layout={SAMPLE_HEADER_LAYOUT}></weg-header>);
+
+    const openButton = root.shadowRoot?.querySelector('.menu-toggle') as HTMLButtonElement | null;
+    await userEvent.click(openButton!);
+    await waitForUpdate();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    const liveRegion = root.shadowRoot?.querySelector('[data-weg-sr-live]');
+    expect(liveRegion?.textContent).toBe('Main navigation opened. 3 items.');
+
+    await userEvent.click(openButton!);
+    await waitForUpdate();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    expect(liveRegion?.textContent).toBe('Main navigation closed.');
+  });
+
+  it('moves focus to the first nav item when the mobile menu opens', async () => {
+    await setViewport(MOBILE_VIEWPORT.width, MOBILE_VIEWPORT.height);
+    const { root } = await render(<weg-header layout={SAMPLE_HEADER_LAYOUT}></weg-header>);
+
+    const openButton = root.shadowRoot?.querySelector('.menu-toggle') as HTMLButtonElement | null;
+    await userEvent.click(openButton!);
+    await waitForUpdate();
+    await new Promise((resolve) => {
+      requestAnimationFrame(() => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+    });
+
+    const firstNavItem = root.shadowRoot?.querySelector('.nav-dropdown__trigger') as HTMLElement | null;
+    expect(root.shadowRoot?.activeElement).toBe(firstNavItem);
+  });
+
+  it('returns focus to the menu toggle when Escape closes the mobile menu', async () => {
+    await setViewport(MOBILE_VIEWPORT.width, MOBILE_VIEWPORT.height);
+    const { root } = await render(<weg-header layout={SAMPLE_HEADER_LAYOUT}></weg-header>);
+
+    const openButton = root.shadowRoot?.querySelector('.menu-toggle') as HTMLButtonElement | null;
+    await userEvent.click(openButton!);
+    await waitForUpdate();
+    await new Promise((resolve) => {
+      requestAnimationFrame(() => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+    });
+
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    await waitForUpdate();
+    await new Promise((resolve) => {
+      requestAnimationFrame(() => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+    });
+
+    expect(openButton?.getAttribute('aria-expanded')).toBe('false');
+    expect(root.shadowRoot?.activeElement).toBe(openButton);
+  });
+
+  it('exposes submenu link position within the set', async () => {
+    await setViewport(DESKTOP_VIEWPORT.width, DESKTOP_VIEWPORT.height);
+    const { root } = await render(<weg-header layout={DUMMY_LAYOUT}></weg-header>);
+
+    const trigger = root.shadowRoot?.querySelector('.nav-dropdown__trigger') as HTMLButtonElement | null;
+    trigger?.focus();
+    trigger?.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
+    await waitForUpdate();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    const links = root.shadowRoot?.querySelectorAll(
+      '.nav-dropdown__link',
+    ) as NodeListOf<HTMLAnchorElement>;
+    expect(links.length).toBe(4);
+    expect(links[0]?.getAttribute('aria-label')).toBe(
+      'Professional & operational services, link 1 of 4',
+    );
+    expect(links[3]?.getAttribute('aria-label')).toBe('Senior & leadership, link 4 of 4');
+  });
+
+  it('announces submenu expand and collapse via live region', async () => {
+    await setViewport(MOBILE_VIEWPORT.width, MOBILE_VIEWPORT.height);
+    const { root } = await render(<weg-header layout={SAMPLE_HEADER_LAYOUT}></weg-header>);
+
+    const openButton = root.shadowRoot?.querySelector('.menu-toggle') as HTMLButtonElement | null;
+    await userEvent.click(openButton!);
+    await waitForUpdate();
+
+    const accordionButton = root.shadowRoot?.querySelector(
+      'button.nav-dropdown__trigger',
+    ) as HTMLButtonElement | null;
+    await userEvent.click(accordionButton!);
+    await waitForUpdate();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    const liveRegion = root.shadowRoot?.querySelector('[data-weg-sr-live]');
+    expect(liveRegion?.textContent).toBe('Find a job submenu expanded. 1 link.');
+
+    await userEvent.click(accordionButton!);
+    await waitForUpdate();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    expect(liveRegion?.textContent).toBe('Find a job submenu collapsed.');
   });
 
   describe('accessibility', () => {

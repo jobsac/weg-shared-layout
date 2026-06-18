@@ -25,6 +25,9 @@ const HEADER_SCROLL_DIRECTION_DELTA = 5;
 const DEFAULT_LOGO_HREF = `${WEG_HOME}/`;
 /** Placeholder href — sign-out is handled via `wegAuthClick`, not navigation. */
 const SIGN_OUT_HREF = '#';
+const MAIN_NAV_LABEL = 'Main navigation';
+const OPEN_MAIN_NAV_LABEL = 'Open main navigation';
+const CLOSE_MAIN_NAV_LABEL = 'Close main navigation';
 
 function normalizeAccountBase(input?: string): string {
   const base = input?.trim() || DEFAULT_ACCOUNT_HOME;
@@ -420,9 +423,87 @@ export class WegHeader {
 
   private handleViewportChange() {
     if (this.desktopMediaQuery?.matches) {
-      this.closeMenu();
+      this.closeMenu({ announce: false, focusToggle: false });
     }
     this.updateHoverDropdownEnabled();
+  }
+
+  private announceToScreenReader(message: string) {
+    const region = this.el.shadowRoot?.querySelector('[data-weg-sr-live]');
+    if (!region) return;
+
+    region.textContent = '';
+    requestAnimationFrame(() => {
+      region.textContent = message;
+    });
+  }
+
+  private getMenuToggleButton(): HTMLButtonElement | null {
+    return this.el.shadowRoot?.querySelector('.menu-toggle');
+  }
+
+  private getFirstNavFocusable(): HTMLElement | null {
+    const panel = this.el.shadowRoot?.querySelector('#weg-header-main-nav');
+    if (!panel) return null;
+
+    const focusables = panel.querySelectorAll<HTMLElement>(
+      'a[href], button:not([disabled])',
+    );
+    return focusables[0] ?? null;
+  }
+
+  private focusFirstNavItem() {
+    setTimeout(() => {
+      const attemptFocus = (retries = 8) => {
+        const target = this.getFirstNavFocusable();
+        if (target) {
+          target.focus();
+          return;
+        }
+        if (retries > 0) {
+          requestAnimationFrame(() => attemptFocus(retries - 1));
+        }
+      };
+
+      attemptFocus();
+    }, 0);
+  }
+
+  private focusMenuToggle() {
+    const attemptFocus = (retries = 8) => {
+      const toggle = this.getMenuToggleButton();
+      if (toggle) {
+        toggle.focus();
+        return;
+      }
+      if (retries > 0) {
+        requestAnimationFrame(() => attemptFocus(retries - 1));
+      }
+    };
+
+    attemptFocus();
+  }
+
+  private getMenuGroupLinkCount(label: string): number {
+    const group = this.getActiveMenu().find((item) => isMenuGroup(item) && item.label === label);
+    return group?.items?.length ?? 0;
+  }
+
+  private formatLinkCount(count: number): string {
+    return count === 1 ? '1 link' : `${count} links`;
+  }
+
+  private formatItemCount(count: number): string {
+    return count === 1 ? '1 item' : `${count} items`;
+  }
+
+  private announceSubmenuExpanded(label: string) {
+    const linkCount = this.getMenuGroupLinkCount(label);
+    this.announceToScreenReader(`${label} submenu expanded. ${this.formatLinkCount(linkCount)}.`);
+  }
+
+  private announceSubmenuCollapsed(label: string) {
+    this.announceToScreenReader(`${label} submenu collapsed.`);
   }
 
   private isMobileMenuActive(): boolean {
@@ -446,7 +527,7 @@ export class WegHeader {
 
     if (this.menuOpen) {
       event.preventDefault();
-      this.closeMenu();
+      this.closeMenu({ focusToggle: true });
     }
   }
 
@@ -509,10 +590,12 @@ export class WegHeader {
 
   private toggleDropdown(label: string) {
     if (this.openDropdown === label) {
+      this.announceSubmenuCollapsed(label);
       this.closeDropdown();
       return;
     }
     this.openDropdownMenu(label);
+    this.announceSubmenuExpanded(label);
   }
 
   private getDropdownPanelId(label: string): string {
@@ -569,7 +652,10 @@ export class WegHeader {
   ) {
     if (event.key !== 'ArrowDown') return;
     event.preventDefault();
-    this.openDropdownMenu(label);
+    if (this.openDropdown !== label) {
+      this.openDropdownMenu(label);
+      this.announceSubmenuExpanded(label);
+    }
     this.focusFirstDropdownLink(itemEl);
   }
 
@@ -578,10 +664,18 @@ export class WegHeader {
   }
 
   private focusDropdownLink(container: HTMLElement, index: number) {
-    setTimeout(() => {
+    const attemptFocus = (retries = 8) => {
       const links = this.getDropdownLinks(container);
-      links[index]?.focus();
-    }, 0);
+      if (links[index]) {
+        links[index].focus();
+        return;
+      }
+      if (retries > 0) {
+        requestAnimationFrame(() => attemptFocus(retries - 1));
+      }
+    };
+
+    attemptFocus();
   }
 
   private focusFirstDropdownLink(itemEl: HTMLElement) {
@@ -599,8 +693,26 @@ export class WegHeader {
         ? this.getDropdownContainer(labelOrContainer)
         : labelOrContainer;
     const trigger = container?.querySelector('.nav-dropdown__trigger') as HTMLButtonElement | null;
+    const label =
+      typeof labelOrContainer === 'string'
+        ? labelOrContainer
+        : (trigger?.querySelector('.nav-dropdown__label')?.textContent?.trim() ?? '');
+    if (label && this.openDropdown === label) {
+      this.announceSubmenuCollapsed(label);
+    }
     this.closeDropdown();
-    setTimeout(() => trigger?.focus(), 0);
+
+    const attemptFocus = (retries = 8) => {
+      if (trigger && this.el.shadowRoot?.contains(trigger)) {
+        trigger.focus();
+        return;
+      }
+      if (retries > 0) {
+        requestAnimationFrame(() => attemptFocus(retries - 1));
+      }
+    };
+
+    attemptFocus();
   }
 
   private handleDropdownLinkKeyDown(event: KeyboardEvent, container: HTMLElement) {
@@ -629,7 +741,7 @@ export class WegHeader {
 
   private toggleMenu() {
     if (this.menuOpen) {
-      this.closeMenu();
+      this.closeMenu({ focusToggle: false });
       return;
     }
     this.openMenu();
@@ -641,15 +753,28 @@ export class WegHeader {
     this.closeDropdown();
     if (!this.desktopMediaQuery?.matches) {
       this.lockBodyScroll();
+      const itemCount = this.getActiveMenu().length;
+      this.announceToScreenReader(`${MAIN_NAV_LABEL} opened. ${this.formatItemCount(itemCount)}.`);
+      this.focusFirstNavItem();
     }
   }
 
-  private closeMenu() {
+  private closeMenu(options: { announce?: boolean; focusToggle?: boolean } = {}) {
+    const { announce = true, focusToggle = false } = options;
+    const wasMobileActive = this.isMobileMenuActive();
+
     this.menuOpen = false;
     this.closeDropdown();
     this.unlockBodyScroll();
     this.syncHeaderHeight();
     this.updateHeaderVisibility();
+
+    if (announce && wasMobileActive) {
+      this.announceToScreenReader(`${MAIN_NAV_LABEL} closed.`);
+    }
+    if (focusToggle) {
+      this.focusMenuToggle();
+    }
   }
 
   private getAccountHome(): string {
@@ -806,33 +931,36 @@ export class WegHeader {
               onMouseLeave={(event) => this.handleDropdownPanelPointerLeave(event)}
             >
               <div class="nav-dropdown__accent">
-                <div class="nav-dropdown__links">
-                  {items.map((child) => {
+                <ul class="nav-dropdown__links">
+                  {items.map((child, index) => {
                     const childActive = this.isNavItemActive(child.href, 'exact');
                     const ariaCurrent = this.isAriaCurrentHref(child.href, ariaCurrentHref);
+                    const positionLabel = `${child.label}, link ${index + 1} of ${items.length}`;
 
                     return (
-                      <a
-                        class={{
-                          'nav-dropdown__link': true,
-                          'nav-dropdown__link--active': childActive,
-                        }}
-                        href={child.href}
-                        key={`${item.label}:${child.label}`}
-                        aria-current={ariaCurrent ? 'page' : undefined}
-                        onClick={() => onNavigate?.()}
-                        onKeyDown={(event) => {
-                          const dropdownContainer = (event.currentTarget as HTMLElement).closest(
-                            '.nav-dropdown',
-                          ) as HTMLElement;
-                          this.handleDropdownLinkKeyDown(event, dropdownContainer);
-                        }}
-                      >
-                        {child.label}
-                      </a>
+                      <li key={`${item.label}:${child.label}`}>
+                        <a
+                          class={{
+                            'nav-dropdown__link': true,
+                            'nav-dropdown__link--active': childActive,
+                          }}
+                          href={child.href}
+                          aria-label={positionLabel}
+                          aria-current={ariaCurrent ? 'page' : undefined}
+                          onClick={() => onNavigate?.()}
+                          onKeyDown={(event) => {
+                            const dropdownContainer = (event.currentTarget as HTMLElement).closest(
+                              '.nav-dropdown',
+                            ) as HTMLElement;
+                            this.handleDropdownLinkKeyDown(event, dropdownContainer);
+                          }}
+                        >
+                          {child.label}
+                        </a>
+                      </li>
                     );
                   })}
-                </div>
+                </ul>
               </div>
             </div>
           ) : null}
@@ -969,7 +1097,7 @@ export class WegHeader {
     const ariaCurrentHref = this.resolveAriaCurrentHref();
 
     return (
-      <nav class="main-nav" aria-label="Main">
+      <nav class="main-nav" aria-label={MAIN_NAV_LABEL}>
         <ul class="main-nav__list">
           {this.getActiveMenu().map((item) => this.renderNavItem(item, onNavigate, ariaCurrentHref))}
         </ul>
@@ -1010,10 +1138,11 @@ export class WegHeader {
         }}
       >
         <div class="header-inner">
+          <div class="sr-only" aria-live="polite" aria-atomic="true" data-weg-sr-live />
           <button
             type="button"
             class="menu-toggle icon-button"
-            aria-label={mobileMenuActive ? 'Close menu' : 'Open menu'}
+            aria-label={mobileMenuActive ? CLOSE_MAIN_NAV_LABEL : OPEN_MAIN_NAV_LABEL}
             aria-expanded={mobileMenuActive ? 'true' : 'false'}
             aria-controls="weg-header-main-nav"
             onClick={() => this.toggleMenu()}
@@ -1027,7 +1156,7 @@ export class WegHeader {
             id="weg-header-main-nav"
             role={mobileMenuActive ? 'dialog' : undefined}
             aria-modal={mobileMenuActive ? 'true' : undefined}
-            aria-label={mobileMenuActive ? 'Menu' : undefined}
+            aria-label={mobileMenuActive ? MAIN_NAV_LABEL : undefined}
           >
             {this.renderNav(mobileMenuActive ? closeMenu : undefined)}
           </div>
