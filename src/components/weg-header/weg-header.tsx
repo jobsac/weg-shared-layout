@@ -28,6 +28,17 @@ const SIGN_OUT_HREF = '#';
 const MAIN_NAV_LABEL = 'Main navigation';
 const OPEN_MAIN_NAV_LABEL = 'Open main navigation';
 const CLOSE_MAIN_NAV_LABEL = 'Close main navigation';
+const SKIP_TO_CONTENT_LABEL = 'Skip to main content';
+const SKIP_TO_CONTENT_TARGET_ID = 'main-content';
+
+function focusScrollTarget(element: HTMLElement) {
+  if (!element.hasAttribute('tabindex')) {
+    element.setAttribute('tabindex', '-1');
+  }
+
+  element.focus({ preventScroll: true });
+  element.scrollIntoView();
+}
 
 function normalizeAccountBase(input?: string): string {
   const base = input?.trim() || DEFAULT_ACCOUNT_HOME;
@@ -1121,6 +1132,21 @@ export class WegHeader {
     });
   }
 
+  private handleSkipToContent(event: MouseEvent) {
+    event.preventDefault();
+
+    const mainContent =
+      document.querySelector('main') ?? document.getElementById(SKIP_TO_CONTENT_TARGET_ID);
+    if (mainContent instanceof HTMLElement) {
+      focusScrollTarget(mainContent);
+    }
+
+    const headings = document.querySelectorAll('h1');
+    if (headings.length > 0 && headings[0] instanceof HTMLElement) {
+      focusScrollTarget(headings[0]);
+    }
+  }
+
   render() {
     const logoHref = this.getLogoHref();
     const logoSrc = this.getLogoSrc();
@@ -1129,39 +1155,49 @@ export class WegHeader {
     const mobileMenuActive = this.isMobileMenuActive();
 
     return (
-      <header
-        class={{
-          header: true,
-          'header--fixed': !mobileMenuActive,
-          'header--hidden': this.headerHidden && !mobileMenuActive,
-          'header--menu-open': mobileMenuActive,
-        }}
-      >
-        <div class="header-inner">
-          <div class="sr-only" aria-live="polite" aria-atomic="true" data-weg-sr-live />
-          <button
-            type="button"
-            class="menu-toggle icon-button"
-            aria-label={mobileMenuActive ? CLOSE_MAIN_NAV_LABEL : OPEN_MAIN_NAV_LABEL}
-            aria-expanded={mobileMenuActive ? 'true' : 'false'}
-            aria-controls="weg-header-main-nav"
-            onClick={() => this.toggleMenu()}
-          >
-            {mobileMenuActive ? <CloseIcon /> : <HamburgerIcon />}
-          </button>
-          <Logo href={logoHref} src={logoSrc} />
-          <div class="header-actions">{this.renderCompactAuth(mobileMenuActive ? closeMenu : undefined)}</div>
-          <div
-            class="main-nav-panel"
-            id="weg-header-main-nav"
-            role={mobileMenuActive ? 'dialog' : undefined}
-            aria-modal={mobileMenuActive ? 'true' : undefined}
-            aria-label={mobileMenuActive ? MAIN_NAV_LABEL : undefined}
-          >
-            {this.renderNav(mobileMenuActive ? closeMenu : undefined)}
+      <div class="weg-header-shell">
+        <a
+          class="skip-to-content"
+          href={`#${SKIP_TO_CONTENT_TARGET_ID}`}
+          title={SKIP_TO_CONTENT_LABEL}
+          onClick={(event) => this.handleSkipToContent(event)}
+        >
+          {SKIP_TO_CONTENT_LABEL}
+        </a>
+        <header
+          class={{
+            header: true,
+            'header--fixed': !mobileMenuActive,
+            'header--hidden': this.headerHidden && !mobileMenuActive,
+            'header--menu-open': mobileMenuActive,
+          }}
+        >
+          <div class="header-inner">
+            <div class="sr-only" aria-live="polite" aria-atomic="true" data-weg-sr-live />
+            <button
+              type="button"
+              class="menu-toggle icon-button"
+              aria-label={mobileMenuActive ? CLOSE_MAIN_NAV_LABEL : OPEN_MAIN_NAV_LABEL}
+              aria-expanded={mobileMenuActive ? 'true' : 'false'}
+              aria-controls="weg-header-main-nav"
+              onClick={() => this.toggleMenu()}
+            >
+              {mobileMenuActive ? <CloseIcon /> : <HamburgerIcon />}
+            </button>
+            <Logo href={logoHref} src={logoSrc} />
+            <div class="header-actions">{this.renderCompactAuth(mobileMenuActive ? closeMenu : undefined)}</div>
+            <div
+              class="main-nav-panel"
+              id="weg-header-main-nav"
+              role={mobileMenuActive ? 'dialog' : undefined}
+              aria-modal={mobileMenuActive ? 'true' : undefined}
+              aria-label={mobileMenuActive ? MAIN_NAV_LABEL : undefined}
+            >
+              {this.renderNav(mobileMenuActive ? closeMenu : undefined)}
+            </div>
           </div>
-        </div>
-      </header>
+        </header>
+      </div>
     );
   }
 }
