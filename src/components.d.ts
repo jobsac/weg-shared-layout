@@ -20,6 +20,10 @@ export namespace Components {
          */
         "accountBaseUrl"?: string;
         /**
+          * Current page path from the host application (e.g. `/career-advice/my-article`). Include a query string when matching dropdown links that use search params.
+         */
+        "currentPath"?: string;
+        /**
           * Layout payload, supplied by the host application.  Expected shape: ```json {   "header": {     "menu": [       { "label": "Find a job", "items": [{ "label": "Graduates", "href": "..." }] },       { "label": "Career advice", "href": "/career-advice" },       { "label": "Sign in", "href": "/account/login" }     ]   } } ```
          */
         "layout"?: LayoutData | string;
@@ -80,6 +84,10 @@ declare namespace LocalJSX {
          */
         "accountBaseUrl"?: string;
         /**
+          * Current page path from the host application (e.g. `/career-advice/my-article`). Include a query string when matching dropdown links that use search params.
+         */
+        "currentPath"?: string;
+        /**
           * Layout payload, supplied by the host application.  Expected shape: ```json {   "header": {     "menu": [       { "label": "Find a job", "items": [{ "label": "Graduates", "href": "..." }] },       { "label": "Career advice", "href": "/career-advice" },       { "label": "Sign in", "href": "/account/login" }     ]   } } ```
          */
         "layout"?: LayoutData | string;
@@ -106,6 +114,7 @@ declare namespace LocalJSX {
         "signedIn": boolean;
         "userName": string;
         "accountBaseUrl": string;
+        "currentPath": string;
     }
 
     interface IntrinsicElements {

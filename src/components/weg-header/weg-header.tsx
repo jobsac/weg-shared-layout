@@ -8,6 +8,12 @@ import {
   parseJsonProp,
 } from '../../utils/layout';
 import { WEG_HOVER_CAPABLE_MEDIA_QUERY, WEG_MD_MEDIA_QUERY } from '../../constants/breakpoints';
+import {
+  isAriaCurrentNavHref,
+  isNavLinkActive,
+  resolveAriaCurrentNavKey,
+  type NavActiveMode,
+} from '../../utils/nav-active';
 import { LOGO_SRC } from './logo-data';
 
 const WEG_HOME = 'https://www.warwickemploymentgroup.com';
@@ -224,7 +230,7 @@ function ToggleIcon({ expanded }: { expanded: boolean }) {
 function Logo({ href, src }: { href: string; src: string }) {
   return (
     <a class="logo-link" href={href} aria-label="Home">
-      <img class="logo" src={src} alt="WEG" width="225" height="83" />
+      <img class="logo" src={src} alt="Warwick Employment Group logo" width="225" height="83" />
     </a>
   );
 }
@@ -268,6 +274,12 @@ export class WegHeader {
    * Defaults to production when omitted.
    */
   @Prop({ attribute: 'account-base-url' }) accountBaseUrl?: string;
+
+  /**
+   * Current page path from the host application (e.g. `/career-advice/my-article`).
+   * Include a query string when matching dropdown links that use search params.
+   */
+  @Prop({ attribute: 'current-path' }) currentPath?: string;
 
   /**
    * Fired when the user clicks Sign in or Sign out.
@@ -514,15 +526,48 @@ export class WegHeader {
     return name || 'Manage Account';
   }
 
+  private shouldExcludeFromNavActive(item: LayoutLink, accountHome: string): boolean {
+    return isSignOutLink(item) || isSignInLink(item, accountHome);
+  }
+
+  private isNavItemActive(href: string | undefined, mode: NavActiveMode): boolean {
+    return isNavLinkActive(this.currentPath ?? '', href, mode);
+  }
+
+  private resolveAriaCurrentHref(): string | null {
+    const accountHome = this.getAccountHome();
+
+    return resolveAriaCurrentNavKey(this.getActiveMenu(), this.currentPath ?? '', (item) =>
+      this.shouldExcludeFromNavActive(item as LayoutLink, accountHome),
+    );
+  }
+
+  private isAriaCurrentHref(href: string | undefined, ariaCurrentKey: string | null): boolean {
+    return isAriaCurrentNavHref(href, ariaCurrentKey);
+  }
+
   private renderIconNavLink(
     link: LayoutLink,
     Icon: () => unknown,
     className: string,
     onNavigate?: () => void,
+    ariaCurrentHref: string | null = null,
   ) {
+    const active = this.isNavItemActive(link.href, 'prefix');
+    const ariaCurrent = this.isAriaCurrentHref(link.href, ariaCurrentHref);
+
     return (
       <li class="main-nav__item main-nav__item--auth" key={link.label}>
-        <a class={{ 'sign-in-link': true, [className]: true }} href={link.href} onClick={() => onNavigate?.()}>
+        <a
+          class={{
+            'sign-in-link': true,
+            [className]: true,
+            'nav-link--active': active,
+          }}
+          href={link.href}
+          aria-current={ariaCurrent ? 'page' : undefined}
+          onClick={() => onNavigate?.()}
+        >
           <Icon />
           {link.label}
         </a>
@@ -530,20 +575,41 @@ export class WegHeader {
     );
   }
 
-  private renderFlatNavLink(link: LayoutLink, onNavigate?: () => void) {
+  private renderFlatNavLink(
+    link: LayoutLink,
+    onNavigate?: () => void,
+    ariaCurrentHref: string | null = null,
+  ) {
+    const active = this.isNavItemActive(link.href, 'prefix');
+    const ariaCurrent = this.isAriaCurrentHref(link.href, ariaCurrentHref);
+
     return (
       <li class="main-nav__item" key={link.label}>
-        <a class="nav-link" href={link.href} onClick={() => onNavigate?.()}>
+        <a
+          class={{
+            'nav-link': true,
+            'nav-link--active': active,
+          }}
+          href={link.href}
+          aria-current={ariaCurrent ? 'page' : undefined}
+          onClick={() => onNavigate?.()}
+        >
           {link.label}
         </a>
       </li>
     );
   }
 
-  private renderMenuGroup(item: LayoutLink, onNavigate?: () => void) {
+  private renderMenuGroup(
+    item: LayoutLink,
+    onNavigate?: () => void,
+    ariaCurrentHref: string | null = null,
+  ) {
     const items = item.items ?? [];
     const isOpen = this.openDropdown === item.label;
     const panelId = this.getDropdownPanelId(item.label);
+    const groupActive = items.some((child) => this.isNavItemActive(child.href, 'exact'));
+
     return (
       <li class="main-nav__item main-nav__item--dropdown" key={item.label}>
         <div
@@ -557,6 +623,7 @@ export class WegHeader {
             class={{
               'nav-dropdown__trigger': true,
               'nav-dropdown__trigger--open': isOpen,
+              'nav-dropdown__trigger--active': groupActive,
             }}
             aria-expanded={isOpen ? 'true' : 'false'}
             aria-haspopup="true"
@@ -582,16 +649,25 @@ export class WegHeader {
             >
               <div class="nav-dropdown__accent">
                 <div class="nav-dropdown__links">
-                  {items.map((child) => (
-                    <a
-                      class="nav-dropdown__link"
-                      href={child.href}
-                      key={`${item.label}:${child.label}`}
-                      onClick={() => onNavigate?.()}
-                    >
-                      {child.label}
-                    </a>
-                  ))}
+                  {items.map((child) => {
+                    const childActive = this.isNavItemActive(child.href, 'exact');
+                    const ariaCurrent = this.isAriaCurrentHref(child.href, ariaCurrentHref);
+
+                    return (
+                      <a
+                        class={{
+                          'nav-dropdown__link': true,
+                          'nav-dropdown__link--active': childActive,
+                        }}
+                        href={child.href}
+                        key={`${item.label}:${child.label}`}
+                        aria-current={ariaCurrent ? 'page' : undefined}
+                        onClick={() => onNavigate?.()}
+                      >
+                        {child.label}
+                      </a>
+                    );
+                  })}
                 </div>
               </div>
             </div>
@@ -653,8 +729,15 @@ export class WegHeader {
     );
   }
 
-  private renderManageAccountAnchor(onNavigate?: () => void, iconOnly = false) {
+  private renderManageAccountAnchor(
+    onNavigate?: () => void,
+    iconOnly = false,
+    ariaCurrentHref: string | null = null,
+  ) {
     const label = this.getManageAccountLabel();
+    const href = accountPath(this.getAccountHome(), '/account/manage');
+    const active = this.isNavItemActive(href, 'prefix');
+    const ariaCurrent = this.isAriaCurrentHref(href, ariaCurrentHref);
 
     return (
       <a
@@ -662,9 +745,11 @@ export class WegHeader {
           'sign-in-link': !iconOnly,
           'manage-account-link': true,
           'icon-button': iconOnly,
+          'nav-link--active': active,
         }}
-        href={accountPath(this.getAccountHome(), '/account/manage')}
+        href={href}
         aria-label={label}
+        aria-current={ariaCurrent ? 'page' : undefined}
         onClick={() => onNavigate?.()}
       >
         <SignInIcon />
@@ -674,11 +759,11 @@ export class WegHeader {
     );
   }
 
-  private renderNavItem(item: LayoutLink, onNavigate?: () => void) {
+  private renderNavItem(item: LayoutLink, onNavigate?: () => void, ariaCurrentHref: string | null = null) {
     const accountHome = this.getAccountHome();
 
     if (isMenuGroup(item)) {
-      return this.renderMenuGroup(item, onNavigate);
+      return this.renderMenuGroup(item, onNavigate, ariaCurrentHref);
     }
 
     if (isSignOutLink(item)) {
@@ -700,27 +785,29 @@ export class WegHeader {
     if (isManageAccountLink(item, accountHome)) {
       return (
         <li class="main-nav__item main-nav__item--auth" key="manage-account">
-          {this.renderManageAccountAnchor(onNavigate)}
+          {this.renderManageAccountAnchor(onNavigate, false, ariaCurrentHref)}
         </li>
       );
     }
 
     if (this.signedIn && isFindJobLink(item)) {
-      return this.renderIconNavLink(item, FindJobIcon, 'find-a-job-link', onNavigate);
+      return this.renderIconNavLink(item, FindJobIcon, 'find-a-job-link', onNavigate, ariaCurrentHref);
     }
 
     if (this.signedIn && isDashboardLink(item, accountHome)) {
-      return this.renderIconNavLink(item, DashboardIcon, 'dashboard-link', onNavigate);
+      return this.renderIconNavLink(item, DashboardIcon, 'dashboard-link', onNavigate, ariaCurrentHref);
     }
 
-    return this.renderFlatNavLink(item, onNavigate);
+    return this.renderFlatNavLink(item, onNavigate, ariaCurrentHref);
   }
 
   private renderNav(onNavigate?: () => void) {
+    const ariaCurrentHref = this.resolveAriaCurrentHref();
+
     return (
       <nav class="main-nav" aria-label="Main">
         <ul class="main-nav__list">
-          {this.getActiveMenu().map((item) => this.renderNavItem(item, onNavigate))}
+          {this.getActiveMenu().map((item) => this.renderNavItem(item, onNavigate, ariaCurrentHref))}
         </ul>
       </nav>
     );

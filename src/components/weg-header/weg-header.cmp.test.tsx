@@ -90,6 +90,40 @@ describe('weg-header', () => {
     expect(signOutLink?.getAttribute('href')).toBe('#');
   });
 
+  it('applies active styles from current-path', async () => {
+    await setViewport(DESKTOP_VIEWPORT.width, DESKTOP_VIEWPORT.height);
+    const { root } = await render(
+      <weg-header layout={SAMPLE_HEADER_LAYOUT} currentPath="/career-advice/my-article"></weg-header>,
+    );
+
+    const careerLink = root.shadowRoot?.querySelector('.nav-link') as HTMLAnchorElement | null;
+    expect(careerLink?.classList.contains('nav-link--active')).toBe(true);
+    expect(careerLink?.getAttribute('aria-current')).toBe('page');
+
+    const dropdownTrigger = root.shadowRoot?.querySelector('.nav-dropdown__trigger') as HTMLButtonElement | null;
+    expect(dropdownTrigger?.classList.contains('nav-dropdown__trigger--active')).toBe(false);
+  });
+
+  it('keeps dropdown parent active when a child matches current-path', async () => {
+    await setViewport(DESKTOP_VIEWPORT.width, DESKTOP_VIEWPORT.height);
+    const { root } = await render(
+      <weg-header
+        layout={SAMPLE_HEADER_LAYOUT}
+        currentPath="/search?category=graduates"
+      ></weg-header>,
+    );
+
+    const dropdownTrigger = root.shadowRoot?.querySelector('.nav-dropdown__trigger') as HTMLButtonElement | null;
+    expect(dropdownTrigger?.classList.contains('nav-dropdown__trigger--active')).toBe(true);
+
+    dropdownTrigger?.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
+    await waitForUpdate();
+
+    const childLink = root.shadowRoot?.querySelector('.nav-dropdown__link--active') as HTMLAnchorElement | null;
+    expect(childLink?.getAttribute('aria-current')).toBe('page');
+    expect(root.shadowRoot?.querySelectorAll('[aria-current="page"]')).toHaveLength(1);
+  });
+
   it('emits wegAuthClick when auth control is clicked', async () => {
     const { root } = await render(<weg-header layout={SAMPLE_HEADER_LAYOUT}></weg-header>);
     let detail: { action: string } | undefined;

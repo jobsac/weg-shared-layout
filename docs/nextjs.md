@@ -9,7 +9,7 @@ Guide for **Next.js 13+ App Router** (`app/` directory). For Vite/CRA-style clie
 | `<weg-header>` | Site header — bundled logo, CMS nav (signed out), built-in nav (signed in), Sign in / Manage Account / Sign out |
 | `<weg-footer>` | Site footer — social, menu, legal text |
 
-Both accept **`layout`** (JSON string recommended in Next). `<weg-header>` also accepts **`signed-in`**, **`user-name`**, **`account-base-url`**, and emits **`wegAuthClick`**.
+Both accept **`layout`** (JSON string recommended in Next). `<weg-header>` also accepts **`signed-in`**, **`user-name`**, **`account-base-url`**, **`current-path`**, and emits **`wegAuthClick`**.
 
 ## Why Next.js is different
 
@@ -62,6 +62,7 @@ Sign-in comes from your CMS `header.menu` like any other link. Handle sign-out v
 'use client';
 
 import { useCallback } from 'react';
+import { usePathname } from 'next/navigation';
 import { defineCustomElements } from 'weg-shared-layout/loader';
 import 'weg-shared-layout/weg-header';
 
@@ -82,6 +83,8 @@ export function Header({
   userName?: string;
   onSignedInChange?: (signedIn: boolean) => void;
 }) {
+  const pathname = usePathname();
+
   const onAuthClick = useCallback(
     async (event: CustomEvent<{ action: 'sign-in' | 'sign-out' }>) => {
       if (event.detail.action !== 'sign-out') return;
@@ -98,6 +101,7 @@ export function Header({
     <weg-header
       layout={JSON.stringify(layout)}
       signedIn={signedIn}
+      currentPath={pathname}
       {...(userName ? { userName } : {})}
       suppressHydrationWarning
       onWegAuthClick={onAuthClick}
@@ -210,7 +214,11 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 
 Pass the plain object into the Client Component; **stringify inside** the header/footer wrappers.
 
-Wire **`signedIn`** and **`userName`** from your auth provider (session hook / context in a client wrapper).
+Wire **`signedIn`** and **`userName`** from your auth provider (session hook / context in a client wrapper). Pass **`currentPath`** from `usePathname()` (and `useSearchParams()` when dropdown links use query strings).
+
+## Nav active state
+
+Pass **`current-path`** from the client wrapper. Flat links use prefix matching; dropdown children use exact pathname (+ query when the href includes `?`). Dropdown parents keep the active background when a child matches. Active styling uses **`weg-purple-200`** (`#CDCFF8`).
 
 ## Header auth reference
 
@@ -222,6 +230,7 @@ Wire **`signedIn`** and **`userName`** from your auth provider (session hook / c
 | `signed-in` prop | `false` | `true` — session flag from host app |
 | `user-name` prop | — | User's first name on Manage Account |
 | `account-base-url` prop | — | Account portal origin for signed-in links (optional) |
+| `current-path` prop | Current pathname (optional query) | Highlights the active nav link; e.g. `/career-advice/my-article` |
 | `wegAuthClick` event | Sign-in follows link `href` | `'sign-out'` — host handles logout and redirect |
 | `event.preventDefault()` | Skip default navigation | Required — sign-out has no built-in redirect |
 
@@ -279,6 +288,7 @@ declare module 'react' {
 | Logo missing | Stale package | Logo is inlined in `logo-data.ts`; rebuild / upgrade. |
 | Header not clickable | Overlapping page content | `:host` uses `z-index: 20`; upgrade package if missing. |
 | Auth not updating | `signed-in` only on server | Manage session in client state / context. |
+| Nav never highlights | `current-path` not passed | Pass `usePathname()` (+ search params when needed) from client wrapper. |
 | Hydration warning | Shadow DOM mismatch | `suppressHydrationWarning` on both tags. |
 | Build error | Package not transpiled | `transpilePackages: ['weg-shared-layout']`. |
 
@@ -287,7 +297,7 @@ declare module 'react' {
 - [ ] `weg-shared-layout` installed
 - [ ] `transpilePackages` in `next.config`
 - [ ] Client `Header.tsx` / `Footer.tsx` with loader, tag imports, `JSON.stringify`, `suppressHydrationWarning`
-- [ ] Auth: `signed-in`, `user-name`, `account-base-url` (optional), and `wegAuthClick` handler on header
+- [ ] Auth: `signed-in`, `user-name`, `account-base-url` (optional), `current-path` from `usePathname()`, and `wegAuthClick` handler on header
 - [ ] Server `layout.tsx` imports client chrome only (no `defineCustomElements` on server)
 - [ ] Layout fetched or imported server-side, passed as serializable props
 - [ ] TypeScript augmentation for `'weg-header'` and `'weg-footer'`

@@ -4,6 +4,8 @@ Guides for integrating **`weg-shared-layout`** (`<weg-header>`, `<weg-footer>`) 
 
 Layout shape uses **`header.menu`** (unified nav) and **`footer.menu`** (columns). Reference JSON: [`src/assets/dummy-data.json`](../src/assets/dummy-data.json).
 
+**Nav active state:** pass **`current-path`** / **`currentPath`** on `<weg-header>` from your router (see framework guides below).
+
 ---
 
 ## Choose a guide

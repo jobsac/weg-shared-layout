@@ -1,6 +1,6 @@
 {
   "name": "weg-shared-layout",
-  "version": "0.0.40",
+  "version": "0.0.41",
   "description": "Shared layout Web Components built with Stencil",
   "main": "dist/index.cjs.js",
   "module": "dist/index.js",
@@ -50,15 +50,15 @@
     "src/styles/container.css"
   ],
   "scripts": {
-    "prepack": "npm run build",
+    "prepack": "pnpm run build",
     "build": "stencil build",
     "start": "stencil build --dev --watch --serve",
     "test": "stencil-test --prod",
     "test:watch": "stencil-test --prod --watch",
     "generate": "stencil generate",
-    "demo:angular16:install": "npm install --prefix demo/angular16",
-    "demo:angular16:build": "npm run build && npm run build --prefix demo/angular16",
-    "demo:angular16": "npm run build && npm run start --prefix demo/angular16"
+    "demo:angular16:install": "pnpm install --dir demo/angular16",
+    "demo:angular16:build": "pnpm run build && pnpm run build --dir demo/angular16",
+    "demo:angular16": "pnpm run build && pnpm run start --dir demo/angular16"
   },
   "devDependencies": {
     "@csstools/postcss-global-data": "~4.0.0",

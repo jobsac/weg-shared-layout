@@ -1,5 +1,6 @@
-import { Component, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import { Component, CUSTOM_ELEMENTS_SCHEMA, OnInit } from '@angular/core';
+import { NavigationEnd, Router, RouterOutlet } from '@angular/router';
+import { filter } from 'rxjs/operators';
 
 import { POST_LOGOUT_HREF } from './auth';
 import { LayoutService } from './layout.service';
@@ -13,11 +14,15 @@ import type { LayoutData } from './layout.types';
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.css'],
 })
-export class AppComponent {
-  constructor(private readonly layoutService: LayoutService) {}
+export class AppComponent implements OnInit {
+  constructor(
+    private readonly layoutService: LayoutService,
+    private readonly router: Router,
+  ) {}
 
   signedIn = false;
   userName: string | undefined;
+  currentPath = '/';
 
   get layoutData(): LayoutData {
     return this.layoutService.layout;
@@ -25,6 +30,17 @@ export class AppComponent {
 
   get headerLayout(): LayoutData {
     return this.layoutService.headerLayout;
+  }
+
+  ngOnInit(): void {
+    this.updateCurrentPath();
+    this.router.events
+      .pipe(filter((event): event is NavigationEnd => event instanceof NavigationEnd))
+      .subscribe(() => this.updateCurrentPath());
+  }
+
+  private updateCurrentPath(): void {
+    this.currentPath = this.router.url || '/';
   }
 
   toggleSignedIn(): void {

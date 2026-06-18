@@ -56,5 +56,5 @@ Re-run `npm install` in `demo/angular16` only if `package.json` `exports` or ver
 | `src/app/layout.types.ts` | `typeof` import from `weg-shared-layout/dummy-data.json` |
 | `src/app/layout.service.ts` | Fixture data (swap for `HttpClient` in production) |
 | `src/app/auth.ts` | Sign-out redirect URL constant |
-| `src/app/app.component.*` | `[layout]`, auth bindings, plain fields (no signals) |
+| `src/app/app.component.*` | `[layout]`, `[currentPath]`, auth bindings, plain fields (no signals) |
 | `tsconfig.json` | `skipLibCheck`, `resolveJsonModule`, `moduleResolution: bundler` |

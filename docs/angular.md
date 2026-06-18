@@ -19,7 +19,7 @@ Copy this while integrating:
 - [ ] **Step 5** — `auth.ts` with sign-out URL (optional; only if handling `wegAuthClick`)
 - [ ] **Step 6** — `CUSTOM_ELEMENTS_SCHEMA` on the shell component
 - [ ] **Step 7** — Template with **`[layout]`** property binding
-- [ ] **Step 8** — Header: `[signedIn]`, `[userName]`, `[accountBaseUrl]` (optional), `(wegAuthClick)`
+- [ ] **Step 8** — Header: `[signedIn]`, `[userName]`, `[accountBaseUrl]` (optional), `[currentPath]`, `(wegAuthClick)`
 - [ ] **Step 9** — Verify in DevTools: `$0.layout` is an object on `<weg-header>`
 
 ---
@@ -108,8 +108,9 @@ Add `CUSTOM_ELEMENTS_SCHEMA` to the component whose template contains `<weg-head
 
 ```ts
 // src/app/app.component.ts
-import { Component, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import { Component, CUSTOM_ELEMENTS_SCHEMA, OnInit } from '@angular/core';
+import { NavigationEnd, Router, RouterOutlet } from '@angular/router';
+import { filter } from 'rxjs/operators';
 import layoutFixture from 'weg-shared-layout/dummy-data.json';
 
 import type { LayoutData } from './layout.types';
@@ -121,11 +122,25 @@ import type { LayoutData } from './layout.types';
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
   templateUrl: './app.component.html',
 })
-export class AppComponent {
+export class AppComponent implements OnInit {
   layoutData: LayoutData = layoutFixture;
 
   signedIn = false;
   userName?: string;
+  currentPath = '/';
+
+  constructor(private readonly router: Router) {}
+
+  ngOnInit(): void {
+    this.updateCurrentPath();
+    this.router.events
+      .pipe(filter((event): event is NavigationEnd => event instanceof NavigationEnd))
+      .subscribe(() => this.updateCurrentPath());
+  }
+
+  private updateCurrentPath(): void {
+    this.currentPath = this.router.url || '/';
+  }
 
   onAuthClick(event: Event): void {
     const customEvent = event as CustomEvent<{ action: 'sign-in' | 'sign-out' }>;
@@ -156,6 +171,7 @@ Use **`[layout]="..."`** so Angular sets the JavaScript property, not an HTML at
   [layout]="layoutData"
   [signedIn]="signedIn"
   [userName]="userName"
+  [currentPath]="currentPath"
   (wegAuthClick)="onAuthClick($event)"
 ></weg-header>
 
@@ -172,6 +188,7 @@ Use **`[layout]="..."`** so Angular sets the JavaScript property, not an HTML at
 | `[signedIn]` | `true` → built-in signed-in nav (ignores CMS `header.menu`) |
 | `[userName]` | First name on Manage Account when signed in |
 | `[accountBaseUrl]` | Account portal origin for signed-in links (optional; production default when omitted) |
+| `[currentPath]` | Current route path (optional query) — highlights the active nav link; use `router.url` |
 | `(wegAuthClick)` | Required for sign-out — call logout API and redirect; sign-in follows the link `href` |
 
 Run the app — you should see header nav and footer.
@@ -226,9 +243,10 @@ export class LayoutService {
 
 ```ts
 import { AsyncPipe } from '@angular/common';
-import { Component, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import { Component, CUSTOM_ELEMENTS_SCHEMA, OnInit } from '@angular/core';
+import { NavigationEnd, Router, RouterOutlet } from '@angular/router';
 import { Observable } from 'rxjs';
+import { filter } from 'rxjs/operators';
 
 import type { LayoutData } from './layout.types';
 import { LayoutService } from './layout.service';
@@ -240,13 +258,28 @@ import { LayoutService } from './layout.service';
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
   templateUrl: './app.component.html',
 })
-export class AppComponent {
+export class AppComponent implements OnInit {
   layout$: Observable<LayoutData>;
   signedIn = false;
   userName?: string;
+  currentPath = '/';
 
-  constructor(layoutService: LayoutService) {
+  constructor(
+    layoutService: LayoutService,
+    private readonly router: Router,
+  ) {
     this.layout$ = layoutService.loadLayout();
+  }
+
+  ngOnInit(): void {
+    this.updateCurrentPath();
+    this.router.events
+      .pipe(filter((event): event is NavigationEnd => event instanceof NavigationEnd))
+      .subscribe(() => this.updateCurrentPath());
+  }
+
+  private updateCurrentPath(): void {
+    this.currentPath = this.router.url || '/';
   }
 
   onAuthClick(event: Event): void {
@@ -274,6 +307,7 @@ export class AppComponent {
     [layout]="layout"
     [signedIn]="signedIn"
     [userName]="userName"
+    [currentPath]="currentPath"
     (wegAuthClick)="onAuthClick($event)"
   ></weg-header>
 
@@ -298,9 +332,25 @@ Add `CommonModule` or `NgIf` + `AsyncPipe` to `imports` if not already present.
 $0.layout      // must be a plain object, not undefined
 $0.signedIn    // boolean
 $0.userName    // string or undefined
+$0.currentPath // string — pathname + optional query, e.g. /career-advice/foo
 ```
 
 If `layout` looks like `"[object Object]"`, you used attribute binding instead of `[layout]`.
+
+---
+
+## Nav active state
+
+Pass **`[currentPath]`** from your router so the header can highlight the current page. Use **`router.url`** (includes query string when present) or build the string yourself (e.g. `/career-advice/my-article`).
+
+| Link type | Match rule |
+| --- | --- |
+| Flat nav link | Prefix — `/career-advice` matches `/career-advice/foo` |
+| Dropdown child | Exact pathname; include `?query` when the link href has search params |
+| Dropdown parent | Active style when any child matches (parent does not get `aria-current`) |
+| Sign in / Sign out | Never highlighted |
+
+Active links use **`weg-purple-200`** (`#CDCFF8`) background. Omit `currentPath` when you do not want active styling.
 
 ---
 
@@ -357,6 +407,7 @@ forkJoin({
 | Auth always Sign in | Bind `[signedIn]` from session state |
 | Generic Manage Account | Pass `[userName]` when signed in |
 | Staging account portal | Pass `[accountBaseUrl]` (e.g. `https://account-staging.example.com`) |
+| Nav never highlights active page | Pass `[currentPath]` from `router.url` on each navigation |
 | `Mixin<const …>` / TS1139 in `stencil-public-runtime.d.ts` | Add `skipLibCheck: true` and/or upgrade to TypeScript 5.0+ |
 | Cannot resolve `weg-shared-layout/loader` | Set `moduleResolution` to `bundler` or `node16` |
 | SSR: `document is not defined` | Guard: `if (typeof window !== 'undefined') defineCustomElements()` |

@@ -53,7 +53,18 @@ Full reference: [`src/assets/dummy-data.json`](src/assets/dummy-data.json). Sign
 
 **Signed in** (`signed-in` true): ignores CMS `header.menu` and shows built-in Find a job, Dashboard, Manage Account, and Sign out.
 
-Set **`signed-in`** from your app session state. Pass **`user-name`** for Manage Account. Pass **`account-base-url`** when account links should point at a non-production portal. **Sign out** emits **`wegAuthClick`** — the host must call `event.preventDefault()` and run your logout flow (API call, clear session, redirect).
+Set **`signed-in`** from your app session state. Pass **`user-name`** for Manage Account. Pass **`account-base-url`** when account links should point at a non-production portal. Pass **`current-path`** (e.g. `/career-advice/my-article`) to highlight the active nav item. **Sign out** emits **`wegAuthClick`** — the host must call `event.preventDefault()` and run your logout flow (API call, clear session, redirect).
+
+### Nav active state
+
+| Link type | Match rule |
+| --- | --- |
+| Flat nav link | Prefix — `/career-advice` matches `/career-advice/foo` |
+| Dropdown child | Exact pathname (+ query when href includes `?`) |
+| Dropdown parent | Active background when any child matches |
+| Sign in / Sign out | Never highlighted |
+
+Active links use **`weg-purple-200`** (`#CDCFF8`). Omit `current-path` to disable active styling.
 
 ```js
 header.addEventListener('wegAuthClick', async (event) => {

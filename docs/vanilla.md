@@ -31,6 +31,14 @@ With a bundler that resolves `node_modules` and package **`exports`** (TypeScrip
 
   header.layout = layout;
   footer.layout = layout;
+
+  function updateCurrentPath() {
+    const { pathname, search } = window.location;
+    header.currentPath = search ? `${pathname}${search}` : pathname;
+  }
+
+  updateCurrentPath();
+  window.addEventListener('popstate', updateCurrentPath);
 </script>
 ```
 
@@ -101,6 +109,29 @@ header.addEventListener('wegAuthClick', async (event) => {
 | --- | --- |
 | `'sign-in'` | Browser follows the link's `href` |
 | `'sign-out'` | Emits event only — no navigation (host handles logout) |
+
+## Nav active state
+
+Set **`currentPath`** (property) or **`current-path`** (attribute) to the current pathname. Include `?query` when dropdown links use search params.
+
+```js
+function syncCurrentPath() {
+  const { pathname, search } = window.location;
+  header.currentPath = search ? `${pathname}${search}` : pathname;
+}
+
+syncCurrentPath();
+window.addEventListener('popstate', syncCurrentPath);
+```
+
+| Link type | Match rule |
+| --- | --- |
+| Flat nav link | Prefix match on pathname |
+| Dropdown child | Exact pathname (+ query when href has `?`) |
+| Dropdown parent | Active when any child matches |
+| Sign in / Sign out | Never highlighted |
+
+Active links use **`weg-purple-200`** (`#CDCFF8`).
 
 Logo **image** uses `header.logoSrc` (bundled if omitted). Logo **link** uses `header.logoHref` when provided; otherwise it goes to the WEG homepage.
 

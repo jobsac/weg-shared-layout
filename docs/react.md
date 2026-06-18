@@ -11,7 +11,7 @@ Guide for **client-rendered** React apps (Vite, Create React App, etc.). If you 
 
 Both are **presentational** [Stencil](https://stenciljs.com/) Web Components. They **do not fetch data** — your app passes a **`layout`** payload (API, CMS, or [`dummy-data.json`](../src/assets/dummy-data.json)).
 
-`<weg-header>` additionally accepts **`signed-in`**, **`user-name`**, **`account-base-url`**, and emits **`wegAuthClick`**.
+`<weg-header>` additionally accepts **`signed-in`**, **`user-name`**, **`account-base-url`**, **`current-path`**, and emits **`wegAuthClick`**.
 
 ## Requirements
 
@@ -85,10 +85,13 @@ Handle **`wegAuthClick`** for sign-out (call your logout API, then redirect):
 
 ```tsx
 import { useCallback, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import 'weg-shared-layout/weg-header';
 import layout from 'weg-shared-layout/dummy-data.json';
 
 export function SiteHeader() {
+  const { pathname, search } = useLocation();
+  const currentPath = search ? `${pathname}${search}` : pathname;
   const [signedIn, setSignedIn] = useState(false);
   const userName = signedIn ? 'Alex' : undefined;
 
@@ -105,6 +108,7 @@ export function SiteHeader() {
     <weg-header
       layout={layout}
       signedIn={signedIn}
+      currentPath={currentPath}
       {...(userName ? { userName } : {})}
       onWegAuthClick={onAuthClick}
     />
@@ -112,11 +116,14 @@ export function SiteHeader() {
 }
 ```
 
+Without React Router, pass `window.location.pathname` (+ `search` when needed) or your router’s equivalent.
+
 | Prop / event | Purpose |
 | --- | --- |
 | `signedIn={boolean}` | Switches to signed-in nav when `true` |
 | `userName={string}` | First name beside profile icon on Manage Account |
 | `accountBaseUrl={string}` | Account portal origin for signed-in links (optional) |
+| `currentPath={string}` | Current path — highlights active nav (e.g. `/career-advice/foo`) |
 | `onWegAuthClick` | Required for sign-out — call logout API and redirect; sign-in follows link `href` |
 
 **Ref fallback for the event** (if `onWegAuthClick` does not bind in your React version):
@@ -143,7 +150,29 @@ useEffect(() => {
 return <weg-header ref={ref} layout={layout} signedIn={signedIn} userName="Alex" />;
 ```
 
-## 4. Production: fetch layout from your API
+## 4. Nav active state
+
+Pass **`currentPath`** so the header highlights the current page. Use your router’s pathname; include the query string when matching dropdown links with search params (e.g. `/search?category=graduates`).
+
+| Link type | Match rule |
+| --- | --- |
+| Flat nav link | Prefix — `/career-advice` matches `/career-advice/foo` |
+| Dropdown child | Exact pathname (+ query when href includes `?`) |
+| Dropdown parent | Active background when any child matches |
+| Sign in / Sign out | Never highlighted |
+
+Active links use **`weg-purple-200`** (`#CDCFF8`). Omit `currentPath` to disable active styling.
+
+```tsx
+import { useLocation } from 'react-router-dom';
+
+const { pathname, search } = useLocation();
+const currentPath = search ? `${pathname}${search}` : pathname;
+
+<weg-header layout={layout} currentPath={currentPath} />
+```
+
+## 5. Production: fetch layout from your API
 
 ```tsx
 import { useEffect, useState } from 'react';
@@ -245,6 +274,7 @@ declare module 'react' {
 | Logo missing on header | Old build without inlined logo | Upgrade package; logo is bundled in `logo-data.ts`. |
 | Auth always Sign in | `signed-in` not set | Bind `signedIn={!!session}`. |
 | Manage Account shows label not name | `user-name` not set | Pass `userName` when signed in. |
+| Nav never highlights active page | `current-path` not set | Pass `currentPath` from your router (pathname + query when needed). |
 | `onWegAuthClick` not firing | React CE event binding | Use `addEventListener` on a ref. |
 | TS: unknown element | No augmentation | Add `weg-shared-layout-jsx.d.ts`. |
 
