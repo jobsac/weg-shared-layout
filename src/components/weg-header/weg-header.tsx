@@ -304,6 +304,8 @@ export class WegHeader {
   private headerResizeObserver?: ResizeObserver;
   private lastScrollY = 0;
   private scrollTicking = false;
+  private bodyScrollLocked = false;
+  private bodyScrollLockY = 0;
   private hoverCloseTimer: ReturnType<typeof setTimeout> | null = null;
   private hoverOpenEnabled = false;
   private desktopMediaQuery?: MediaQueryList;
@@ -346,6 +348,7 @@ export class WegHeader {
   disconnectedCallback() {
     document.removeEventListener('click', this.boundHandleDocumentClick);
     window.removeEventListener('scroll', this.boundHandleScroll);
+    this.unlockBodyScroll();
     this.headerResizeObserver?.disconnect();
     this.desktopMediaQuery?.removeEventListener('change', this.boundHandleViewportChange);
     this.hoverCapableMediaQuery?.removeEventListener('change', this.boundHandleHoverCapabilityChange);
@@ -441,8 +444,36 @@ export class WegHeader {
       return;
     }
 
-    this.menuOpen = false;
-    this.closeDropdown();
+    if (this.menuOpen) {
+      event.preventDefault();
+      this.closeMenu();
+    }
+  }
+
+  private lockBodyScroll() {
+    if (this.bodyScrollLocked) return;
+
+    this.bodyScrollLockY = window.scrollY;
+    document.body.style.overflow = 'hidden';
+    document.body.style.position = 'fixed';
+    document.body.style.top = `-${this.bodyScrollLockY}px`;
+    document.body.style.left = '0';
+    document.body.style.right = '0';
+    document.body.style.width = '100%';
+    this.bodyScrollLocked = true;
+  }
+
+  private unlockBodyScroll() {
+    if (!this.bodyScrollLocked) return;
+
+    document.body.style.overflow = '';
+    document.body.style.position = '';
+    document.body.style.top = '';
+    document.body.style.left = '';
+    document.body.style.right = '';
+    document.body.style.width = '';
+    window.scrollTo(0, this.bodyScrollLockY);
+    this.bodyScrollLocked = false;
   }
 
   private handleDocumentClick(event: MouseEvent) {
@@ -608,11 +639,15 @@ export class WegHeader {
     this.menuOpen = true;
     this.headerHidden = false;
     this.closeDropdown();
+    if (!this.desktopMediaQuery?.matches) {
+      this.lockBodyScroll();
+    }
   }
 
   private closeMenu() {
     this.menuOpen = false;
     this.closeDropdown();
+    this.unlockBodyScroll();
     this.syncHeaderHeight();
     this.updateHeaderVisibility();
   }
