@@ -17,6 +17,28 @@
 :host {
   position: relative;
   z-index: 20;
+  display: block;
+  height: var(--weg-header-height, auto);
+}
+
+.header--fixed {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 20;
+  transform: translateY(0);
+  transition: transform 0.25s ease;
+}
+
+.header--fixed.header--hidden {
+  transform: translateY(-100%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .header--fixed {
+    transition: none;
+  }
 }
 
 .header--menu-open {
