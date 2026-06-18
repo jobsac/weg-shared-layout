@@ -223,6 +223,41 @@ describe('weg-header', () => {
     expect(root.shadowRoot?.querySelector('.nav-dropdown__panel')).toBeTruthy();
   });
 
+  it('navigates submenu links with arrow keys and returns focus on Escape', async () => {
+    await setViewport(DESKTOP_VIEWPORT.width, DESKTOP_VIEWPORT.height);
+    const { root } = await render(<weg-header layout={DUMMY_LAYOUT}></weg-header>);
+
+    const trigger = root.shadowRoot?.querySelector('.nav-dropdown__trigger') as HTMLButtonElement | null;
+    expect(trigger).toBeTruthy();
+
+    trigger?.focus();
+    trigger?.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
+    await waitForUpdate();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    const links = root.shadowRoot?.querySelectorAll(
+      '.nav-dropdown__link',
+    ) as NodeListOf<HTMLAnchorElement>;
+    expect(links.length).toBeGreaterThan(1);
+    expect(root.shadowRoot?.activeElement).toBe(links[0]);
+
+    links[0].dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(root.shadowRoot?.activeElement).toBe(links[1]);
+
+    links[1].dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowUp', bubbles: true }));
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(root.shadowRoot?.activeElement).toBe(links[0]);
+
+    links[0].dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    await waitForUpdate();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    expect(trigger?.getAttribute('aria-expanded')).toBe('false');
+    expect(root.shadowRoot?.querySelector('.nav-dropdown__panel')).toBeFalsy();
+    expect(root.shadowRoot?.activeElement).toBe(trigger);
+  });
+
   it('opens mobile accordion on first tap', async () => {
     await setViewport(MOBILE_VIEWPORT.width, MOBILE_VIEWPORT.height);
     const { root } = await render(<weg-header layout={SAMPLE_HEADER_LAYOUT}></weg-header>);

@@ -368,6 +368,13 @@ export class WegHeader {
   @Listen('keydown', { target: 'window' })
   handleKeyDown(event: KeyboardEvent) {
     if (event.key !== 'Escape') return;
+
+    if (this.openDropdown) {
+      event.preventDefault();
+      this.closeDropdownAndFocusTrigger(this.openDropdown);
+      return;
+    }
+
     this.menuOpen = false;
     this.closeDropdown();
   }
@@ -469,11 +476,58 @@ export class WegHeader {
     this.focusFirstDropdownLink(itemEl);
   }
 
-  private focusFirstDropdownLink(itemEl: HTMLElement) {
+  private getDropdownLinks(container: HTMLElement): HTMLAnchorElement[] {
+    return Array.from(container.querySelectorAll('.nav-dropdown__link'));
+  }
+
+  private focusDropdownLink(container: HTMLElement, index: number) {
     setTimeout(() => {
-      const firstLink = itemEl.querySelector('.nav-dropdown__link') as HTMLAnchorElement | null;
-      firstLink?.focus();
+      const links = this.getDropdownLinks(container);
+      links[index]?.focus();
     }, 0);
+  }
+
+  private focusFirstDropdownLink(itemEl: HTMLElement) {
+    this.focusDropdownLink(itemEl, 0);
+  }
+
+  private getDropdownContainer(label: string): HTMLElement | null {
+    const panelId = this.getDropdownPanelId(label);
+    return this.el.shadowRoot?.querySelector(`#${panelId}-trigger`)?.closest('.nav-dropdown') ?? null;
+  }
+
+  private closeDropdownAndFocusTrigger(labelOrContainer: string | HTMLElement) {
+    const container =
+      typeof labelOrContainer === 'string'
+        ? this.getDropdownContainer(labelOrContainer)
+        : labelOrContainer;
+    const trigger = container?.querySelector('.nav-dropdown__trigger') as HTMLButtonElement | null;
+    this.closeDropdown();
+    setTimeout(() => trigger?.focus(), 0);
+  }
+
+  private handleDropdownLinkKeyDown(event: KeyboardEvent, container: HTMLElement) {
+    const links = this.getDropdownLinks(container);
+    const currentIndex = links.indexOf(event.currentTarget as HTMLAnchorElement);
+    if (currentIndex === -1) return;
+
+    if (event.key === 'ArrowDown') {
+      event.preventDefault();
+      links[(currentIndex + 1) % links.length]?.focus();
+      return;
+    }
+
+    if (event.key === 'ArrowUp') {
+      event.preventDefault();
+      links[(currentIndex - 1 + links.length) % links.length]?.focus();
+      return;
+    }
+
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      event.stopPropagation();
+      this.closeDropdownAndFocusTrigger(container);
+    }
   }
 
   private toggleMenu() {
@@ -663,6 +717,12 @@ export class WegHeader {
                         key={`${item.label}:${child.label}`}
                         aria-current={ariaCurrent ? 'page' : undefined}
                         onClick={() => onNavigate?.()}
+                        onKeyDown={(event) => {
+                          const dropdownContainer = (event.currentTarget as HTMLElement).closest(
+                            '.nav-dropdown',
+                          ) as HTMLElement;
+                          this.handleDropdownLinkKeyDown(event, dropdownContainer);
+                        }}
                       >
                         {child.label}
                       </a>
