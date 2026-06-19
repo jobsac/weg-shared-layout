@@ -1,0 +1,19 @@
+{
+  "header": {
+    "ext": [
+      {
+        "label": "Find a job",
+        "items": [
+          { "label": "Graduates", "href": "https://www.warwickemploymentgroup.com/find-a-job/graduates" }
+        ]
+      },
+      { "label": "Sign in", "href": "https://account.warwickemploymentgroup.com/account/login" }
+    ],
+    "int": [
+      { "label": "Dashboard", "href": "https://account.warwickemploymentgroup.com/dashboard" }
+    ]
+  },
+  "footer": [
+    [{ "label": "About WEG", "href": "https://www.warwickemploymentgroup.com/about" }]
+  ]
+}

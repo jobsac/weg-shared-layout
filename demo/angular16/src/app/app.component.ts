@@ -1,3 +1,4 @@
+import { NgIf } from '@angular/common';
 import { Component, CUSTOM_ELEMENTS_SCHEMA, OnInit } from '@angular/core';
 import { NavigationEnd, Router, RouterOutlet } from '@angular/router';
 import { filter } from 'rxjs/operators';
@@ -9,7 +10,7 @@ import type { LayoutData } from './layout.types';
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet],
+  imports: [NgIf, RouterOutlet],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.css'],
@@ -26,6 +27,10 @@ export class AppComponent implements OnInit {
 
   get layoutData(): LayoutData {
     return this.layoutService.layout;
+  }
+
+  get loadError(): string | null {
+    return this.layoutService.loadError;
   }
 
   get headerLayout(): LayoutData {

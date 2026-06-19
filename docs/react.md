@@ -9,7 +9,7 @@ Guide for **client-rendered** React apps (Vite, Create React App, etc.). If you 
 | `<weg-header>` | Site header — bundled logo, CMS nav (signed out), built-in nav (signed in), Sign in / Manage Account / Sign out |
 | `<weg-footer>` | Site footer — social links, menu, credits, copyright |
 
-Both are **presentational** [Stencil](https://stenciljs.com/) Web Components. They **do not fetch data** — your app passes a **`layout`** payload (API, CMS, or [`dummy-data.json`](../src/assets/dummy-data.json)).
+Both are **presentational** [Stencil](https://stenciljs.com/) Web Components. They **do not fetch data** — your app passes a **`layout`** payload from the WEG CMS WEG21 API (via [`fetchWeg21Layout`](../src/utils/menus.ts)) or [`weg21-bootstrap.json`](../src/assets/weg21-bootstrap.json) and [`weg21-menus.json`](../src/assets/weg21-menus.json) as offline fallback.
 
 `<weg-header>` additionally accepts **`signed-in`**, **`user-name`**, **`account-base-url`**, **`current-path`**, and emits **`wegAuthClick`**.
 
@@ -53,7 +53,8 @@ import 'weg-shared-layout/weg-footer';
 ```tsx
 import 'weg-shared-layout/weg-header';
 import 'weg-shared-layout/weg-footer';
-import layout from 'weg-shared-layout/dummy-data.json';
+import { dummyWeg21LayoutData } from 'weg-shared-layout/menus';
+const layout = dummyWeg21LayoutData();
 
 export function SiteLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -87,7 +88,8 @@ Handle **`wegAuthClick`** for sign-out (call your logout API, then redirect):
 import { useCallback, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import 'weg-shared-layout/weg-header';
-import layout from 'weg-shared-layout/dummy-data.json';
+import { dummyWeg21LayoutData } from 'weg-shared-layout/menus';
+const layout = dummyWeg21LayoutData();
 
 export function SiteHeader() {
   const { pathname, search } = useLocation();
@@ -178,11 +180,12 @@ const currentPath = search ? `${pathname}${search}` : pathname;
 import { useEffect, useState } from 'react';
 import 'weg-shared-layout/weg-header';
 import 'weg-shared-layout/weg-footer';
-import layoutFixture from 'weg-shared-layout/dummy-data.json';
+import { dummyWeg21LayoutData } from 'weg-shared-layout/menus';
+const layoutFixture = dummyWeg21LayoutData();
 
 type LayoutData = typeof layoutFixture;
 
-const LAYOUT_URL = 'https://weg-payload-test.vercel.app/api/layout';
+const WEG21_API = 'https://warwickemploymentgroup.com/api/v1/weg21';
 
 export function SiteLayout({ children }: { children: React.ReactNode }) {
   const [layout, setLayout] = useState<LayoutData | null>(null);
@@ -215,7 +218,7 @@ export function SiteLayout({ children }: { children: React.ReactNode }) {
 }
 ```
 
-Replace the URL with your CMS/API. Keep the object shape aligned with `dummy-data.json`.
+Keep the mapped object shape aligned with `menusToLayoutData` output.
 
 ## TypeScript
 
@@ -231,7 +234,8 @@ Replace the URL with your CMS/API. Keep the object shape aligned with `dummy-dat
 ```
 
 ```ts
-import layoutFixture from 'weg-shared-layout/dummy-data.json';
+import { dummyWeg21LayoutData } from 'weg-shared-layout/menus';
+const layoutFixture = dummyWeg21LayoutData();
 export type LayoutData = typeof layoutFixture;
 ```
 

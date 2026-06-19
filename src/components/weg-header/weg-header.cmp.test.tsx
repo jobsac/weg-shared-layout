@@ -1,21 +1,12 @@
 import { render, h, describe, it, expect, vi } from '@stencil/vitest';
 import { userEvent } from 'vitest/browser';
 import { runAxe } from '../../../test-utils/axe';
-import { DESKTOP_VIEWPORT, MOBILE_VIEWPORT, setViewport, waitForUpdate } from '../../../test-utils/viewport';
-import DUMMY_LAYOUT from '../../assets/dummy-data.json';
-
-const SAMPLE_HEADER_LAYOUT = {
-  header: {
-    menu: [
-      {
-        label: 'Find a job',
-        items: [{ label: 'Graduates', href: '/search?category=graduates' }],
-      },
-      { label: 'Career advice', href: '/career-advice' },
-      { label: 'Sign in', href: '/account/login' },
-    ],
-  },
-};
+import { setViewport, waitForUpdate, DESKTOP_VIEWPORT, MOBILE_VIEWPORT } from '../../../test-utils/viewport';
+import {
+  FULL_LAYOUT_FIXTURE,
+  MULTI_DROPDOWN_HEADER_LAYOUT,
+  SAMPLE_HEADER_LAYOUT,
+} from '../../../test-utils/layout-fixtures';
 
 describe('weg-header', () => {
   it('renders safely when layout is undefined', async () => {
@@ -191,7 +182,7 @@ describe('weg-header', () => {
 
   it('opens desktop dropdown on trigger click', async () => {
     await setViewport(DESKTOP_VIEWPORT.width, DESKTOP_VIEWPORT.height);
-    const { root } = await render(<weg-header layout={DUMMY_LAYOUT}></weg-header>);
+    const { root } = await render(<weg-header layout={MULTI_DROPDOWN_HEADER_LAYOUT}></weg-header>);
 
     const triggers = root.shadowRoot?.querySelectorAll(
       '.nav-dropdown__trigger',
@@ -227,7 +218,7 @@ describe('weg-header', () => {
 
   it('navigates submenu links with arrow keys and returns focus on Escape', async () => {
     await setViewport(DESKTOP_VIEWPORT.width, DESKTOP_VIEWPORT.height);
-    const { root } = await render(<weg-header layout={DUMMY_LAYOUT}></weg-header>);
+    const { root } = await render(<weg-header layout={MULTI_DROPDOWN_HEADER_LAYOUT}></weg-header>);
 
     const trigger = root.shadowRoot?.querySelector('.nav-dropdown__trigger') as HTMLButtonElement | null;
     expect(trigger).toBeTruthy();
@@ -387,7 +378,7 @@ describe('weg-header', () => {
 
   it('exposes submenu link position within the set', async () => {
     await setViewport(DESKTOP_VIEWPORT.width, DESKTOP_VIEWPORT.height);
-    const { root } = await render(<weg-header layout={DUMMY_LAYOUT}></weg-header>);
+    const { root } = await render(<weg-header layout={MULTI_DROPDOWN_HEADER_LAYOUT}></weg-header>);
 
     const trigger = root.shadowRoot?.querySelector('.nav-dropdown__trigger') as HTMLButtonElement | null;
     trigger?.focus();
@@ -398,11 +389,9 @@ describe('weg-header', () => {
     const links = root.shadowRoot?.querySelectorAll(
       '.nav-dropdown__link',
     ) as NodeListOf<HTMLAnchorElement>;
-    expect(links.length).toBe(4);
-    expect(links[0]?.getAttribute('aria-label')).toBe(
-      'Professional & operational services, link 1 of 4',
-    );
-    expect(links[3]?.getAttribute('aria-label')).toBe('Senior & leadership, link 4 of 4');
+    expect(links.length).toBe(2);
+    expect(links[0]?.getAttribute('aria-label')).toBe('Graduates, link 1 of 2');
+    expect(links[1]?.getAttribute('aria-label')).toBe('Senior roles, link 2 of 2');
   });
 
   it('announces submenu expand and collapse via live region', async () => {
@@ -466,7 +455,7 @@ describe('weg-header', () => {
     });
 
     it('has no WCAG violations with full dummy layout', async () => {
-      const { root } = await render(<weg-header layout={DUMMY_LAYOUT}></weg-header>);
+      const { root } = await render(<weg-header layout={MULTI_DROPDOWN_HEADER_LAYOUT}></weg-header>);
       const results = await runAxe(root);
       expect(results.violations).toEqual([]);
     });

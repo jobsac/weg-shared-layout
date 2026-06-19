@@ -1,6 +1,6 @@
 # Angular 16 demo
 
-Minimal Angular **16.2** app that mirrors a real consumer install: `defineCustomElements`, `[layout]` bindings, and `import … from 'weg-shared-layout/dummy-data.json'`.
+Minimal Angular **16.2** app that mirrors a real consumer install: `defineCustomElements`, `[layout]` bindings, and **`fetchWeg21Layout` from `weg-shared-layout/menus` (falls back to `dummyWeg21LayoutData()`).
 
 Integration steps: **[docs/angular.md](../../docs/angular.md)**.
 
@@ -53,8 +53,8 @@ Re-run `npm install` in `demo/angular16` only if `package.json` `exports` or ver
 | File | Pattern |
 | --- | --- |
 | `src/main.ts` | `defineCustomElements()` from `weg-shared-layout/loader` |
-| `src/app/layout.types.ts` | `typeof` import from `weg-shared-layout/dummy-data.json` |
-| `src/app/layout.service.ts` | Fixture data (swap for `HttpClient` in production) |
+| `src/app/layout.types.ts` | `LayoutData` from `weg-shared-layout/layout-data` |
+| `src/app/layout.service.ts` | `fetchWeg21Layout` + `dummyWeg21LayoutData()` fallback |
 | `src/app/auth.ts` | Sign-out redirect URL constant |
 | `src/app/app.component.*` | `[layout]`, `[currentPath]`, auth bindings, plain fields (no signals) |
 | `tsconfig.json` | `skipLibCheck`, `resolveJsonModule`, `moduleResolution: bundler` |

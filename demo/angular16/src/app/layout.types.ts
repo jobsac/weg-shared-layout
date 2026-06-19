@@ -1,9 +1,4 @@
-/**
- * Production pattern: import fixture/types from the installed package.
- * Requires `resolveJsonModule` + `moduleResolution` `bundler` (or `node16`) in tsconfig.
- * @see ../../docs/angular.md
- */
-import layoutFixture from 'weg-shared-layout/dummy-data.json';
+import type { LayoutData } from 'weg-shared-layout/layout-data';
 
-/** Aligns with weg-shared-layout / CMS layout shape */
-export type LayoutData = typeof layoutFixture;
+/** Aligns with weg-shared-layout / WEG CMS layout shape */
+export type { LayoutData };

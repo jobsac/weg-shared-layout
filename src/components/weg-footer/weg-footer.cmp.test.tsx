@@ -1,20 +1,6 @@
 import { render, h, describe, it, expect } from '@stencil/vitest';
 import { runAxe } from '../../../test-utils/axe';
-import DUMMY_LAYOUT from '../../assets/dummy-data.json';
-
-const SAMPLE_FOOTER_LAYOUT = {
-  footer: {
-    social: [{ platform: 'LinkedIn', href: 'https://www.linkedin.com/company/example/' }],
-    menu: [
-      [
-        { label: 'Find a job', href: '/jobs' },
-        { label: 'About WEG', href: '/about' },
-      ],
-    ],
-    credits: 'Example credits text.',
-    copyright: 'Copyright © Example.',
-  },
-};
+import { FULL_LAYOUT_FIXTURE, SAMPLE_FOOTER_LAYOUT } from '../../../test-utils/layout-fixtures';
 
 describe('weg-footer', () => {
   it('renders safely when layout is undefined', async () => {
@@ -46,8 +32,8 @@ describe('weg-footer', () => {
       expect(results.violations).toEqual([]);
     });
 
-    it('has no WCAG violations with full dummy layout', async () => {
-      const { root } = await render(<weg-footer layout={DUMMY_LAYOUT}></weg-footer>);
+    it('has no WCAG violations with full layout fixture', async () => {
+      const { root } = await render(<weg-footer layout={FULL_LAYOUT_FIXTURE}></weg-footer>);
       const results = await runAxe(root);
       expect(results.violations).toEqual([]);
     });

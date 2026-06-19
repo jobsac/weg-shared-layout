@@ -1,6 +1,6 @@
 {
   "name": "weg-shared-layout",
-  "version": "0.0.46",
+  "version": "0.0.47",
   "description": "Shared layout Web Components built with Stencil",
   "main": "dist/index.cjs.js",
   "module": "dist/index.js",
@@ -27,9 +27,18 @@
       "import": "./loader/index.js",
       "require": "./loader/index.cjs.js"
     },
-    "./dummy-data.json": "./src/assets/dummy-data.json",
+    "./weg21-bootstrap.json": "./src/assets/weg21-bootstrap.json",
+    "./weg21-menus.json": "./src/assets/weg21-menus.json",
     "./layout-data": {
       "types": "./dist/types/types/layout-data.d.ts"
+    },
+    "./menus-data": {
+      "types": "./dist/types/types/menus-data.d.ts"
+    },
+    "./menus": {
+      "types": "./src/utils/menus.ts",
+      "import": "./src/utils/menus.ts",
+      "default": "./src/utils/menus.ts"
     },
     "./styles/container.css": "./src/styles/container.css"
   },
@@ -45,7 +54,10 @@
     "dist/",
     "docs/",
     "loader/",
-    "src/assets/dummy-data.json",
+    "src/assets/weg21-bootstrap.json",
+    "src/assets/weg21-menus.json",
+    "src/utils/menus.ts",
+    "src/types/menus-data.ts",
     "src/constants/",
     "src/styles/container.css"
   ],

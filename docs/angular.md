@@ -50,8 +50,8 @@ In **`tsconfig.json`** and/or **`tsconfig.app.json`**:
 | Option | Why |
 | --- | --- |
 | `skipLibCheck` | Skips Stencil `stencil-public-runtime.d.ts` (TS 5 syntax) when on TS 4.9 |
-| `resolveJsonModule` | Allows `import … from 'weg-shared-layout/dummy-data.json'` |
-| `moduleResolution: "bundler"` | Resolves package `exports` (`loader`, `dummy-data.json`) |
+| `resolveJsonModule` | Allows `import … from 'weg-shared-layout/weg21-bootstrap.json'` |
+| `moduleResolution: "bundler"` | Resolves package `exports` (`loader`, `weg21-*.json`) |
 
 Use **`node16`** instead of **`bundler`** if you must stay on TypeScript 4.9. Classic **`node`** does not resolve subpaths reliably.
 
@@ -83,15 +83,15 @@ If header/footer tags appear but nav is empty, registration did not run or ran t
 
 ```ts
 // src/app/layout.types.ts
-import layoutFixture from 'weg-shared-layout/dummy-data.json';
+import type { LayoutData } from 'weg-shared-layout/layout-data';
 
-export type LayoutData = typeof layoutFixture;
+export type { LayoutData };
 ```
 
-Alternative (types only, no JSON import):
+Optional WEG21 API typing:
 
 ```ts
-import type { LayoutData } from 'weg-shared-layout/layout-data';
+import type { MenusProps, Weg21BootstrapProps } from 'weg-shared-layout/menus-data';
 ```
 
 ---
@@ -111,9 +111,9 @@ Add `CUSTOM_ELEMENTS_SCHEMA` to the component whose template contains `<weg-head
 import { Component, CUSTOM_ELEMENTS_SCHEMA, OnInit } from '@angular/core';
 import { NavigationEnd, Router, RouterOutlet } from '@angular/router';
 import { filter } from 'rxjs/operators';
-import layoutFixture from 'weg-shared-layout/dummy-data.json';
 
 import type { LayoutData } from './layout.types';
+import { LayoutService } from './layout.service';
 
 @Component({
   selector: 'app-root',
@@ -123,13 +123,18 @@ import type { LayoutData } from './layout.types';
   templateUrl: './app.component.html',
 })
 export class AppComponent implements OnInit {
-  layoutData: LayoutData = layoutFixture;
-
   signedIn = false;
   userName?: string;
   currentPath = '/';
 
-  constructor(private readonly router: Router) {}
+  constructor(
+    private readonly layoutService: LayoutService,
+    private readonly router: Router,
+  ) {}
+
+  get layoutData(): LayoutData {
+    return this.layoutService.layout;
+  }
 
   ngOnInit(): void {
     this.updateCurrentPath();
@@ -195,49 +200,33 @@ Run the app — you should see header nav and footer.
 
 ---
 
-## Step 8 — Load layout from your API (optional)
+## Step 8 — Load layout from WEG CMS
 
-When ready, replace the static fixture with HTTP. Register `provideHttpClient()` in `app.config.ts`.
+Register `provideHttpClient()` only if you prefer RxJS; `fetchWeg21Layout` uses native `fetch`.
 
 **`src/app/layout.service.ts`:**
 
 ```ts
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { map, Observable } from 'rxjs';
+import { dummyWeg21LayoutData, fetchWeg21Layout } from 'weg-shared-layout/menus';
 
 import type { LayoutData } from './layout.types';
 
-const DEFAULT_SIGN_IN = {
-  label: 'Sign in',
-  href: 'https://account.warwickemploymentgroup.com/account/login',
-};
-
 @Injectable({ providedIn: 'root' })
 export class LayoutService {
-  constructor(private http: HttpClient) {}
+  layout: LayoutData = dummyWeg21LayoutData();
 
-  loadLayout(): Observable<LayoutData> {
-    return this.http.get<LayoutData>('/api/layout').pipe(
-      map((data) => this.ensureSignInMenu(data)),
-    );
-  }
-
-  private ensureSignInMenu(data: LayoutData): LayoutData {
-    const menu = data.header?.menu ?? [];
-    const hasSignIn = menu.some(
-      (item) =>
-        !item.items?.length &&
-        item.label?.trim().toLowerCase() === 'sign in',
-    );
-    if (hasSignIn) return data;
-    return {
-      ...data,
-      header: { ...data.header, menu: [...menu, DEFAULT_SIGN_IN] },
-    };
+  constructor() {
+    void fetchWeg21Layout({ apiKey: 'your-wcms-api-key' })
+      .then((data) => (this.layout = data))
+      .catch(() => {
+        /* keep dummyWeg21LayoutData() */
+      });
   }
 }
 ```
+
+Wire `layout` in the shell template from `layoutService.layout` (see [demo/angular16](../demo/angular16/README.md)).
 
 **`src/app/app.component.ts`** (HTTP variant):
 
@@ -358,7 +347,7 @@ Active links use **`weg-purple-200`** (`#CDCFF8`) background. Omit `currentPath`
 
 Both tags accept one **`layout`** object with `header` and `footer` keys — **not** a bare array at the top level.
 
-Full reference: [`dummy-data.json`](../src/assets/dummy-data.json) or [`GET /api/layout`](https://weg-payload-test.vercel.app/api/layout).
+Full WEG21 schema reference: [`weg21-bootstrap.json`](../src/assets/weg21-bootstrap.json), [`weg21-menus.json`](../src/assets/weg21-menus.json). Live data: `GET https://warwickemploymentgroup.com/api/v1/weg21` + `/menus` via [`fetchWeg21Layout`](../src/utils/menus.ts).
 
 ```json
 {
@@ -423,8 +412,8 @@ For typing only, avoid pulling Stencil runtime declarations:
 
 ```ts
 import type { LayoutData } from 'weg-shared-layout/layout-data';
-// or
-export type LayoutData = typeof layoutFixture; // from dummy-data.json
+// or WEG21 API types:
+import type { MenusProps, Weg21BootstrapProps } from 'weg-shared-layout/menus-data';
 ```
 
 ---
@@ -435,9 +424,9 @@ export type LayoutData = typeof layoutFixture; // from dummy-data.json
 | --- | --- |
 | `src/main.ts` | `defineCustomElements()` then bootstrap |
 | `tsconfig.json` | `skipLibCheck`, `resolveJsonModule`, `moduleResolution` |
-| `src/app/layout.types.ts` | `export type LayoutData = typeof layoutFixture` |
+| `src/app/layout.types.ts` | `LayoutData` from `weg-shared-layout/layout-data` |
 | `src/app/auth.ts` | `POST_LOGOUT_HREF` (optional) |
-| `src/app/layout.service.ts` | HTTP / API mapping (optional) |
+| `src/app/layout.service.ts` | `fetchWeg21Layout` with `dummyWeg21LayoutData()` fallback |
 | `src/app/app.component.ts` | Shell: schema, layout, auth handler |
 | `src/app/app.component.html` | `<weg-header>`, `<router-outlet>`, `<weg-footer>` |
 

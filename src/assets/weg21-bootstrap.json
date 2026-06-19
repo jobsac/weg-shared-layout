@@ -1,0 +1,12 @@
+{
+  "logo": "https://warwickemploymentgroup.com/api/logo.png",
+  "favicon": "https://warwickemploymentgroup.com/favicon.ico",
+  "menus": "https://warwickemploymentgroup.com/api/v1/weg21/menus",
+  "footer": {
+    "social_links": [
+      { "platform": "LinkedIn", "href": "https://www.linkedin.com/company/warwickemploymentgroup/" }
+    ],
+    "credit": "Warwick Employment Group is a department of the Campus and Commercial Services Group at the University of Warwick.",
+    "copyright": "Copyright © Warwick Employment Group."
+  }
+}

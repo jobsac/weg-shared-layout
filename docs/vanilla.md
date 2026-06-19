@@ -9,7 +9,7 @@
 
 Both components are **presentational**: they do **not** fetch data. Pass the same `layout` payload to each.
 
-Payload shape: [`dummy-data.json`](../src/assets/dummy-data.json) (see [readme](../readme.md#how-it-works)).
+WEG21 API schema: [`weg21-bootstrap.json`](../src/assets/weg21-bootstrap.json), [`weg21-menus.json`](../src/assets/weg21-menus.json)
 
 ## Install & register
 
@@ -22,7 +22,8 @@ With a bundler that resolves `node_modules` and package **`exports`** (TypeScrip
 
 <script type="module">
   import { defineCustomElements } from 'weg-shared-layout/loader';
-  import layout from 'weg-shared-layout/dummy-data.json';
+  import { dummyWeg21LayoutData } from 'weg-shared-layout/menus';
+  const layout = dummyWeg21LayoutData();
 
   defineCustomElements();
 
@@ -71,7 +72,7 @@ Or pass a JSON **string** on the `layout` attribute:
 | `header.logoHref` | Logo link URL (WEG homepage if omitted) |
 | `header.menu` | Unified nav — groups with `items[]`, flat links with `href` (incl. Sign in) |
 
-See [`dummy-data.json`](../src/assets/dummy-data.json) for production URL examples.
+See [`weg21-menus.json`](../src/assets/weg21-menus.json) for absolute URL examples in menu links.
 
 ## Header auth (Sign in / Sign out)
 
@@ -137,10 +138,13 @@ Logo **image** uses `header.logoSrc` (bundled if omitted). Logo **link** uses `h
 
 ## Without a bundler
 
-Copy `dummy-data.json` to your static assets, `fetch` it, parse JSON, then assign properties:
+Fetch `weg21-bootstrap.json` and `weg21-menus.json`, map with the same logic as [`menusToLayoutData`](../src/utils/menus.ts), then assign properties:
 
 ```js
-const res = await fetch('/assets/dummy-data.json');
+const [bootstrapRes, menusRes] = await Promise.all([
+  fetch('/assets/weg21-bootstrap.json'),
+  fetch('/assets/weg21-menus.json'),
+]);
 const layout = await res.json();
 document.getElementById('header').layout = layout;
 document.getElementById('footer').layout = layout;

@@ -1,5 +1,3 @@
-[![Built With Stencil](https://img.shields.io/badge/-Built%20With%20Stencil-16161d.svg?logo=data%3Aimage%2Fsvg%2Bxml%3Bbase64%2CPD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiPz4KPCEtLSBHZW5lcmF0b3I6IEFkb2JlIElsbHVzdHJhdG9yIDE5LjIuMSwgU1ZHIEV4cG9ydCBQbHVnLUluIC4gU1ZHIFZlcnNpb246IDYuMDAgQnVpbGQgMCkgIC0tPgo8c3ZnIHZlcnNpb249IjEuMSIgaWQ9IkxheWVyXzEiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiIHg9IjBweCIgeT0iMHB4IgoJIHZpZXdCb3g9IjAgMCA1MTIgNTEyIiBzdHlsZT0iZW5hYmxlLWJhY2tncm91bmQ6bmV3IDAgMCA1MTIgNTEyOyIgeG1sOnNwYWNlPSJwcmVzZXJ2ZSI%2BCjxzdHlsZSB0eXBlPSJ0ZXh0L2NzcyI%2BCgkuc3Qwe2ZpbGw6I0ZGRkZGRjt9Cjwvc3R5bGU%2BCjxwYXRoIGNsYXNzPSJzdDAiIGQ9Ik00MjQuNywzNzMuOWMwLDM3LjYtNTUuMSw2OC42LTkyLjcsNjguNkgxODAuNGMtMzcuOSwwLTkyLjctMzAuNy05Mi43LTY4LjZ2LTMuNmgzMzYuOVYzNzMuOXoiLz4KPHBhdGggY2xhc3M9InN0MCIgZD0iTTQyNC43LDI5Mi4xSDE4MC40Yy0zNy42LDAtOTIuNy0zMS05Mi43LTY4LjZ2LTMuNkgzMzJjMzcuNiwwLDkyLjcsMzEsOTIuNyw2OC42VjI5Mi4xeiIvPgo8cGF0aCBjbGFzcz0ic3QwIiBkPSJNNDI0LjcsMTQxLjdIODcuN3YtMy42YzAtMzcuNiw1NC44LTY4LjYsOTIuNy02OC42SDMzMmMzNy45LDAsOTIuNywzMC43LDkyLjcsNjguNlYxNDEuN3oiLz4KPC9zdmc%2BCg%3D%3D&colorA=16161d&style=flat-square)](https://stenciljs.com)
-
 # weg-shared-layout
 
 > Shared layout Web Components.
@@ -14,18 +12,33 @@ npm i weg-shared-layout
 
 `<weg-header>` and `<weg-footer>` are **presentational** Web Components: they do **not** fetch data.
 
-Load layout JSON from your CMS/API (e.g. [`GET /api/layout`](https://weg-payload-test.vercel.app/api/layout) from WEG CMS) or import [`dummy-data.json`](src/assets/dummy-data.json), then pass it to `layout` on each tag.
+Load layout from the **WEG CMS WEG21 API**, then pass the mapped object to `layout` on each tag:
+
+| Endpoint | Purpose |
+| --- | --- |
+| `GET https://warwickemploymentgroup.com/api/v1/weg21` | Logo URLs, footer social + legal copy |
+| `GET …/api/v1/weg21/menus` | Header (`ext` / `int`) and footer link columns |
+
+Both require the `wcms-api-key` header. Use `fetchWeg21Layout` from `weg-shared-layout/menus`:
+
+```ts
+import { fetchWeg21Layout } from 'weg-shared-layout/menus';
+
+const layout = await fetchWeg21Layout({
+  apiKey: process.env.WCMS_API_KEY,
+});
+// layout.header.menu, layout.footer.menu, layout.footer.social, …
+```
+
+[`weg21-bootstrap.json`](src/assets/weg21-bootstrap.json) and [`weg21-menus.json`](src/assets/weg21-menus.json) mirror the **WEG21 API response schemas** (`GET /api/v1/weg21` and `/menus`). Map to `layout` with `dummyWeg21LayoutData()` or `menusToLayoutData`.
 
 ### Layout shape (abbreviated)
-
-Full reference: [`src/assets/dummy-data.json`](src/assets/dummy-data.json). Sign-in is a normal `header.menu` link (label **Sign in** or login `href`); `<weg-header>` recognizes it automatically. Signed-in nav is built into `<weg-header>` when `signed-in` is true.
 
 ```json
 {
   "header": {
     "menu": [
       { "label": "Find a job", "items": [{ "label": "Graduates", "href": "…" }] },
-      { "label": "Career advice", "href": "…" },
       { "label": "Sign in", "href": "…" }
     ]
   },
@@ -75,16 +88,16 @@ header.addEventListener('wegAuthClick', async (event) => {
 });
 ```
 
-- **From npm:** `import layout from 'weg-shared-layout/dummy-data.json'` — in TypeScript set `resolveJsonModule` and `moduleResolution` to `bundler` or `node16` (see [docs/angular.md](./docs/angular.md)).
-- **In this repo:** [`src/assets/dummy-data.json`](src/assets/dummy-data.json)
-
 ### Package imports (TypeScript / bundlers)
 
 | Subpath | Use |
 | --- | --- |
 | `weg-shared-layout/loader` | `defineCustomElements()` — **recommended** |
-| `weg-shared-layout/dummy-data.json` | Sample layout + `typeof` for app types |
-| `weg-shared-layout/layout-data` | Types only (`LayoutData`, …) |
+| `weg-shared-layout/menus` | `fetchWeg21Layout`, `menusToLayoutData` |
+| `weg-shared-layout/menus-data` | WEG21 API types (`MenusData`, …) |
+| `weg-shared-layout/layout-data` | `<weg-header>` / `<weg-footer>` types (`LayoutData`, …) |
+| `weg-shared-layout/weg21-bootstrap.json` | `GET /api/v1/weg21` schema sample |
+| `weg-shared-layout/weg21-menus.json` | `GET /api/v1/weg21/menus` schema sample |
 | `weg-shared-layout/weg-header` / `weg-footer` | Side-effect tag registration |
 | `weg-shared-layout/styles/container.css` | Shared `.container` width and gutter utility |
 

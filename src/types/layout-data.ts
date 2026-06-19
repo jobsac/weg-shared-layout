@@ -28,7 +28,8 @@ export type LayoutFooterData = {
 
 /**
  * Layout payload accepted by `<weg-header>` and `<weg-footer>`.
- * @see src/assets/dummy-data.json
+ * @see src/assets/weg21-bootstrap.json and src/assets/weg21-menus.json (WEG21 API schema)
+ * @see src/utils/menus.ts (`menusToLayoutData`, `dummyWeg21LayoutData`)
  */
 export type LayoutData = {
   header?: Partial<LayoutHeaderData>;

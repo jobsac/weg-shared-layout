@@ -10,9 +10,12 @@
   <h1>weg-shared-layout — Angular 16</h1>
   <p>
     Header and footer load layout from
-    <code>weg-shared-layout/dummy-data.json</code> (same import path as npm install).
-    Sign-in is a normal nav link; the header recognizes it by label or login URL.
+    <code>GET https://warwickemploymentgroup.com/api/v1/weg21</code> and
+    <code>/menus</code>, mapped to the <code>layout</code> prop. Falls back to
+    <code>weg-shared-layout/weg21-bootstrap.json</code> and
+    <code>weg-shared-layout/weg21-menus.json</code> when the API is unavailable.
   </p>
+  <p *ngIf="loadError" class="demo-notice">{{ loadError }}</p>
   <button type="button" class="demo-toggle" (click)="toggleSignedIn()">
     {{ signedIn ? 'Switch to signed out' : 'Switch to signed in' }}
   </button>

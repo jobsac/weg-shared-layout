@@ -28,7 +28,7 @@ Both accept **`layout`** (JSON string recommended in Next). `<weg-header>` also 
 | **Next.js 13+** | App Router (`app/layout.tsx`) |
 | **`transpilePackages`** | Next must compile `weg-shared-layout` |
 | **`suppressHydrationWarning`** | Recommended on both tags (SSR placeholder vs client shadow DOM) |
-| **TypeScript** | `resolveJsonModule` if importing `weg-shared-layout/dummy-data.json` on the server |
+| **TypeScript** | `resolveJsonModule` if importing `weg-shared-layout/weg21-*.json` on the server |
 
 ## Install
 
@@ -69,7 +69,7 @@ import 'weg-shared-layout/weg-header';
 defineCustomElements();
 
 import type { LayoutData } from 'weg-shared-layout/layout-data';
-// Or: import layoutFixture from 'weg-shared-layout/dummy-data.json';
+// Or: import { dummyWeg21LayoutData } from 'weg-shared-layout/menus';
 //      type LayoutData = typeof layoutFixture;
 
 export function Header({
@@ -172,7 +172,8 @@ Do **not** pass `layout={layoutObject}` directly on the custom elements in Next.
 ```tsx
 // app/layout.tsx (Server Component)
 import { SiteChrome } from '@/components/layout/SiteChrome';
-import layout from 'weg-shared-layout/dummy-data.json';
+import { dummyWeg21LayoutData } from 'weg-shared-layout/menus';
+const layout = dummyWeg21LayoutData();
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -191,7 +192,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 // app/layout.tsx
 import { SiteChrome } from '@/components/layout/SiteChrome';
 
-const LAYOUT_URL = 'https://weg-payload-test.vercel.app/api/layout';
+const WEG21_API = 'https://warwickemploymentgroup.com/api/v1/weg21';
 
 async function getLayout() {
   const res = await fetch(LAYOUT_URL, { next: { revalidate: 60 } });
