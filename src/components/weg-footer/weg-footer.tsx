@@ -195,8 +195,9 @@ export class WegFooter {
     const links = this.resolved.social;
     if (links.length === 0) return null;
     return (
-      <div class="social">
+      <menu class="social">
         {links.map((l) => (
+          <li class="social__item" key={l.platform}>
           <a
             class="social__link"
             href={l.href}
@@ -208,8 +209,9 @@ export class WegFooter {
               <SocialIcon platform={l.platform} />
             </span>
           </a>
+          </li>
         ))}
-      </div>
+      </menu>
     );
   }
 
