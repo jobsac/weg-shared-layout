@@ -222,7 +222,6 @@ export class WegFooter {
       <ul class="columns">
         {menu.map((links, columnIndex) => (
           <li class="columns__col" key={columnIndex}>
-            {columnIndex > 0 ? <div class="columns__divider" aria-hidden="true" /> : null}
             <menu class="columns__links" aria-label={`Footer links column ${columnIndex + 1}`}>
               {links.map((l, linkIndex) => (
                 <li key={linkIndex}>
