@@ -186,7 +186,6 @@ export class WegFooter {
     return (
       <div class="legal">
         {credits ? <p class="legal__p">{credits}</p> : null}
-        {credits && copyright ? <p class="legal__p">{String.fromCharCode(8203)}</p> : null}
         {copyright ? <p class="legal__p">{copyright}</p> : null}
       </div>
     );
@@ -248,8 +247,8 @@ export class WegFooter {
           {this.renderSocialLinks()}
           <div class="standard">
             {this.renderMenu()}
-            {this.renderLegalText()}
           </div>
+          {this.renderLegalText()}
         </div>
       </footer>
     );
