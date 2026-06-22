@@ -217,26 +217,27 @@ export class WegFooter {
     const menu = this.resolved.menu;
     if (menu.length === 0) return null;
     return (
-      <div class="columns">
+      <ul class="columns">
         {menu.map((links, columnIndex) => (
-          <div class="columns__col" key={columnIndex}>
+          <li class="columns__col" key={columnIndex}>
             {columnIndex > 0 ? <div class="columns__divider" aria-hidden="true" /> : null}
-            <nav class="columns__links" aria-label={`Footer links column ${columnIndex + 1}`}>
+            <menu class="columns__links" aria-label={`Footer links column ${columnIndex + 1}`}>
               {links.map((l, linkIndex) => (
-                <a
-                  class="footer-link"
-                  href={l.href}
-                  key={linkIndex}
-                  target={linkTarget(l)}
-                  rel={linkRel(l)}
-                >
-                  {l.label}
-                </a>
+                <li key={linkIndex}>
+                  <a
+                    class="footer-link"
+                    href={l.href}
+                    target={linkTarget(l)}
+                    rel={linkRel(l)}
+                  >
+                    {l.label}
+                  </a>
+                </li>
               ))}
-            </nav>
-          </div>
+            </menu>
+          </li>
         ))}
-      </div>
+      </ul>
     );
   }
 
@@ -245,9 +246,7 @@ export class WegFooter {
       <footer class="footer">
         <div class="container footer__inner">
           {this.renderSocialLinks()}
-          <div class="standard">
-            {this.renderMenu()}
-          </div>
+          {this.renderMenu()}
           {this.renderLegalText()}
         </div>
       </footer>
