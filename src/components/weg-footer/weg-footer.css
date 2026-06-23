@@ -188,6 +188,10 @@
     border-top: none;
   }
 
+  .columns__col:not(:last-child) {
+    padding-right: 1.5rem;
+  }
+
   .footer-link {
     display: inline;
     width: auto;
