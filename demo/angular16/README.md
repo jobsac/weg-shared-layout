@@ -4,6 +4,8 @@ Minimal Angular **16.2** app that mirrors a real consumer install: `defineCustom
 
 Integration steps: **[docs/angular.md](../../docs/angular.md)**.
 
+The demo points at `https://dev.warwickemploymentgroup.com/api/v1/weg21` and sends `wcms-api-key` for the live CMS data.
+
 ---
 
 ## Run (maintainers)
@@ -12,7 +14,6 @@ From **repo root**:
 
 ```bash
 npm install
-npm run build
 npm run demo:angular16
 ```
 
@@ -26,15 +27,14 @@ npm install
 npm start
 ```
 
-### After changing the library
+### Updating the published package
 
 ```bash
-# repo root
-npm run build
-cd demo/angular16 && npm start
+cd demo/angular16
+npm install weg-shared-layout@latest
 ```
 
-Re-run `npm install` in `demo/angular16` only if `package.json` `exports` or version changed.
+Re-run `npm install` in `demo/angular16` when a new `weg-shared-layout` package is published.
 
 ---
 
@@ -42,8 +42,8 @@ Re-run `npm install` in `demo/angular16` only if `package.json` `exports` or ver
 
 | | Your Angular 16 app | This demo |
 | --- | --- | --- |
-| Dependency | `"weg-shared-layout": "^0.0.38"` from npm | `"weg-shared-layout": "file:../.."` |
-| Library build | Prebuilt in npm tarball | Run `npm run build` at repo root first |
+| Dependency | `"weg-shared-layout": "^0.0.50"` from npm | `"weg-shared-layout": "^0.0.50"` from npm |
+| Library build | Prebuilt in npm tarball | Prebuilt in npm tarball |
 | Source code | Same imports and tsconfig | Identical |
 
 ---
