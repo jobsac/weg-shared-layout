@@ -52,7 +52,8 @@
         "serve": {
           "builder": "@angular-devkit/build-angular:dev-server",
           "options": {
-            "browserTarget": "weg-shared-layout-angular16-demo:build"
+            "browserTarget": "weg-shared-layout-angular16-demo:build",
+            "port": 49938
           },
           "configurations": {
             "production": {

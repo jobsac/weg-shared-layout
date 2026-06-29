@@ -17,7 +17,7 @@ npm install
 npm run demo:angular16
 ```
 
-Open http://localhost:4200/
+Open http://localhost:49938/
 
 Or manually (uses **npm** — run from this folder):
 
