@@ -4,6 +4,33 @@
   display: contents;
 }
 
+:host {
+  display: block;
+}
+
+:host(.weg-header--scroll-mode) {
+  /* Reserves flow space while the header is fixed past 50vh. */
+  min-height: 4.25rem;
+}
+
+@media (--weg-md) {
+  :host(.weg-header--scroll-mode) {
+    min-height: 5.75rem;
+  }
+}
+
+@media (--weg-lg) {
+  :host(.weg-header--scroll-mode) {
+    min-height: 7.75rem;
+  }
+}
+
+@media (--weg-xl) {
+  :host(.weg-header--scroll-mode) {
+    min-height: 8.75rem;
+  }
+}
+
 .skip-to-content {
   position: fixed;
   top: -100%;
@@ -29,10 +56,34 @@
 
 .header {
   width: 100%;
+  position: relative;
+  z-index: 1000;
+  transition: transform 0.25s ease;
   border-bottom: 2px solid var(--weg-color-accent);
   background: #ffffff;
   color: #0f172a;
   font-family: var(--weg-font-family);
+}
+
+.header--scroll-mode {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+}
+
+.header--scroll-hidden {
+  transform: translateY(-100%);
+}
+
+.header:not(.header--scroll-mode).header--scroll-hidden {
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .header {
+    transition: none;
+  }
 }
 
 @media (--weg-md) {
@@ -41,14 +92,14 @@
   }
 }
 
-:host {
-  display: block;
-}
-
 .header--menu-open {
   position: fixed;
-  inset: 0;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   z-index: 1000;
+  transform: none;
   display: flex;
   flex-direction: column;
   overflow: hidden;

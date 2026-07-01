@@ -1,4 +1,4 @@
-import { render, h, describe, it, expect, vi } from '@stencil/vitest';
+import { render, h, describe, it, expect, vi, beforeEach } from '@stencil/vitest';
 import { userEvent } from 'vitest/browser';
 import { runAxe } from '../../../test-utils/axe';
 import { setViewport, waitForUpdate, DESKTOP_VIEWPORT, MOBILE_VIEWPORT } from '../../../test-utils/viewport';
@@ -437,6 +437,129 @@ describe('weg-header', () => {
     expect(document.activeElement).toBe(heading);
 
     content.remove();
+  });
+
+  describe('scroll hide', () => {
+    function getHeaderBar(root: HTMLElement) {
+      return root.shadowRoot?.querySelector('header.header');
+    }
+
+    async function setScrollPosition(y: number, root: HTMLElement) {
+      Object.defineProperty(window, 'scrollY', {
+        configurable: true,
+        value: y,
+      });
+      window.dispatchEvent(new Event('scroll'));
+      await waitForUpdate();
+      await (root as HTMLWegHeaderElement).componentOnReady();
+    }
+
+    beforeEach(async () => {
+      Object.defineProperty(window, 'scrollY', {
+        configurable: true,
+        value: 0,
+      });
+    });
+
+    it('stays visible when scrolling down below 50vh', async () => {
+      await setViewport(DESKTOP_VIEWPORT.width, DESKTOP_VIEWPORT.height);
+      const { root } = await render(<weg-header layout={SAMPLE_HEADER_LAYOUT}></weg-header>);
+      await waitForUpdate();
+
+      await setScrollPosition(100, root);
+
+      expect(getHeaderBar(root)?.classList.contains('header--scroll-hidden')).toBe(false);
+      expect(getHeaderBar(root)?.classList.contains('header--scroll-mode')).toBe(false);
+    });
+
+    it('hides when scrolling down past 50vh', async () => {
+      await setViewport(DESKTOP_VIEWPORT.width, DESKTOP_VIEWPORT.height);
+      const { root } = await render(<weg-header layout={SAMPLE_HEADER_LAYOUT}></weg-header>);
+      await waitForUpdate();
+
+      await setScrollPosition(400, root);
+
+      expect(getHeaderBar(root)?.classList.contains('header--scroll-hidden')).toBe(true);
+      expect(getHeaderBar(root)?.classList.contains('header--scroll-mode')).toBe(true);
+    });
+
+    it('returns to normal flow when scrolling up below 50vh while hidden', async () => {
+      await setViewport(DESKTOP_VIEWPORT.width, DESKTOP_VIEWPORT.height);
+      const { root } = await render(<weg-header layout={SAMPLE_HEADER_LAYOUT}></weg-header>);
+      await waitForUpdate();
+
+      await setScrollPosition(500, root);
+      expect(getHeaderBar(root)?.classList.contains('header--scroll-hidden')).toBe(true);
+      expect(getHeaderBar(root)?.classList.contains('header--scroll-mode')).toBe(true);
+
+      await setScrollPosition(300, root);
+
+      expect(getHeaderBar(root)?.classList.contains('header--scroll-hidden')).toBe(false);
+      expect(getHeaderBar(root)?.classList.contains('header--scroll-mode')).toBe(false);
+    });
+
+    it('stays pinned when scrolling up below 50vh after reveal', async () => {
+      await setViewport(DESKTOP_VIEWPORT.width, DESKTOP_VIEWPORT.height);
+      const { root } = await render(<weg-header layout={SAMPLE_HEADER_LAYOUT}></weg-header>);
+      await waitForUpdate();
+
+      await setScrollPosition(500, root);
+      await setScrollPosition(400, root);
+
+      expect(getHeaderBar(root)?.classList.contains('header--scroll-hidden')).toBe(false);
+      expect(getHeaderBar(root)?.classList.contains('header--scroll-mode')).toBe(true);
+
+      await setScrollPosition(300, root);
+
+      expect(getHeaderBar(root)?.classList.contains('header--scroll-hidden')).toBe(false);
+      expect(getHeaderBar(root)?.classList.contains('header--scroll-mode')).toBe(true);
+
+      await setScrollPosition(0, root);
+
+      expect(getHeaderBar(root)?.classList.contains('header--scroll-hidden')).toBe(false);
+      expect(getHeaderBar(root)?.classList.contains('header--scroll-mode')).toBe(false);
+    });
+
+    it('reveals when scrolling up past 50vh', async () => {
+      await setViewport(DESKTOP_VIEWPORT.width, DESKTOP_VIEWPORT.height);
+      const { root } = await render(<weg-header layout={SAMPLE_HEADER_LAYOUT}></weg-header>);
+      await waitForUpdate();
+
+      await setScrollPosition(500, root);
+      expect(getHeaderBar(root)?.classList.contains('header--scroll-hidden')).toBe(true);
+
+      await setScrollPosition(400, root);
+
+      expect(getHeaderBar(root)?.classList.contains('header--scroll-hidden')).toBe(false);
+    });
+
+    it('reveals when scrolled back to the top', async () => {
+      await setViewport(DESKTOP_VIEWPORT.width, DESKTOP_VIEWPORT.height);
+      const { root } = await render(<weg-header layout={SAMPLE_HEADER_LAYOUT}></weg-header>);
+      await waitForUpdate();
+
+      await setScrollPosition(500, root);
+      expect(getHeaderBar(root)?.classList.contains('header--scroll-hidden')).toBe(true);
+
+      await setScrollPosition(0, root);
+
+      expect(getHeaderBar(root)?.classList.contains('header--scroll-hidden')).toBe(false);
+    });
+
+    it('stays visible while the mobile menu is open', async () => {
+      await setViewport(MOBILE_VIEWPORT.width, MOBILE_VIEWPORT.height);
+      const { root } = await render(<weg-header layout={SAMPLE_HEADER_LAYOUT}></weg-header>);
+      await waitForUpdate();
+
+      const openButton = root.shadowRoot?.querySelector('.menu-toggle') as HTMLButtonElement | null;
+      await userEvent.click(openButton!);
+      await waitForUpdate();
+
+      await setScrollPosition(200, root);
+
+      expect(getHeaderBar(root)?.classList.contains('header--scroll-hidden')).toBe(false);
+      expect(getHeaderBar(root)?.classList.contains('header--menu-open')).toBe(true);
+    });
   });
 
   describe('accessibility', () => {

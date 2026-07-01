@@ -1,4 +1,4 @@
-import { Component, Prop, State, Watch, Element, Event, EventEmitter, h, Listen } from '@stencil/core';
+import { Component, Prop, State, Watch, Element, Event, EventEmitter, h, Host, Listen } from '@stencil/core';
 import type { LayoutData, LayoutHeaderAuthAction, LayoutLink } from '../../types/layout-data';
 import {
   findAuthMenuLink,
@@ -196,6 +196,8 @@ function Logo({ href, src }: { href: string; src: string }) {
   shadow: true,
 })
 export class WegHeader {
+  private static readonly SCROLL_REVEAL_VIEWPORT_FRACTION = 0.5;
+
   /**
    * Layout payload, supplied by the host application.
    *
@@ -251,12 +253,16 @@ export class WegHeader {
   private boundHandleDocumentClick = this.handleDocumentClick.bind(this);
   private boundHandleViewportChange = this.handleViewportChange.bind(this);
   private boundHandleHoverCapabilityChange = this.handleHoverCapabilityChange.bind(this);
+  private boundHandleScroll = this.handleScroll.bind(this);
   private bodyScrollLocked = false;
   private bodyScrollLockY = 0;
   private hoverCloseTimer: ReturnType<typeof setTimeout> | null = null;
   private hoverOpenEnabled = false;
   private desktopMediaQuery?: MediaQueryList;
   private hoverCapableMediaQuery?: MediaQueryList;
+  @State() private headerScrollMode = false;
+  @State() private headerScrollHidden = false;
+  private lastScrollY = 0;
 
   private resolve() {
     if (this.layout === undefined || this.layout === null) {
@@ -280,8 +286,19 @@ export class WegHeader {
     document.addEventListener('click', this.boundHandleDocumentClick);
   }
 
+  componentDidLoad() {
+    this.lastScrollY = Math.max(0, window.scrollY);
+    window.addEventListener('scroll', this.boundHandleScroll, { passive: true });
+    this.applyScrollState();
+  }
+
+  componentDidRender() {
+    this.applyScrollState();
+  }
+
   disconnectedCallback() {
     document.removeEventListener('click', this.boundHandleDocumentClick);
+    window.removeEventListener('scroll', this.boundHandleScroll);
     this.unlockBodyScroll();
     this.desktopMediaQuery?.removeEventListener('change', this.boundHandleViewportChange);
     this.hoverCapableMediaQuery?.removeEventListener('change', this.boundHandleHoverCapabilityChange);
@@ -394,6 +411,68 @@ export class WegHeader {
 
   private isMobileMenuActive(): boolean {
     return this.menuOpen && !this.desktopMediaQuery?.matches;
+  }
+
+  private handleScroll() {
+    this.applyScrollState();
+  }
+
+  private applyScrollState() {
+    if (this.isMobileMenuActive()) {
+      if (this.headerScrollHidden) {
+        this.headerScrollHidden = false;
+      }
+      if (this.headerScrollMode) {
+        this.headerScrollMode = false;
+      }
+      this.lastScrollY = Math.max(0, window.scrollY);
+      return;
+    }
+
+    const scrollY = Math.max(0, window.scrollY);
+    const threshold = this.getScrollRevealThreshold();
+    const pastRevealThreshold = scrollY >= threshold;
+    let nextScrollMode = this.headerScrollMode;
+    let nextHidden = this.headerScrollHidden;
+
+    if (!pastRevealThreshold) {
+      if (scrollY === 0) {
+        nextScrollMode = false;
+        nextHidden = false;
+      } else if (this.headerScrollMode && !this.headerScrollHidden) {
+        // Keep a revealed header pinned while scrolling up toward the top.
+        nextScrollMode = true;
+        nextHidden = scrollY > this.lastScrollY;
+      } else {
+        nextScrollMode = false;
+        nextHidden = false;
+      }
+    } else if (scrollY === 0) {
+      nextScrollMode = false;
+      nextHidden = false;
+    } else {
+      nextScrollMode = true;
+      if (scrollY > this.lastScrollY) {
+        nextHidden = true;
+      } else if (scrollY < this.lastScrollY) {
+        nextHidden = false;
+      }
+    }
+
+    this.lastScrollY = scrollY;
+
+    if (nextScrollMode !== this.headerScrollMode) {
+      this.headerScrollMode = nextScrollMode;
+    }
+
+    if (nextHidden !== this.headerScrollHidden) {
+      this.headerScrollHidden = nextHidden;
+    }
+  }
+
+  private getScrollRevealThreshold(): number {
+    const viewportHeight = window.visualViewport?.height ?? window.innerHeight;
+    return viewportHeight * WegHeader.SCROLL_REVEAL_VIEWPORT_FRACTION;
   }
 
   @Watch('layout')
@@ -1028,21 +1107,24 @@ export class WegHeader {
     const mobileMenuActive = this.isMobileMenuActive();
 
     return (
-      <div class="weg-header-shell">
-        <a
-          class="skip-to-content"
-          href="#"
-          title={SKIP_TO_CONTENT_LABEL}
-          onClick={(event) => this.handleSkipToContent(event)}
-        >
-          {SKIP_TO_CONTENT_LABEL}
-        </a>
-        <header
-          class={{
-            header: true,
-            'header--menu-open': mobileMenuActive,
-          }}
-        >
+      <Host class={{ 'weg-header--scroll-mode': this.headerScrollMode }}>
+        <div class="weg-header-shell">
+          <a
+            class="skip-to-content"
+            href="#"
+            title={SKIP_TO_CONTENT_LABEL}
+            onClick={(event) => this.handleSkipToContent(event)}
+          >
+            {SKIP_TO_CONTENT_LABEL}
+          </a>
+          <header
+            class={{
+              header: true,
+              'header--menu-open': mobileMenuActive,
+              'header--scroll-mode': this.headerScrollMode,
+              'header--scroll-hidden': this.headerScrollHidden && this.headerScrollMode,
+            }}
+          >
           <div class="header-inner">
             <div class="sr-only" aria-live="polite" aria-atomic="true" data-weg-sr-live />
             <button
@@ -1069,6 +1151,7 @@ export class WegHeader {
           </div>
         </header>
       </div>
+      </Host>
     );
   }
 }
