@@ -18,9 +18,6 @@ import { LOGO_SRC } from './logo-data';
 
 const WEG_HOME = 'https://www.warwickemploymentgroup.com';
 const DEFAULT_ACCOUNT_HOME = 'https://account.warwickemploymentgroup.com';
-/** Stay visible while scrolling down through the first half of the viewport. */
-const HEADER_SCROLL_HIDE_THRESHOLD_VH = 0.5;
-const HEADER_SCROLL_DIRECTION_DELTA = 5;
 
 const DEFAULT_LOGO_HREF = `${WEG_HOME}/`;
 /** Placeholder href — sign-out is handled via `wegAuthClick`, not navigation. */
@@ -250,15 +247,10 @@ export class WegHeader {
   @State() private resolved: HeaderData = EMPTY_HEADER;
   @State() private menuOpen = false;
   @State() private openDropdown: string | null = null;
-  @State() private headerHidden = false;
 
   private boundHandleDocumentClick = this.handleDocumentClick.bind(this);
   private boundHandleViewportChange = this.handleViewportChange.bind(this);
   private boundHandleHoverCapabilityChange = this.handleHoverCapabilityChange.bind(this);
-  private boundHandleScroll = this.handleScroll.bind(this);
-  private headerResizeObserver?: ResizeObserver;
-  private lastScrollY = 0;
-  private scrollTicking = false;
   private bodyScrollLocked = false;
   private bodyScrollLockY = 0;
   private hoverCloseTimer: ReturnType<typeof setTimeout> | null = null;
@@ -284,74 +276,16 @@ export class WegHeader {
     this.handleViewportChange();
   }
 
-  componentDidLoad() {
-    const header = this.el.shadowRoot?.querySelector('.header');
-    if (!header) return;
-
-    this.headerResizeObserver = new ResizeObserver(() => this.syncHeaderHeight());
-    this.headerResizeObserver.observe(header);
-    this.syncHeaderHeight();
-    this.lastScrollY = window.scrollY;
-    this.updateHeaderVisibility();
-  }
-
   connectedCallback() {
     document.addEventListener('click', this.boundHandleDocumentClick);
-    window.addEventListener('scroll', this.boundHandleScroll, { passive: true });
   }
 
   disconnectedCallback() {
     document.removeEventListener('click', this.boundHandleDocumentClick);
-    window.removeEventListener('scroll', this.boundHandleScroll);
     this.unlockBodyScroll();
-    this.headerResizeObserver?.disconnect();
     this.desktopMediaQuery?.removeEventListener('change', this.boundHandleViewportChange);
     this.hoverCapableMediaQuery?.removeEventListener('change', this.boundHandleHoverCapabilityChange);
     this.cancelScheduledDropdownClose();
-  }
-
-  private syncHeaderHeight() {
-    if (this.isMobileMenuActive()) return;
-
-    const header = this.el.shadowRoot?.querySelector('.header') as HTMLElement | null;
-    if (!header) return;
-
-    this.el.style.setProperty('--weg-header-height', `${header.offsetHeight}px`);
-  }
-
-  private handleScroll() {
-    if (this.scrollTicking) return;
-
-    this.scrollTicking = true;
-    requestAnimationFrame(() => {
-      this.scrollTicking = false;
-      this.updateHeaderVisibility();
-    });
-  }
-
-  private updateHeaderVisibility() {
-    if (this.isMobileMenuActive()) {
-      if (this.headerHidden) this.headerHidden = false;
-      return;
-    }
-
-    const scrollY = window.scrollY;
-    const delta = scrollY - this.lastScrollY;
-    const threshold = window.innerHeight * HEADER_SCROLL_HIDE_THRESHOLD_VH;
-    let nextHidden = this.headerHidden;
-
-    if (scrollY <= threshold) {
-      nextHidden = false;
-    } else if (Math.abs(delta) >= HEADER_SCROLL_DIRECTION_DELTA) {
-      nextHidden = delta > 0;
-    }
-
-    this.lastScrollY = scrollY;
-
-    if (nextHidden === this.headerHidden) return;
-
-    if (nextHidden) this.closeDropdown();
-    this.headerHidden = nextHidden;
   }
 
   /**
@@ -701,7 +635,6 @@ export class WegHeader {
 
   private openMenu() {
     this.menuOpen = true;
-    this.headerHidden = false;
     this.closeDropdown();
     if (!this.desktopMediaQuery?.matches) {
       this.lockBodyScroll();
@@ -718,8 +651,6 @@ export class WegHeader {
     this.menuOpen = false;
     this.closeDropdown();
     this.unlockBodyScroll();
-    this.syncHeaderHeight();
-    this.updateHeaderVisibility();
 
     if (announce && wasMobileActive) {
       this.announceToScreenReader(`${MAIN_NAV_LABEL} closed.`);
@@ -1109,8 +1040,6 @@ export class WegHeader {
         <header
           class={{
             header: true,
-            'header--fixed': !mobileMenuActive,
-            'header--hidden': this.headerHidden && !mobileMenuActive,
             'header--menu-open': mobileMenuActive,
           }}
         >
