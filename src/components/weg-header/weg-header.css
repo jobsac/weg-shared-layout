@@ -1,5 +1,9 @@
 @import '../../styles/breakpoints.css';
 
+.weg-header-shell {
+  display: contents;
+}
+
 .skip-to-content {
   position: fixed;
   top: -100%;

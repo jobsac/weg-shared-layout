@@ -1097,7 +1097,7 @@ export class WegHeader {
     const mobileMenuActive = this.isMobileMenuActive();
 
     return (
-      <>
+      <div class="weg-header-shell">
         <a
           class="skip-to-content"
           href="#"
@@ -1139,7 +1139,7 @@ export class WegHeader {
             </div>
           </div>
         </header>
-      </>
+      </div>
     );
   }
 }
