@@ -1,0 +1,12 @@
+{
+  "name": "weg-shared-layout/hydrate",
+  "description": "WegSharedLayout component hydration app.",
+  "main": "index.js",
+  "types": "index.d.ts",
+  "exports": {
+    ".": {
+      "require": "./index.js",
+      "import": "./index.mjs"
+    }
+  }
+}

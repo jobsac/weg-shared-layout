@@ -27,6 +27,11 @@
       "import": "./loader/index.js",
       "require": "./loader/index.cjs.js"
     },
+    "./hydrate": {
+      "types": "./hydrate/index.d.ts",
+      "import": "./hydrate/index.mjs",
+      "require": "./hydrate/index.js"
+    },
     "./weg21-bootstrap.json": "./src/assets/weg21-bootstrap.json",
     "./weg21-menus.json": "./src/assets/weg21-menus.json",
     "./layout-data": {
@@ -52,6 +57,7 @@
   "homepage": "https://github.com/jobsac/weg-shared-layout#readme",
   "files": [
     "dist/",
+    "hydrate/",
     "docs/",
     "loader/",
     "src/assets/weg21-bootstrap.json",
@@ -75,7 +81,7 @@
   "devDependencies": {
     "@csstools/postcss-global-data": "~4.0.0",
     "@stencil-community/postcss": "~2.2.0",
-    "@stencil/core": "~4.27.1 || ~5.0.0-0",
+    "@stencil/core": "~4.43.5",
     "@stencil/vitest": "~1.8.3",
     "@types/node": "~22.13.5",
     "@vitest/browser-playwright": "~4.0.0",
