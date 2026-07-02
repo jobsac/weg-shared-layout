@@ -49,9 +49,9 @@ describe('weg-header', () => {
     expect(text).toContain('Career advice');
   });
 
-  it('shows signed-in navigation when signed-in is true', async () => {
+  it('falls back to built-in signed-in navigation when signed-in and layout menu is empty', async () => {
     const { root } = await render(
-      <weg-header layout={SAMPLE_HEADER_LAYOUT} signed-in user-name="Alex"></weg-header>,
+      <weg-header layout={{ header: { menu: [] } }} signed-in user-name="Alex"></weg-header>,
     );
     const text = root.shadowRoot?.textContent ?? '';
     expect(text).toContain('Find a job');
@@ -64,11 +64,43 @@ describe('weg-header', () => {
     expect(root.shadowRoot?.querySelector('.dashboard-link svg')).toBeTruthy();
   });
 
-  it('uses account-base-url for signed-in navigation links', async () => {
+  it('uses layout.header.menu when signed-in and menu is provided', async () => {
+    const accountBase = 'https://dev-account.warwickemploymentgroup.com';
+    const signedInLayout = {
+      header: {
+        menu: [
+          { label: 'Find a job', href: '/find-a-job' },
+          { label: 'Dashboard', href: `${accountBase}/dashboard` },
+          { label: 'Manage Account', href: `${accountBase}/account/manage` },
+          { label: 'Sign out', href: '#' },
+        ],
+      },
+    };
+
+    const { root } = await render(
+      <weg-header
+        layout={signedInLayout}
+        account-base-url={accountBase}
+        signed-in
+        user-name="Alex"
+      ></weg-header>,
+    );
+
+    const findJobLink = root.shadowRoot?.querySelector('.find-a-job-link') as HTMLAnchorElement | null;
+    const dashboardLink = root.shadowRoot?.querySelector('.dashboard-link') as HTMLAnchorElement | null;
+
+    expect(findJobLink?.pathname).toBe('/find-a-job');
+    expect(findJobLink?.querySelector('svg')).toBeTruthy();
+    expect(dashboardLink?.href).toBe(`${accountBase}/dashboard`);
+    expect(dashboardLink?.querySelector('svg')).toBeTruthy();
+    expect(root.shadowRoot?.textContent).not.toContain('Career advice');
+  });
+
+  it('uses account-base-url for built-in signed-in navigation links', async () => {
     const accountBase = 'https://dev-account.warwickemploymentgroup.com';
     const { root } = await render(
       <weg-header
-        layout={SAMPLE_HEADER_LAYOUT}
+        layout={{ header: { menu: [] } }}
         account-base-url={accountBase}
         signed-in
         user-name="Alex"

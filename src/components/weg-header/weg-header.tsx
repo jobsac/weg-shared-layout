@@ -86,7 +86,10 @@ function isManageAccountLink(link: LayoutLink, accountHome: string): boolean {
 
 function isFindJobLink(link: LayoutLink): boolean {
   if (link.label.trim().toLowerCase() === 'find a job') return true;
-  return link.href === `${WEG_HOME}/find-a-job`;
+  const href = link.href?.trim();
+  if (!href) return false;
+  if (href === `${WEG_HOME}/find-a-job` || href === '/find-a-job') return true;
+  return href.endsWith('/find-a-job');
 }
 
 function isDashboardLink(link: LayoutLink, accountHome: string): boolean {
@@ -217,7 +220,9 @@ export class WegHeader {
   @Prop() layout?: LayoutData | string;
 
   /**
-   * When true, the header uses the built-in signed-in menu instead of the CMS layout.
+   * Session flag from the host app. Enables signed-in UI (icons, compact manage account).
+   * Navigation uses `layout.header.menu` when provided; falls back to the built-in
+   * signed-in menu only when signed in and the layout menu is empty.
    */
   @Prop({ attribute: 'signed-in', reflect: true }) signedIn = false;
 
@@ -744,7 +749,15 @@ export class WegHeader {
   }
 
   private getActiveMenu(): LayoutLink[] {
-    return this.signedIn ? buildSignedInMenu(this.getAccountHome()) : this.resolved.menu;
+    if (this.resolved.menu.length > 0) {
+      return this.resolved.menu;
+    }
+
+    if (this.signedIn) {
+      return buildSignedInMenu(this.getAccountHome());
+    }
+
+    return this.resolved.menu;
   }
 
   private getLogoSrc(): string {

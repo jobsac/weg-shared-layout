@@ -28,7 +28,7 @@ export namespace Components {
          */
         "layout"?: LayoutData | string;
         /**
-          * When true, the header uses the built-in signed-in menu instead of the CMS layout.
+          * Session flag from the host app. Enables signed-in UI (icons, compact manage account). Navigation uses `layout.header.menu` when provided; falls back to the built-in signed-in menu only when signed in and the layout menu is empty.
           * @default false
          */
         "signedIn": boolean;
@@ -96,7 +96,7 @@ declare namespace LocalJSX {
          */
         "onWegAuthClick"?: (event: WegHeaderCustomEvent<{ action: LayoutHeaderAuthAction }>) => void;
         /**
-          * When true, the header uses the built-in signed-in menu instead of the CMS layout.
+          * Session flag from the host app. Enables signed-in UI (icons, compact manage account). Navigation uses `layout.header.menu` when provided; falls back to the built-in signed-in menu only when signed in and the layout menu is empty.
           * @default false
          */
         "signedIn"?: boolean;

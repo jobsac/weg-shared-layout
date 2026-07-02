@@ -5622,7 +5622,7 @@ class WegFooter {
         return (hAsync("ul", { class: "columns" }, menu.map((links, columnIndex) => (hAsync("li", { class: "columns__col", key: columnIndex }, hAsync("menu", { class: "columns__links", "aria-label": `Footer links column ${columnIndex + 1}` }, links.map((l, linkIndex) => (hAsync("li", { key: linkIndex }, hAsync("a", { class: "footer-link", href: l.href, target: linkTarget(l), rel: linkRel(l) }, l.label))))))))));
     }
     render() {
-        return (hAsync("footer", { key: 'b371f29aeb607a3e1f9bf16d9bd3fb5548b20dc1', class: "footer" }, hAsync("div", { key: '622bda2f3e7c106b62d40deccf6f7e94b79ecaea', class: "container footer__inner" }, this.renderSocialLinks(), this.renderMenu(), this.renderLegalText())));
+        return (hAsync("footer", { key: 'a4ab6d9a195118e94228f7a49d20f7268f7386b8', class: "footer" }, hAsync("div", { key: 'ab675090e0a7896d50b29e27c83170a1f7af9104', class: "container footer__inner" }, this.renderSocialLinks(), this.renderMenu(), this.renderLegalText())));
     }
     static get watchers() { return {
         "layout": [{
@@ -5839,7 +5839,12 @@ function isManageAccountLink(link, accountHome) {
 function isFindJobLink(link) {
     if (link.label.trim().toLowerCase() === 'find a job')
         return true;
-    return link.href === `${WEG_HOME}/find-a-job`;
+    const href = link.href?.trim();
+    if (!href)
+        return false;
+    if (href === `${WEG_HOME}/find-a-job` || href === '/find-a-job')
+        return true;
+    return href.endsWith('/find-a-job');
 }
 function isDashboardLink(link, accountHome) {
     if (link.label.trim().toLowerCase() === 'dashboard')
@@ -5905,7 +5910,9 @@ class WegHeader {
      */
     layout;
     /**
-     * When true, the header uses the built-in signed-in menu instead of the CMS layout.
+     * Session flag from the host app. Enables signed-in UI (icons, compact manage account).
+     * Navigation uses `layout.header.menu` when provided; falls back to the built-in
+     * signed-in menu only when signed in and the layout menu is empty.
      */
     signedIn = false;
     /**
@@ -6360,7 +6367,13 @@ class WegHeader {
         return normalizeAccountBase(this.accountBaseUrl);
     }
     getActiveMenu() {
-        return this.signedIn ? buildSignedInMenu(this.getAccountHome()) : this.resolved.menu;
+        if (this.resolved.menu.length > 0) {
+            return this.resolved.menu;
+        }
+        if (this.signedIn) {
+            return buildSignedInMenu(this.getAccountHome());
+        }
+        return this.resolved.menu;
     }
     getLogoSrc() {
         return this.resolved.logoSrc ?? LOGO_SRC;
@@ -6531,12 +6544,12 @@ class WegHeader {
         const logoSrc = this.getLogoSrc();
         const closeMenu = () => this.closeMenu();
         const mobileMenuActive = this.isMobileMenuActive();
-        return (hAsync(Host, { key: 'ce97dfe33ac5f2576e1172ead666cc3e60fea46b', class: { 'weg-header--scroll-mode': this.headerScrollMode } }, hAsync("div", { key: '3f79d9212732577f5f701aabfcc8cc8bd0a45646', class: "weg-header-shell" }, hAsync("a", { key: '520d8ac6ba79472a23b1e558b02cd1d3b26b60cd', class: "skip-to-content", href: "#", title: SKIP_TO_CONTENT_LABEL, onClick: (event) => this.handleSkipToContent(event) }, SKIP_TO_CONTENT_LABEL), hAsync("header", { key: '949e5d1505ae2603490391412e1295703d10a930', class: {
+        return (hAsync(Host, { key: '001f8f638f598f2cb2a4bc09279c369e39683de7', class: { 'weg-header--scroll-mode': this.headerScrollMode } }, hAsync("div", { key: '315dca8edee12160ed98c84dfe51f79bcf3ee748', class: "weg-header-shell" }, hAsync("a", { key: 'b190a2d53e62075ec1a9871b9de41d42604ec660', class: "skip-to-content", href: "#", title: SKIP_TO_CONTENT_LABEL, onClick: (event) => this.handleSkipToContent(event) }, SKIP_TO_CONTENT_LABEL), hAsync("header", { key: '8b2a501b95dd2ad9abef63dd3521ee86fdbbde36', class: {
                 header: true,
                 'header--menu-open': mobileMenuActive,
                 'header--scroll-mode': this.headerScrollMode,
                 'header--scroll-hidden': this.headerScrollHidden && this.headerScrollMode,
-            } }, hAsync("div", { key: 'f43fcc66f9bd450580b2dcfe03a7daf9b804e573', class: "header-inner" }, hAsync("div", { key: '4366f0e0c617e42f07857db3343e5a4d489abe83', class: "sr-only", "aria-live": "polite", "aria-atomic": "true", "data-weg-sr-live": true }), hAsync("button", { key: '4cce3ca0a8a13d182367294ae0223b6c17e7dcba', type: "button", class: "menu-toggle icon-button", "aria-label": mobileMenuActive ? CLOSE_MAIN_NAV_LABEL : OPEN_MAIN_NAV_LABEL, "aria-expanded": mobileMenuActive ? 'true' : 'false', "aria-controls": "weg-header-main-nav", onClick: () => this.toggleMenu() }, mobileMenuActive ? hAsync(CloseIcon, null) : hAsync(HamburgerIcon, null)), hAsync(Logo, { key: 'a2508570f7f2edc2fb2ea93f2cce779e63396422', href: logoHref, src: logoSrc }), hAsync("div", { key: 'dbcab901c9eb1bcad0e5b38e3440a63a70b3f7a6', class: "header-actions" }, this.renderCompactAuth(mobileMenuActive ? closeMenu : undefined)), hAsync("div", { key: 'c6e48c4221bf8d0501c9960ac09857b4b3fcd521', class: "main-nav-panel", id: "weg-header-main-nav", role: mobileMenuActive ? 'dialog' : undefined, "aria-modal": mobileMenuActive ? 'true' : undefined, "aria-label": mobileMenuActive ? MAIN_NAV_LABEL : undefined }, this.renderNav(mobileMenuActive ? closeMenu : undefined)))))));
+            } }, hAsync("div", { key: '25352f45a43bf682fc2770f76f5c2637702114b4', class: "header-inner" }, hAsync("div", { key: 'fff7fa017abacd21025e6c23c1b73aac695faeab', class: "sr-only", "aria-live": "polite", "aria-atomic": "true", "data-weg-sr-live": true }), hAsync("button", { key: '20c8be512de0e3453913609ac08bd74c30518b40', type: "button", class: "menu-toggle icon-button", "aria-label": mobileMenuActive ? CLOSE_MAIN_NAV_LABEL : OPEN_MAIN_NAV_LABEL, "aria-expanded": mobileMenuActive ? 'true' : 'false', "aria-controls": "weg-header-main-nav", onClick: () => this.toggleMenu() }, mobileMenuActive ? hAsync(CloseIcon, null) : hAsync(HamburgerIcon, null)), hAsync(Logo, { key: '5bb6468e98405a26ac9594e87fcad359f6509891', href: logoHref, src: logoSrc }), hAsync("div", { key: 'f2ca35dea212260c014044062f64adf6a4fa8f64', class: "header-actions" }, this.renderCompactAuth(mobileMenuActive ? closeMenu : undefined)), hAsync("div", { key: 'c4fd63998271e19fdeee371160095de27b4d4820', class: "main-nav-panel", id: "weg-header-main-nav", role: mobileMenuActive ? 'dialog' : undefined, "aria-modal": mobileMenuActive ? 'true' : undefined, "aria-label": mobileMenuActive ? MAIN_NAV_LABEL : undefined }, this.renderNav(mobileMenuActive ? closeMenu : undefined)))))));
     }
     static get watchers() { return {
         "layout": [{
