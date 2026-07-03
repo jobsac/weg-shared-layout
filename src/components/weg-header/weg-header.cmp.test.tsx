@@ -88,12 +88,34 @@ describe('weg-header', () => {
 
     const findJobLink = root.shadowRoot?.querySelector('.find-a-job-link') as HTMLAnchorElement | null;
     const dashboardLink = root.shadowRoot?.querySelector('.dashboard-link') as HTMLAnchorElement | null;
+    const manageLink = root.shadowRoot?.querySelector('.manage-account-link') as HTMLAnchorElement | null;
 
     expect(findJobLink?.pathname).toBe('/find-a-job');
     expect(findJobLink?.querySelector('svg')).toBeTruthy();
     expect(dashboardLink?.href).toBe(`${accountBase}/dashboard`);
     expect(dashboardLink?.querySelector('svg')).toBeTruthy();
+    expect(manageLink?.href).toBe(`${accountBase}/account/manage`);
     expect(root.shadowRoot?.textContent).not.toContain('Career advice');
+  });
+
+  it('uses layout menu href for Manage Account when provided, without account-base-url', async () => {
+    const accountBase = 'https://dev-account.warwickemploymentgroup.com';
+    const signedInLayout = {
+      header: {
+        menu: [
+          { label: 'Dashboard', href: `${accountBase}/dashboard` },
+          { label: 'Manage Account', href: `${accountBase}/account/manage` },
+          { label: 'Sign out', href: '#' },
+        ],
+      },
+    };
+
+    const { root } = await render(
+      <weg-header layout={signedInLayout} signed-in user-name="Alex"></weg-header>,
+    );
+
+    const manageLink = root.shadowRoot?.querySelector('.manage-account-link') as HTMLAnchorElement | null;
+    expect(manageLink?.href).toBe(`${accountBase}/account/manage`);
   });
 
   it('uses account-base-url for built-in signed-in navigation links', async () => {

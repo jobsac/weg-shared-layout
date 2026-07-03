@@ -16,7 +16,7 @@ export namespace Components {
     }
     interface WegHeader {
         /**
-          * Account portal origin for sign-in, register, dashboard, and manage-account links. Defaults to production when omitted.
+          * Account portal origin for the built-in signed-in fallback menu (when `header.menu` is empty). Menu links from the CMS use their `href` as-is. Defaults to production when omitted.
          */
         "accountBaseUrl"?: string;
         /**
@@ -80,7 +80,7 @@ declare namespace LocalJSX {
     }
     interface WegHeader {
         /**
-          * Account portal origin for sign-in, register, dashboard, and manage-account links. Defaults to production when omitted.
+          * Account portal origin for the built-in signed-in fallback menu (when `header.menu` is empty). Menu links from the CMS use their `href` as-is. Defaults to production when omitted.
          */
         "accountBaseUrl"?: string;
         /**

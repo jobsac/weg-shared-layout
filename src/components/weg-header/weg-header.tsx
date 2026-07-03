@@ -232,8 +232,8 @@ export class WegHeader {
   @Prop({ attribute: 'user-name' }) userName?: string;
 
   /**
-   * Account portal origin for sign-in, register, dashboard, and manage-account links.
-   * Defaults to production when omitted.
+   * Account portal origin for the built-in signed-in fallback menu (when `header.menu` is empty).
+   * Menu links from the CMS use their `href` as-is. Defaults to production when omitted.
    */
   @Prop({ attribute: 'account-base-url' }) accountBaseUrl?: string;
 
@@ -784,6 +784,20 @@ export class WegHeader {
     return name || 'Manage Account';
   }
 
+  private resolveManageAccountHref(link?: LayoutLink): string {
+    const fromMenu = link?.href?.trim();
+    if (fromMenu) return fromMenu;
+    return accountPath(this.getAccountHome(), '/account/manage');
+  }
+
+  private findManageAccountLink(menu: LayoutLink[]): LayoutLink | null {
+    const accountHome = this.getAccountHome();
+    for (const item of menu) {
+      if (!isMenuGroup(item) && isManageAccountLink(item, accountHome)) return item;
+    }
+    return null;
+  }
+
   private shouldExcludeFromNavActive(item: LayoutLink, accountHome: string): boolean {
     return isSignOutLink(item) || isSignInLink(item, accountHome);
   }
@@ -1000,9 +1014,10 @@ export class WegHeader {
     onNavigate?: () => void,
     iconOnly = false,
     ariaCurrentHref: string | null = null,
+    link?: LayoutLink,
   ) {
     const label = this.getManageAccountLabel();
-    const href = accountPath(this.getAccountHome(), '/account/manage');
+    const href = this.resolveManageAccountHref(link);
     const active = this.isNavItemActive(href, 'prefix');
     const ariaCurrent = this.isAriaCurrentHref(href, ariaCurrentHref);
 
@@ -1052,7 +1067,7 @@ export class WegHeader {
     if (isManageAccountLink(item, accountHome)) {
       return (
         <li class="main-nav__item main-nav__item--auth" key="manage-account">
-          {this.renderManageAccountAnchor(onNavigate, false, ariaCurrentHref)}
+          {this.renderManageAccountAnchor(onNavigate, false, ariaCurrentHref, item)}
         </li>
       );
     }
@@ -1082,7 +1097,8 @@ export class WegHeader {
 
   private renderCompactAuth(onNavigate?: () => void) {
     if (this.signedIn) {
-      return this.renderManageAccountAnchor(onNavigate, true);
+      const manageLink = this.findManageAccountLink(this.getActiveMenu());
+      return this.renderManageAccountAnchor(onNavigate, true, null, manageLink ?? undefined);
     }
 
     const signIn = this.findSignInLink(this.resolved.menu);

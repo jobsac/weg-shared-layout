@@ -5920,8 +5920,8 @@ class WegHeader {
      */
     userName;
     /**
-     * Account portal origin for sign-in, register, dashboard, and manage-account links.
-     * Defaults to production when omitted.
+     * Account portal origin for the built-in signed-in fallback menu (when `header.menu` is empty).
+     * Menu links from the CMS use their `href` as-is. Defaults to production when omitted.
      */
     accountBaseUrl;
     /**
@@ -6396,6 +6396,20 @@ class WegHeader {
         const name = this.userName?.trim();
         return name || 'Manage Account';
     }
+    resolveManageAccountHref(link) {
+        const fromMenu = link?.href?.trim();
+        if (fromMenu)
+            return fromMenu;
+        return accountPath(this.getAccountHome(), '/account/manage');
+    }
+    findManageAccountLink(menu) {
+        const accountHome = this.getAccountHome();
+        for (const item of menu) {
+            if (!isMenuGroup(item) && isManageAccountLink(item, accountHome))
+                return item;
+        }
+        return null;
+    }
     shouldExcludeFromNavActive(item, accountHome) {
         return isSignOutLink(item) || isSignInLink(item, accountHome);
     }
@@ -6475,9 +6489,9 @@ class WegHeader {
                 [options.className || '']: !!options.className,
             }, href: link.href, "aria-label": link.label, onClick: (event) => this.handleAuthClick(event, action, link.href, onNavigate) }, hAsync(Icon, null), !iconOnly ? link.label : null, iconOnly ? hAsync("span", { class: "sr-only" }, link.label) : null));
     }
-    renderManageAccountAnchor(onNavigate, iconOnly = false, ariaCurrentHref = null) {
+    renderManageAccountAnchor(onNavigate, iconOnly = false, ariaCurrentHref = null, link) {
         const label = this.getManageAccountLabel();
-        const href = accountPath(this.getAccountHome(), '/account/manage');
+        const href = this.resolveManageAccountHref(link);
         const active = this.isNavItemActive(href, 'prefix');
         const ariaCurrent = this.isAriaCurrentHref(href, ariaCurrentHref);
         return (hAsync("a", { class: {
@@ -6499,7 +6513,7 @@ class WegHeader {
             return (hAsync("li", { class: "main-nav__item main-nav__item--auth", key: "sign-in" }, this.renderAuthControl({ link: item, action: 'sign-in', onNavigate })));
         }
         if (isManageAccountLink(item, accountHome)) {
-            return (hAsync("li", { class: "main-nav__item main-nav__item--auth", key: "manage-account" }, this.renderManageAccountAnchor(onNavigate, false, ariaCurrentHref)));
+            return (hAsync("li", { class: "main-nav__item main-nav__item--auth", key: "manage-account" }, this.renderManageAccountAnchor(onNavigate, false, ariaCurrentHref, item)));
         }
         if (this.signedIn && isFindJobLink(item)) {
             return this.renderIconNavLink(item, FindJobIcon, 'find-a-job-link', onNavigate, ariaCurrentHref);
@@ -6515,7 +6529,8 @@ class WegHeader {
     }
     renderCompactAuth(onNavigate) {
         if (this.signedIn) {
-            return this.renderManageAccountAnchor(onNavigate, true);
+            const manageLink = this.findManageAccountLink(this.getActiveMenu());
+            return this.renderManageAccountAnchor(onNavigate, true, null, manageLink ?? undefined);
         }
         const signIn = this.findSignInLink(this.resolved.menu);
         if (!signIn?.href)
@@ -6544,12 +6559,12 @@ class WegHeader {
         const logoSrc = this.getLogoSrc();
         const closeMenu = () => this.closeMenu();
         const mobileMenuActive = this.isMobileMenuActive();
-        return (hAsync(Host, { key: 'e0ed16abe9a49db723b627ea8bccfde470406f57', class: { 'weg-header--scroll-mode': this.headerScrollMode } }, hAsync("div", { key: '574712a024543f0653f9956949b2796377451847', class: "weg-header-shell" }, hAsync("a", { key: '279c196e293d93db62fc29915f63b7b24b38e6c1', class: "skip-to-content", href: "#", title: SKIP_TO_CONTENT_LABEL, onClick: (event) => this.handleSkipToContent(event) }, SKIP_TO_CONTENT_LABEL), hAsync("header", { key: '29bbed6bde5ccf8cd2b4e4df4a7ba58b122c2d6a', class: {
+        return (hAsync(Host, { key: '46951a1043d7f0270496e815b32bceda2d3486e8', class: { 'weg-header--scroll-mode': this.headerScrollMode } }, hAsync("div", { key: 'eba0ff9e1c834e5d5a6cc9107a1b970ed5cd7649', class: "weg-header-shell" }, hAsync("a", { key: '80e0e92ee3fb667293c20e5ad086c18b3ebefd75', class: "skip-to-content", href: "#", title: SKIP_TO_CONTENT_LABEL, onClick: (event) => this.handleSkipToContent(event) }, SKIP_TO_CONTENT_LABEL), hAsync("header", { key: '72280ef241ab2c0a5693a829a0aab4f6d16f16b1', class: {
                 header: true,
                 'header--menu-open': mobileMenuActive,
                 'header--scroll-mode': this.headerScrollMode,
                 'header--scroll-hidden': this.headerScrollHidden && this.headerScrollMode,
-            } }, hAsync("div", { key: '85650e9d0d244fefbd9f216130703de9288baa93', class: "header-inner" }, hAsync("div", { key: '34e7bf3d15733e9acefb12b2c77fee9a4cf7479c', class: "sr-only", "aria-live": "polite", "aria-atomic": "true", "data-weg-sr-live": true }), hAsync("button", { key: '9e35626afcecc92d93deb2fb25f8f93727f85d4d', type: "button", class: "menu-toggle icon-button", "aria-label": mobileMenuActive ? CLOSE_MAIN_NAV_LABEL : OPEN_MAIN_NAV_LABEL, "aria-expanded": mobileMenuActive ? 'true' : 'false', "aria-controls": "weg-header-main-nav", onClick: () => this.toggleMenu() }, mobileMenuActive ? hAsync(CloseIcon, null) : hAsync(HamburgerIcon, null)), hAsync(Logo, { key: '99ffa62e443e939316b58d36cab8e9e0a10cfa36', href: logoHref, src: logoSrc }), hAsync("div", { key: 'c9b453f5187d5b6ad782ae03400c13f16a31c383', class: "header-actions" }, this.renderCompactAuth(mobileMenuActive ? closeMenu : undefined)), hAsync("div", { key: '0f15f985cf4931a9867c341d053f5ebd2b398d42', class: "main-nav-panel", id: "weg-header-main-nav", role: mobileMenuActive ? 'dialog' : undefined, "aria-modal": mobileMenuActive ? 'true' : undefined, "aria-label": mobileMenuActive ? MAIN_NAV_LABEL : undefined }, this.renderNav(mobileMenuActive ? closeMenu : undefined)))))));
+            } }, hAsync("div", { key: '634be20c6f4a6de4070ce0c4adc96c1d2f93d391', class: "header-inner" }, hAsync("div", { key: 'c087c9482ea95b33c4ae2bfe83b57a07b3cb44c8', class: "sr-only", "aria-live": "polite", "aria-atomic": "true", "data-weg-sr-live": true }), hAsync("button", { key: '5423d59c8504c7ba1f76331ff19ad3b7f040131b', type: "button", class: "menu-toggle icon-button", "aria-label": mobileMenuActive ? CLOSE_MAIN_NAV_LABEL : OPEN_MAIN_NAV_LABEL, "aria-expanded": mobileMenuActive ? 'true' : 'false', "aria-controls": "weg-header-main-nav", onClick: () => this.toggleMenu() }, mobileMenuActive ? hAsync(CloseIcon, null) : hAsync(HamburgerIcon, null)), hAsync(Logo, { key: '370fc18b81e150c9a6f7b9f8515f6f0597afdb58', href: logoHref, src: logoSrc }), hAsync("div", { key: 'a99f8addf9fa2594c5e331c3be5d0a1c626131dc', class: "header-actions" }, this.renderCompactAuth(mobileMenuActive ? closeMenu : undefined)), hAsync("div", { key: 'bcffaff7bca9fe7dc7dd4468239708462962f893', class: "main-nav-panel", id: "weg-header-main-nav", role: mobileMenuActive ? 'dialog' : undefined, "aria-modal": mobileMenuActive ? 'true' : undefined, "aria-label": mobileMenuActive ? MAIN_NAV_LABEL : undefined }, this.renderNav(mobileMenuActive ? closeMenu : undefined)))))));
     }
     static get watchers() { return {
         "layout": [{

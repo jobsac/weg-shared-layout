@@ -66,7 +66,7 @@ const layout = await fetchWeg21Layout({
 
 **Signed in** (`signed-in` true): ignores CMS `header.menu` and shows built-in Find a job, Dashboard, Manage Account, and Sign out.
 
-Set **`signed-in`** from your app session state. Pass **`user-name`** for Manage Account. Pass **`account-base-url`** when account links should point at a non-production portal. Pass **`current-path`** (e.g. `/career-advice/my-article`) to highlight the active nav item. **Sign out** emits **`wegAuthClick`** — the host must call `event.preventDefault()` and run your logout flow (API call, clear session, redirect).
+Set **`signed-in`** from your app session state. Pass **`user-name`** for Manage Account. Pass **`account-base-url`** only when using the built-in signed-in fallback menu (empty `header.menu`) on non-production portals. Nav links from `layout.header.menu` use their CMS `href` as-is. Pass **`current-path`** (e.g. `/career-advice/my-article`) to highlight the active nav item. **Sign out** emits **`wegAuthClick`** — the host must call `event.preventDefault()` and run your logout flow (API call, clear session, redirect).
 
 ### Nav active state
 
