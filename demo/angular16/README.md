@@ -4,7 +4,7 @@ Minimal Angular **16.2** app that mirrors a real consumer install: `defineCustom
 
 Integration steps: **[docs/angular.md](../../docs/angular.md)**.
 
-The demo points at `https://dev.warwickemploymentgroup.com/api/v1/weg21` and sends `wcms-api-key` for the live CMS data.
+The demo uses bundled fixture data by default. To enable live CMS data locally, set both the API base URL and your own read-only `wcms-api-key` in `src/app/local-api-key.ts`.
 
 ---
 
@@ -18,6 +18,15 @@ npm run demo:angular16
 ```
 
 Open http://localhost:49938/
+
+### Optional: enable live CMS data locally
+
+Edit `src/app/local-api-key.ts` and set:
+
+- `WEG21_API_BASE` to the environment you want to test
+- `WEG21_API_KEY` to your own read-only key
+
+The key is still exposed to the browser when you run the demo, so only use a low-risk read-only key here.
 
 Or manually (uses **npm** — run from this folder):
 
@@ -54,7 +63,7 @@ Re-run `npm install` in `demo/angular16` when a new `weg-shared-layout` package 
 | --- | --- |
 | `src/main.ts` | `defineCustomElements()` from `weg-shared-layout/loader` |
 | `src/app/layout.types.ts` | `LayoutData` from `weg-shared-layout/layout-data` |
-| `src/app/layout.service.ts` | `fetchWeg21Layout` + `dummyWeg21LayoutData()` fallback |
+| `src/app/layout.service.ts` | `fetchWeg21Layout` when `src/app/local-api-key.ts` contains an API base and key, otherwise `dummyWeg21LayoutData()` |
 | `src/app/auth.ts` | Sign-out redirect URL constant |
 | `src/app/app.component.*` | `[layout]`, `[currentPath]`, auth bindings, plain fields (no signals) |
 | `tsconfig.json` | `skipLibCheck`, `resolveJsonModule`, `moduleResolution: bundler` |

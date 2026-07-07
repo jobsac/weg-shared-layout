@@ -4,9 +4,8 @@ import menusDummy from 'weg-shared-layout/weg21-menus.json';
 import type { MenusProps, Weg21BootstrapProps } from 'weg-shared-layout/menus-data';
 
 import type { LayoutData } from './layout.types';
+import { WEG21_API_BASE, WEG21_API_KEY } from './local-api-key';
 
-const WEG21_API_BASE = 'https://dev.warwickemploymentgroup.com/api/v1/weg21';
-const WEG21_API_KEY = '9hVxD7PkcXfmHho2x2AF';
 const WEG21_HEADERS = {
   Accept: 'application/json',
   'wcms-api-key': WEG21_API_KEY,
@@ -60,12 +59,18 @@ export class LayoutService {
   }
 
   private async loadFromApi(): Promise<void> {
+    if (!WEG21_API_KEY) {
+      this.loadError =
+        'Live CMS disabled - add your API base and key in src/app/local-api-key.ts to enable API fetches.';
+      return;
+    }
+
     try {
       this.layout = await fetchWeg21Layout();
       this.loadError = null;
     } catch {
       this.loadError =
-        'WEG21 dev API unavailable - showing WEG21 dummy fixtures.';
+        'WEG21 API unavailable - showing WEG21 dummy fixtures.';
     }
   }
 }
