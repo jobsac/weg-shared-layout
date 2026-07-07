@@ -1,25 +1,34 @@
 # weg-shared-layout
 
-> Shared layout Web Components.
+Shared layout Web Components built with Stencil.
 
 ## Install
 
 ```bash
 npm i weg-shared-layout
+# or
+pnpm add weg-shared-layout
 ```
 
-## How it works
+## What this package contains
 
-`<weg-header>` and `<weg-footer>` are **presentational** Web Components: they do **not** fetch data.
+`weg-shared-layout` publishes two presentational Web Components:
 
-Load layout from the **WEG CMS WEG21 API**, then pass the mapped object to `layout` on each tag:
+- `<weg-header>`
+- `<weg-footer>`
+
+They do not fetch their own content. Your app loads layout data, maps it into the expected shape, and passes the same `layout` object to both components.
+
+## WEG21 API flow
+
+The package includes helpers for the WEG CMS WEG21 API:
 
 | Endpoint | Purpose |
 | --- | --- |
-| `GET https://warwickemploymentgroup.com/api/v1/weg21` | Logo URLs, footer social + legal copy |
-| `GET …/api/v1/weg21/menus` | Header (`ext` / `int`) and footer link columns |
+| `GET https://warwickemploymentgroup.com/api/v1/weg21` | Footer copy, social links, and additional bootstrap metadata such as logo/favicon URLs |
+| `GET https://warwickemploymentgroup.com/api/v1/weg21/menus` | Header nav (`ext` / `int`) and footer link columns |
 
-Both require the `wcms-api-key` header. Use `fetchWeg21Layout` from `weg-shared-layout/menus`:
+Use `fetchWeg21Layout()` to fetch and map both endpoints:
 
 ```ts
 import { fetchWeg21Layout } from 'weg-shared-layout/menus';
@@ -27,12 +36,16 @@ import { fetchWeg21Layout } from 'weg-shared-layout/menus';
 const layout = await fetchWeg21Layout({
   apiKey: process.env.WCMS_API_KEY,
 });
-// layout.header.menu, layout.footer.menu, layout.footer.social, …
 ```
 
-[`weg21-bootstrap.json`](src/assets/weg21-bootstrap.json) and [`weg21-menus.json`](src/assets/weg21-menus.json) mirror the **WEG21 API response schemas** (`GET /api/v1/weg21` and `/menus`). Map to `layout` with `dummyWeg21LayoutData()` or `menusToLayoutData`.
+You can also work offline with the bundled schema fixtures:
 
-### Layout shape (abbreviated)
+- `weg-shared-layout/weg21-bootstrap.json`
+- `weg-shared-layout/weg21-menus.json`
+
+Map those with `dummyWeg21LayoutData()` or `menusToLayoutData()`.
+
+## Layout shape
 
 ```json
 {
@@ -51,33 +64,29 @@ const layout = await fetchWeg21Layout({
 }
 ```
 
-| Field | Used when | Notes |
-| --- | --- | --- |
-| `header.logoSrc` | Signed out | Optional CMS logo URL; bundled PNG if omitted |
-| `header.logoHref` | Always | Optional logo link URL; WEG homepage if omitted |
-| `header.menu` | Signed out | Groups use `items`; flat links use `href` |
-| `footer.menu` | Always | `LayoutLink[][]` — one column per inner array |
-| `footer.social` | Always | LinkedIn, Instagram, TikTok, or YouTube |
-| `footer.credits` / `footer.copyright` | Always | Legal copy |
-
-### Auth (Sign in / Sign out)
-
-**Signed out**: renders `header.menu`. Sign-in is a normal link — add `{ "label": "Sign in", "href": "…" }` like Register or Career advice. The header recognizes it by label or login URL and follows `href` on click.
-
-**Signed in** (`signed-in` true): ignores CMS `header.menu` and shows built-in Find a job, Dashboard, Manage Account, and Sign out.
-
-Set **`signed-in`** from your app session state. Pass **`user-name`** for Manage Account. Pass **`account-base-url`** only when using the built-in signed-in fallback menu (empty `header.menu`) on non-production portals. Nav links from `layout.header.menu` use their CMS `href` as-is. Pass **`current-path`** (e.g. `/career-advice/my-article`) to highlight the active nav item. **Sign out** emits **`wegAuthClick`** — the host must call `event.preventDefault()` and run your logout flow (API call, clear session, redirect).
-
-### Nav active state
-
-| Link type | Match rule |
+| Field | Notes |
 | --- | --- |
-| Flat nav link | Prefix — `/career-advice` matches `/career-advice/foo` |
-| Dropdown child | Exact pathname (+ query when href includes `?`) |
-| Dropdown parent | Active background when any child matches |
-| Sign in / Sign out | Never highlighted |
+| `header.logoSrc` | Optional logo image URL; bundled logo is used when omitted |
+| `header.logoHref` | Optional logo link URL; defaults to the WEG homepage |
+| `header.menu` | Mixed array of groups (`items`) and flat links (`href`) |
+| `footer.menu` | `LayoutLink[][]` where each inner array is a footer column |
+| `footer.social` | LinkedIn, Instagram, TikTok, or YouTube links |
+| `footer.credits` / `footer.copyright` | Footer legal copy |
 
-Active links use **`weg-purple-200`** (`#CDCFF8`). Omit `current-path` to disable active styling.
+## Header auth behavior
+
+When `signed-in` is `false`, the header renders `layout.header.menu` directly. Sign-in should be represented as a normal CMS link such as `{ "label": "Sign in", "href": "…" }`.
+
+When `signed-in` is `true`, the component still uses `layout.header.menu` if you provide one. If `layout.header.menu` is empty, it falls back to the built-in signed-in menu: Find a job, Dashboard, Manage Account, and Sign out.
+
+Pass:
+
+- `signed-in` from your app session state
+- `user-name` for the signed-in Manage Account label
+- `account-base-url` only when using the built-in signed-in fallback menu against a non-production account portal
+- `current-path` to highlight the active nav item
+
+Sign-out emits `wegAuthClick`. The host app should call `event.preventDefault()` and run logout + redirect itself.
 
 ```js
 header.addEventListener('wegAuthClick', async (event) => {
@@ -88,34 +97,47 @@ header.addEventListener('wegAuthClick', async (event) => {
 });
 ```
 
-### Package imports (TypeScript / bundlers)
+## Nav active state
 
-| Subpath | Use |
+| Link type | Match rule |
 | --- | --- |
-| `weg-shared-layout/loader` | `defineCustomElements()` — **recommended** |
-| `weg-shared-layout/menus` | `fetchWeg21Layout`, `menusToLayoutData` |
-| `weg-shared-layout/menus-data` | WEG21 API types (`MenusData`, …) |
-| `weg-shared-layout/layout-data` | `<weg-header>` / `<weg-footer>` types (`LayoutData`, …) |
-| `weg-shared-layout/weg21-bootstrap.json` | `GET /api/v1/weg21` schema sample |
-| `weg-shared-layout/weg21-menus.json` | `GET /api/v1/weg21/menus` schema sample |
-| `weg-shared-layout/weg-header` / `weg-footer` | Side-effect tag registration |
-| `weg-shared-layout/styles/container.css` | Shared `.container` width and gutter utility |
+| Flat nav link | Prefix match, so `/career-advice` matches `/career-advice/foo` |
+| Dropdown child | Exact pathname, plus query string when the href includes `?` |
+| Dropdown parent | Active background when any child matches |
+| Sign in / Sign out | Never highlighted |
+
+Active links use `weg-purple-200` (`#CDCFF8`). Omit `current-path` to disable active styling.
+
+## Package entry points
+
+| Import | Purpose |
+| --- | --- |
+| `weg-shared-layout/loader` | `defineCustomElements()` for registering all tags |
+| `weg-shared-layout/menus` | `fetchWeg21Layout`, `menusToLayoutData`, `dummyWeg21LayoutData` |
+| `weg-shared-layout/menus-data` | WEG21 API response types |
+| `weg-shared-layout/layout-data` | `layout` prop types |
+| `weg-shared-layout/weg21-bootstrap.json` | Sample `GET /api/v1/weg21` payload |
+| `weg-shared-layout/weg21-menus.json` | Sample `GET /api/v1/weg21/menus` payload |
+| `weg-shared-layout/weg-header` / `weg-footer` | Side-effect imports for individual tags |
+| `weg-shared-layout/hydrate` | Stencil hydrate build for server-side rendering workflows |
+| `weg-shared-layout/styles/container.css` | Shared `.container` layout utility |
+| `weg-shared-layout` | Root package export with generated JSX/component typings plus `format()` |
 
 ## Documentation
 
-Full index: **[docs/README.md](./docs/README.md)**.
+See **[docs/README.md](./docs/README.md)** for the full index.
 
 | Guide | Doc |
 | --- | --- |
 | Angular 16 | [docs/angular.md](./docs/angular.md) |
-| Angular 16 demo (runnable) | [demo/angular16/README.md](./demo/angular16/README.md) |
-| React (SPA, client-only) | [docs/react.md](./docs/react.md) |
-| Next.js (App Router) | [docs/nextjs.md](./docs/nextjs.md) |
+| Angular 16 demo | [demo/angular16/README.md](./demo/angular16/README.md) |
+| React SPA | [docs/react.md](./docs/react.md) |
+| Next.js App Router | [docs/nextjs.md](./docs/nextjs.md) |
 | Plain HTML / vanilla JS | [docs/vanilla.md](./docs/vanilla.md) |
-| Publishing (maintainers) | [docs/publishing.md](./docs/publishing.md) |
+| Publishing | [docs/publishing.md](./docs/publishing.md) |
 
-## Publishing (maintainers)
+## Publishing
 
-**`npm publish` does not run `npm run build` by itself** — it packs what is on disk. This package uses a **`prepack`** script so a full Stencil build runs before every `npm pack` / `npm publish`, avoiding incomplete tarballs.
+`npm publish` does not run a build on its own; it publishes whatever is already on disk. This repo relies on `prepack` so a Stencil build runs before packing or publishing.
 
-Details, checklist, and CI notes: **[docs/publishing.md](./docs/publishing.md)**.
+For the full release checklist, package contents, and CI notes, see **[docs/publishing.md](./docs/publishing.md)**.

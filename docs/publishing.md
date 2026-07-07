@@ -2,13 +2,13 @@
 
 ## `npm publish` does not run your build by default
 
-Publishing packs **whatever is already on disk** under the paths listed in [`package.json` `files`](../package.json) (for this package: `dist/`, `loader/`, and `weg21-bootstrap.json` and `weg21-menus.json`). It does **not** automatically run `npm run build` unless a lifecycle script does.
+Publishing packs **whatever is already on disk** under the paths listed in [`package.json` `files`](../package.json) (for this package that includes `dist/`, `hydrate/`, `docs/`, `loader/`, JSON fixtures, and exported source/type files). It does **not** automatically run `npm run build` unless a lifecycle script does.
 
 If you publish with an empty, missing, or half-built `dist/`, consumers get a broken tarball (missing `loader/index.js`, missing `dist/components/*.js`, missing type declarations, etc.).
 
 ## What this repo does
 
-The **`prepack`** script runs **`npm run build`** before every:
+The **`prepack`** script runs **`pnpm run build`** before every:
 
 - `npm pack`
 - `npm publish` (which packs first)
@@ -17,7 +17,7 @@ So the Stencil output and generated `loader/` are always fresh in the tarball.
 
 ```json
 "scripts": {
-  "prepack": "npm run build",
+  "prepack": "pnpm run build",
   "build": "stencil build"
 }
 ```
@@ -28,8 +28,8 @@ So the Stencil output and generated `loader/` are always fresh in the tarball.
 2. From the package root:
 
    ```bash
-   npm run build
-   npm test
+   pnpm run build
+   pnpm test
    npm pack --dry-run
    ```
 
@@ -43,7 +43,7 @@ So the Stencil output and generated `loader/` are always fresh in the tarball.
 3. Smoke-test the Angular 16 demo (optional but recommended):
 
    ```bash
-   npm run demo:angular16:build
+   pnpm run demo:angular16:build
    ```
 
    See [demo/angular16/README.md](../demo/angular16/README.md).
@@ -58,8 +58,8 @@ Use `npm publish --dry-run` if you want to exercise the full pack pipeline witho
 
 ## What consumers import
 
-Documented in [docs/README.md](./README.md): `loader`, `menus`, `menus-data`, `layout-data`, `weg21-bootstrap.json`, `weg21-menus.json`, and per-tag subpaths. Angular 16 apps need modern `moduleResolution` or the loader-only pattern — [angular.md](./angular.md).
+Documented in [docs/README.md](./README.md): `loader`, `menus`, `menus-data`, `layout-data`, `weg21-bootstrap.json`, `weg21-menus.json`, `hydrate`, and per-tag subpaths. Angular 16 apps need modern `moduleResolution` or the loader-only pattern — [angular.md](./angular.md).
 
 ## CI
 
-If you publish from CI, run **`npm run build`** (or rely on **`npm publish`**, which triggers **`prepack`**) in the same job before `npm publish`, and ensure **devDependencies** (e.g. `@stencil/core`) are installed so `stencil build` succeeds.
+If you publish from CI, run **`pnpm run build`** (or rely on **`npm publish`**, which triggers **`prepack`**) in the same job before `npm publish`, and ensure **devDependencies** (e.g. `@stencil/core`) are installed so `stencil build` succeeds.

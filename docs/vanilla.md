@@ -7,7 +7,7 @@
 | `<weg-header>` | Site header — bundled logo, CMS nav (signed out), built-in nav (signed in), Sign in / Manage Account / Sign out |
 | `<weg-footer>` | Site footer — social links, menu, credits, copyright |
 
-Both components are **presentational**: they do **not** fetch data. Pass the same `layout` payload to each.
+Both components are **presentational**: they do **not** fetch data. Pass the same `layout` payload to both.
 
 WEG21 API schema: [`weg21-bootstrap.json`](../src/assets/weg21-bootstrap.json), [`weg21-menus.json`](../src/assets/weg21-menus.json)
 
@@ -82,7 +82,7 @@ Renders `header.menu` from `layout`. Add sign-in as a normal link — `{ "label"
 
 ### Signed in
 
-Set **`signedIn`** and optionally **`userName`**. CMS nav is ignored; built-in links are shown (Find a job, Dashboard, Manage Account, Sign out). Set **`accountBaseUrl`** when account links should use a non-production portal.
+Set **`signedIn`** and optionally **`userName`**. If `layout.header.menu` is present, the component keeps using that menu while switching to signed-in UI. If the menu is empty, the built-in signed-in fallback menu is shown instead: Find a job, Dashboard, Manage Account, and Sign out. Set **`accountBaseUrl`** when those fallback account links should use a non-production portal.
 
 ```js
 header.signedIn = true;
@@ -138,14 +138,21 @@ Logo **image** uses `header.logoSrc` (bundled if omitted). Logo **link** uses `h
 
 ## Without a bundler
 
-Fetch `weg21-bootstrap.json` and `weg21-menus.json`, map with the same logic as [`menusToLayoutData`](../src/utils/menus.ts), then assign properties:
+If you are not using a bundler, you cannot import `weg-shared-layout/menus` directly from the package. In that case, fetch or embed a pre-mapped `layout` object yourself, or copy the same mapping logic as [`menusToLayoutData`](../src/utils/menus.ts) into your app.
+
+At minimum, the object you assign still needs the same final shape:
 
 ```js
-const [bootstrapRes, menusRes] = await Promise.all([
-  fetch('/assets/weg21-bootstrap.json'),
-  fetch('/assets/weg21-menus.json'),
-]);
-const layout = await res.json();
+const layout = {
+  header: { menu: [...] },
+  footer: {
+    menu: [...],
+    social: [...],
+    credits: '...',
+    copyright: '...',
+  },
+};
+
 document.getElementById('header').layout = layout;
 document.getElementById('footer').layout = layout;
 ```

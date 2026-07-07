@@ -1,10 +1,10 @@
 # Angular 16 integration
 
-Step-by-step guide for **Angular 16** (standalone or NgModule). Uses plain component properties — no signals.
+Step-by-step guide for **Angular 16** (standalone or NgModule). Uses plain component properties, not signals.
 
-Runnable reference: **[demo/angular16](../demo/angular16/README.md)** (`npm run demo:angular16` from repo root).
+Runnable reference: **[demo/angular16](../demo/angular16/README.md)** (`pnpm run demo:angular16` from repo root).
 
-Newer Angular (signals): [weg-angular-demo](https://github.com/jobsac/weg-angular-demo) — same layout ideas, different syntax.
+For newer Angular with signals, see [weg-angular-demo](https://github.com/jobsac/weg-angular-demo) — same layout ideas, different syntax.
 
 ---
 
@@ -168,7 +168,7 @@ export class AppComponent implements OnInit {
 
 ## Step 7 — Template
 
-Use **`[layout]="..."`** so Angular sets the JavaScript property, not an HTML attribute.
+Use **`[layout]="..."`** so Angular sets the JavaScript property rather than an HTML attribute.
 
 ```html
 <!-- src/app/app.component.html -->
@@ -190,7 +190,7 @@ Use **`[layout]="..."`** so Angular sets the JavaScript property, not an HTML at
 | Binding | Purpose |
 | --- | --- |
 | `[layout]` | CMS nav when signed out; same object for header and footer |
-| `[signedIn]` | `true` → built-in signed-in nav (ignores CMS `header.menu`) |
+| `[signedIn]` | Enables signed-in UI; built-in signed-in nav is only used when `header.menu` is empty |
 | `[userName]` | First name on Manage Account when signed in |
 | `[accountBaseUrl]` | Account portal origin for signed-in links (optional; production default when omitted) |
 | `[currentPath]` | Current route path (optional query) — highlights the active nav link; use `router.url` |
@@ -217,7 +217,10 @@ export class LayoutService {
   layout: LayoutData = dummyWeg21LayoutData();
 
   constructor() {
-    void fetchWeg21Layout({ apiKey: 'your-wcms-api-key' })
+    void fetchWeg21Layout({
+      apiBase: 'https://warwickemploymentgroup.com/api/v1/weg21',
+      apiKey: 'your-wcms-api-key',
+    })
       .then((data) => (this.layout = data))
       .catch(() => {
         /* keep dummyWeg21LayoutData() */
@@ -393,7 +396,7 @@ forkJoin({
 | `'weg-header'` is not a known element | `CUSTOM_ELEMENTS_SCHEMA` on the component that owns the template |
 | Header/footer empty | `defineCustomElements()` before bootstrap |
 | Nav empty after passing data | `[layout]` must be `{ header, footer }`, not a bare array |
-| Auth always Sign in | Bind `[signedIn]` from session state |
+| Signed-in links are not what you expected | If `layout.header.menu` is present, the component uses that menu even when `[signedIn]="true"`; leave it empty to use the built-in signed-in fallback |
 | Generic Manage Account | Pass `[userName]` when signed in |
 | Staging account portal | Pass `[accountBaseUrl]` (e.g. `https://account-staging.example.com`) |
 | Nav never highlights active page | Pass `[currentPath]` from `router.url` on each navigation |

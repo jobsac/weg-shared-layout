@@ -1,6 +1,6 @@
 # React (SPA)
 
-Guide for **client-rendered** React apps (Vite, Create React App, etc.). If you use **Next.js App Router**, see **[Next.js](./nextjs.md)** — SSR and Server Components require a different integration.
+Guide for **client-rendered** React apps (Vite, Create React App, and similar). If you use **Next.js App Router**, see **[Next.js](./nextjs.md)** because SSR and Server Components need a different integration.
 
 ## Components
 
@@ -9,7 +9,7 @@ Guide for **client-rendered** React apps (Vite, Create React App, etc.). If you 
 | `<weg-header>` | Site header — bundled logo, CMS nav (signed out), built-in nav (signed in), Sign in / Manage Account / Sign out |
 | `<weg-footer>` | Site footer — social links, menu, credits, copyright |
 
-Both are **presentational** [Stencil](https://stenciljs.com/) Web Components. They **do not fetch data** — your app passes a **`layout`** payload from the WEG CMS WEG21 API (via [`fetchWeg21Layout`](../src/utils/menus.ts)) or [`weg21-bootstrap.json`](../src/assets/weg21-bootstrap.json) and [`weg21-menus.json`](../src/assets/weg21-menus.json) as offline fallback.
+Both are **presentational** [Stencil](https://stenciljs.com/) Web Components. They **do not fetch data**. Your app passes a **`layout`** payload from the WEG CMS WEG21 API (for example via [`fetchWeg21Layout`](../src/utils/menus.ts)) or from the bundled offline fixtures [`weg21-bootstrap.json`](../src/assets/weg21-bootstrap.json) and [`weg21-menus.json`](../src/assets/weg21-menus.json).
 
 `<weg-header>` additionally accepts **`signed-in`**, **`user-name`**, **`account-base-url`**, **`current-path`**, and emits **`wegAuthClick`**.
 
@@ -80,7 +80,7 @@ Sign-in is a normal `header.menu` link — add it in your CMS like Register. The
 
 ### Signed in
 
-Set **`signed-in`** and optionally **`user-name`**. The component **ignores CMS nav** and shows built-in links: Find a job, Dashboard, Manage Account, Sign out. Pass **`account-base-url`** when account links should use a non-production portal.
+Set **`signed-in`** and optionally **`user-name`**. If `layout.header.menu` is present, the component keeps using that menu while switching to signed-in UI. If `layout.header.menu` is empty, it falls back to the built-in signed-in menu: Find a job, Dashboard, Manage Account, and Sign out. Pass **`account-base-url`** when those fallback account links should use a non-production portal.
 
 Handle **`wegAuthClick`** for sign-out (call your logout API, then redirect):
 
@@ -122,7 +122,7 @@ Without React Router, pass `window.location.pathname` (+ `search` when needed) o
 
 | Prop / event | Purpose |
 | --- | --- |
-| `signedIn={boolean}` | Switches to signed-in nav when `true` |
+| `signedIn={boolean}` | Enables signed-in UI; the built-in signed-in fallback menu is used when `layout.header.menu` is empty |
 | `userName={string}` | First name beside profile icon on Manage Account |
 | `accountBaseUrl={string}` | Account portal origin for signed-in links (optional) |
 | `currentPath={string}` | Current path — highlights active nav (e.g. `/career-advice/foo`) |
@@ -180,23 +180,17 @@ const currentPath = search ? `${pathname}${search}` : pathname;
 import { useEffect, useState } from 'react';
 import 'weg-shared-layout/weg-header';
 import 'weg-shared-layout/weg-footer';
-import { dummyWeg21LayoutData } from 'weg-shared-layout/menus';
+import { dummyWeg21LayoutData, fetchWeg21Layout } from 'weg-shared-layout/menus';
 const layoutFixture = dummyWeg21LayoutData();
 
 type LayoutData = typeof layoutFixture;
-
-const WEG21_API = 'https://warwickemploymentgroup.com/api/v1/weg21';
 
 export function SiteLayout({ children }: { children: React.ReactNode }) {
   const [layout, setLayout] = useState<LayoutData | null>(null);
 
   useEffect(() => {
     let cancelled = false;
-    fetch(LAYOUT_URL)
-      .then((res) => {
-        if (!res.ok) throw new Error(`layout fetch failed: ${res.status}`);
-        return res.json() as Promise<LayoutData>;
-      })
+    fetchWeg21Layout({ apiKey: import.meta.env.VITE_WCMS_API_KEY })
       .then((data) => {
         if (!cancelled) setLayout(data);
       })
@@ -277,6 +271,7 @@ declare module 'react' {
 | Empty despite correct data | React set `layout` as attribute | React 19+, or `JSON.stringify`, or ref assignment. |
 | Logo missing on header | Old build without inlined logo | Upgrade package; logo is bundled in `logo-data.ts`. |
 | Auth always Sign in | `signed-in` not set | Bind `signedIn={!!session}`. |
+| Signed-in links are not what you expected | `layout.header.menu` is still being used | Leave `layout.header.menu` empty if you want the built-in signed-in fallback nav. |
 | Manage Account shows label not name | `user-name` not set | Pass `userName` when signed in. |
 | Nav never highlights active page | `current-path` not set | Pass `currentPath` from your router (pathname + query when needed). |
 | `onWegAuthClick` not firing | React CE event binding | Use `addEventListener` on a ref. |

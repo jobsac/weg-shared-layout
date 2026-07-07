@@ -1,6 +1,6 @@
 # Next.js (App Router)
 
-Guide for **Next.js 13+ App Router** (`app/` directory). For Vite/CRA-style client-only React, see **[React SPA](./react.md)**.
+Guide for **Next.js 13+ App Router** (`app/` directory). For client-only React apps such as Vite or CRA, see **[React SPA](./react.md)**.
 
 ## Components
 
@@ -9,7 +9,7 @@ Guide for **Next.js 13+ App Router** (`app/` directory). For Vite/CRA-style clie
 | `<weg-header>` | Site header — bundled logo, CMS nav (signed out), built-in nav (signed in), Sign in / Manage Account / Sign out |
 | `<weg-footer>` | Site footer — social, menu, legal text |
 
-Both accept **`layout`** (JSON string recommended in Next). `<weg-header>` also accepts **`signed-in`**, **`user-name`**, **`account-base-url`**, **`current-path`**, and emits **`wegAuthClick`**.
+Both components accept **`layout`** (a JSON string is recommended in Next). `<weg-header>` also accepts **`signed-in`**, **`user-name`**, **`account-base-url`**, **`current-path`**, and emits **`wegAuthClick`**.
 
 ## Why Next.js is different
 
@@ -62,7 +62,7 @@ Sign-in comes from your CMS `header.menu` like any other link. Handle sign-out v
 'use client';
 
 import { useCallback } from 'react';
-import { usePathname } from 'next/navigation';
+import { usePathname, useSearchParams } from 'next/navigation';
 import { defineCustomElements } from 'weg-shared-layout/loader';
 import 'weg-shared-layout/weg-header';
 
@@ -84,6 +84,9 @@ export function Header({
   onSignedInChange?: (signedIn: boolean) => void;
 }) {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const query = searchParams.toString();
+  const currentPath = query ? `${pathname}?${query}` : pathname;
 
   const onAuthClick = useCallback(
     async (event: CustomEvent<{ action: 'sign-in' | 'sign-out' }>) => {
@@ -101,7 +104,7 @@ export function Header({
     <weg-header
       layout={JSON.stringify(layout)}
       signedIn={signedIn}
-      currentPath={pathname}
+      currentPath={currentPath}
       {...(userName ? { userName } : {})}
       suppressHydrationWarning
       onWegAuthClick={onAuthClick}
@@ -191,13 +194,23 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 ```tsx
 // app/layout.tsx
 import { SiteChrome } from '@/components/layout/SiteChrome';
+import { menusToLayoutData } from 'weg-shared-layout/menus';
 
-const WEG21_API = 'https://warwickemploymentgroup.com/api/v1/weg21';
+const WEG21_API_BASE = 'https://warwickemploymentgroup.com/api/v1/weg21';
 
 async function getLayout() {
-  const res = await fetch(LAYOUT_URL, { next: { revalidate: 60 } });
-  if (!res.ok) throw new Error('Failed to load layout');
-  return res.json();
+  const headers = { 'wcms-api-key': process.env.WCMS_API_KEY! };
+  const [bootstrapRes, menusRes] = await Promise.all([
+    fetch(WEG21_API_BASE, { headers, next: { revalidate: 60 } }),
+    fetch(`${WEG21_API_BASE}/menus`, { headers, next: { revalidate: 60 } }),
+  ]);
+
+  if (!bootstrapRes.ok || !menusRes.ok) {
+    throw new Error('Failed to load WEG21 layout');
+  }
+
+  const [bootstrap, menus] = await Promise.all([bootstrapRes.json(), menusRes.json()]);
+  return menusToLayoutData(bootstrap, menus);
 }
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
@@ -225,17 +238,17 @@ Pass **`current-path`** from the client wrapper. Flat links use prefix matching;
 
 | API | Signed out | Signed in |
 | --- | --- | --- |
-| `layout.header.menu` | CMS nav rendered (groups + flat links incl. sign-in) | Ignored — built-in nav used |
+| `layout.header.menu` | CMS nav rendered (groups + flat links incl. sign-in) | Still used when provided; built-in signed-in fallback is only used when the menu is empty |
 | `layout.header.logoSrc` | Logo image URL (bundled if omitted) | Built-in bundled logo |
 | `layout.header.logoHref` | Logo link URL | WEG homepage |
-| `signed-in` prop | `false` | `true` — session flag from host app |
+| `signed-in` prop | `false` | `true` — session flag from host app, plus signed-in UI |
 | `user-name` prop | — | User's first name on Manage Account |
 | `account-base-url` prop | — | Account portal origin for signed-in links (optional) |
 | `current-path` prop | Current pathname (optional query) | Highlights the active nav link; e.g. `/career-advice/my-article` |
 | `wegAuthClick` event | Sign-in follows link `href` | `'sign-out'` — host handles logout and redirect |
 | `event.preventDefault()` | Skip default navigation | Required — sign-out has no built-in redirect |
 
-**Signed-in nav (built into the component):** Find a job, Dashboard, Manage Account, Sign out.
+**Built-in signed-in fallback menu:** Find a job, Dashboard, Manage Account, Sign out.
 
 The logo **image** uses `layout.header.logoSrc` when signed out (bundled if omitted). The logo **link** uses `layout.header.logoHref` when provided; otherwise it defaults to the WEG homepage.
 
