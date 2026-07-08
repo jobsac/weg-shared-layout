@@ -6017,12 +6017,42 @@ class WegHeader {
     getMenuToggleButton() {
         return this.el.shadowRoot?.querySelector('.menu-toggle');
     }
+    static FOCUSABLE_SELECTOR = 'a[href]:not([tabindex="-1"]), button:not([disabled]):not([tabindex="-1"])';
     getFirstNavFocusable() {
         const panel = this.el.shadowRoot?.querySelector('#weg-header-main-nav');
         if (!panel)
             return null;
-        const focusables = panel.querySelectorAll('a[href], button:not([disabled])');
+        const focusables = panel.querySelectorAll(WegHeader.FOCUSABLE_SELECTOR);
         return focusables[0] ?? null;
+    }
+    /** Focusable controls inside the open mobile menu chrome (toggle → logo → auth → nav). */
+    getMobileMenuFocusables() {
+        const header = this.el.shadowRoot?.querySelector('.header');
+        if (!header)
+            return [];
+        return Array.from(header.querySelectorAll(WegHeader.FOCUSABLE_SELECTOR));
+    }
+    trapMobileMenuFocus(event) {
+        if (!this.isMobileMenuActive() || event.key !== 'Tab')
+            return;
+        const focusables = this.getMobileMenuFocusables();
+        if (focusables.length === 0)
+            return;
+        const first = focusables[0];
+        const last = focusables[focusables.length - 1];
+        const active = this.el.shadowRoot?.activeElement;
+        const activeInTrap = active != null && focusables.includes(active);
+        if (event.shiftKey) {
+            if (!activeInTrap || active === first) {
+                event.preventDefault();
+                last.focus();
+            }
+            return;
+        }
+        if (!activeInTrap || active === last) {
+            event.preventDefault();
+            first.focus();
+        }
     }
     focusFirstNavItem() {
         setTimeout(() => {
@@ -6135,6 +6165,10 @@ class WegHeader {
         this.resolve();
     }
     handleKeyDown(event) {
+        if (event.key === 'Tab') {
+            this.trapMobileMenuFocus(event);
+            return;
+        }
         if (event.key !== 'Escape')
             return;
         if (this.openDropdown) {
@@ -6557,12 +6591,12 @@ class WegHeader {
         const logoSrc = this.getLogoSrc();
         const closeMenu = () => this.closeMenu();
         const mobileMenuActive = this.isMobileMenuActive();
-        return (hAsync(Host, { key: '46951a1043d7f0270496e815b32bceda2d3486e8', class: { 'weg-header--scroll-mode': this.headerScrollMode } }, hAsync("div", { key: 'eba0ff9e1c834e5d5a6cc9107a1b970ed5cd7649', class: "weg-header-shell" }, hAsync("a", { key: '80e0e92ee3fb667293c20e5ad086c18b3ebefd75', class: "skip-to-content", href: "#", title: SKIP_TO_CONTENT_LABEL, onClick: (event) => this.handleSkipToContent(event) }, SKIP_TO_CONTENT_LABEL), hAsync("header", { key: '72280ef241ab2c0a5693a829a0aab4f6d16f16b1', class: {
+        return (hAsync(Host, { key: '916472d15df8abf5270650126356ef2d7a475765', class: { 'weg-header--scroll-mode': this.headerScrollMode } }, hAsync("div", { key: '8c8d63f67cf7b27364cc828aa42c5b011cbb971e', class: "weg-header-shell" }, hAsync("a", { key: '96f6141f0bff7a51bbc8f46ea9b92d0c33142e1a', class: "skip-to-content", href: "#", title: SKIP_TO_CONTENT_LABEL, onClick: (event) => this.handleSkipToContent(event) }, SKIP_TO_CONTENT_LABEL), hAsync("header", { key: '4a727a72e031159ca991505a1a8a59a32271aedf', class: {
                 header: true,
                 'header--menu-open': mobileMenuActive,
                 'header--scroll-mode': this.headerScrollMode,
                 'header--scroll-hidden': this.headerScrollHidden && this.headerScrollMode,
-            } }, hAsync("div", { key: '634be20c6f4a6de4070ce0c4adc96c1d2f93d391', class: "header-inner" }, hAsync("div", { key: 'c087c9482ea95b33c4ae2bfe83b57a07b3cb44c8', class: "sr-only", "aria-live": "polite", "aria-atomic": "true", "data-weg-sr-live": true }), hAsync("button", { key: '5423d59c8504c7ba1f76331ff19ad3b7f040131b', type: "button", class: "menu-toggle icon-button", "aria-label": mobileMenuActive ? CLOSE_MAIN_NAV_LABEL : OPEN_MAIN_NAV_LABEL, "aria-expanded": mobileMenuActive ? 'true' : 'false', "aria-controls": "weg-header-main-nav", onClick: () => this.toggleMenu() }, mobileMenuActive ? hAsync(CloseIcon, null) : hAsync(HamburgerIcon, null)), hAsync(Logo, { key: '370fc18b81e150c9a6f7b9f8515f6f0597afdb58', href: logoHref, src: logoSrc }), hAsync("div", { key: 'a99f8addf9fa2594c5e331c3be5d0a1c626131dc', class: "header-actions" }, this.renderCompactAuth(mobileMenuActive ? closeMenu : undefined)), hAsync("div", { key: 'bcffaff7bca9fe7dc7dd4468239708462962f893', class: "main-nav-panel", id: "weg-header-main-nav", role: mobileMenuActive ? 'dialog' : undefined, "aria-modal": mobileMenuActive ? 'true' : undefined, "aria-label": mobileMenuActive ? MAIN_NAV_LABEL : undefined }, this.renderNav(mobileMenuActive ? closeMenu : undefined)))))));
+            } }, hAsync("div", { key: '5ef2a85bf2087206a17e3cbf163dde4d549dcd0b', class: "header-inner" }, hAsync("div", { key: '3af6990b5c6d93b4332a0d53300daddb11e2ad2b', class: "sr-only", "aria-live": "polite", "aria-atomic": "true", "data-weg-sr-live": true }), hAsync("button", { key: '023322f1e49a676a5b20208b956624ce820e9b57', type: "button", class: "menu-toggle icon-button", "aria-label": mobileMenuActive ? CLOSE_MAIN_NAV_LABEL : OPEN_MAIN_NAV_LABEL, "aria-expanded": mobileMenuActive ? 'true' : 'false', "aria-controls": "weg-header-main-nav", onClick: () => this.toggleMenu() }, mobileMenuActive ? hAsync(CloseIcon, null) : hAsync(HamburgerIcon, null)), hAsync(Logo, { key: 'efa51b76936456c49059c67e9f2c9c2365b97d25', href: logoHref, src: logoSrc }), hAsync("div", { key: 'ee0eff5ae3a63cf9550261a4d1727c9a88ab3e4d', class: "header-actions" }, this.renderCompactAuth(mobileMenuActive ? closeMenu : undefined)), hAsync("div", { key: '7552a6a661e644dcb3d555ab5572f680cd0295de', class: "main-nav-panel", id: "weg-header-main-nav", role: mobileMenuActive ? 'dialog' : undefined, "aria-modal": mobileMenuActive ? 'true' : undefined, "aria-label": mobileMenuActive ? MAIN_NAV_LABEL : undefined }, this.renderNav(mobileMenuActive ? closeMenu : undefined)))))));
     }
     static get watchers() { return {
         "layout": [{

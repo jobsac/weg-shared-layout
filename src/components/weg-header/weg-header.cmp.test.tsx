@@ -430,6 +430,39 @@ describe('weg-header', () => {
     expect(root.shadowRoot?.activeElement).toBe(openButton);
   });
 
+  it('traps Tab focus within the open mobile menu', async () => {
+    await setViewport(MOBILE_VIEWPORT.width, MOBILE_VIEWPORT.height);
+    const { root } = await render(<weg-header layout={SAMPLE_HEADER_LAYOUT}></weg-header>);
+
+    const openButton = root.shadowRoot?.querySelector('.menu-toggle') as HTMLButtonElement | null;
+    await userEvent.click(openButton!);
+    await waitForUpdate();
+    await new Promise((resolve) => {
+      requestAnimationFrame(() => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+    });
+
+    const focusables = Array.from(
+      root.shadowRoot?.querySelectorAll<HTMLElement>(
+        '.header a[href]:not([tabindex="-1"]), .header button:not([disabled]):not([tabindex="-1"])',
+      ) ?? [],
+    );
+    const lastFocusable = focusables[focusables.length - 1];
+    expect(lastFocusable).toBeTruthy();
+    expect(openButton).toBe(focusables[0]);
+
+    lastFocusable!.focus();
+    window.dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'Tab', bubbles: true, cancelable: true }),
+    );
+    expect(root.shadowRoot?.activeElement).toBe(openButton);
+
+    openButton!.focus();
+    window.dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'Tab', shiftKey: true, bubbles: true, cancelable: true }),
+    );
+    expect(root.shadowRoot?.activeElement).toBe(lastFocusable);
+  });
+
   it('exposes submenu link position within the set', async () => {
     await setViewport(DESKTOP_VIEWPORT.width, DESKTOP_VIEWPORT.height);
     const { root } = await render(<weg-header layout={MULTI_DROPDOWN_HEADER_LAYOUT}></weg-header>);

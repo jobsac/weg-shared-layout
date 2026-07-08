@@ -350,14 +350,48 @@ export class WegHeader {
     return this.el.shadowRoot?.querySelector('.menu-toggle');
   }
 
+  private static readonly FOCUSABLE_SELECTOR =
+    'a[href]:not([tabindex="-1"]), button:not([disabled]):not([tabindex="-1"])';
+
   private getFirstNavFocusable(): HTMLElement | null {
     const panel = this.el.shadowRoot?.querySelector('#weg-header-main-nav');
     if (!panel) return null;
 
-    const focusables = panel.querySelectorAll<HTMLElement>(
-      'a[href], button:not([disabled])',
-    );
+    const focusables = panel.querySelectorAll<HTMLElement>(WegHeader.FOCUSABLE_SELECTOR);
     return focusables[0] ?? null;
+  }
+
+  /** Focusable controls inside the open mobile menu chrome (toggle → logo → auth → nav). */
+  private getMobileMenuFocusables(): HTMLElement[] {
+    const header = this.el.shadowRoot?.querySelector('.header');
+    if (!header) return [];
+
+    return Array.from(header.querySelectorAll<HTMLElement>(WegHeader.FOCUSABLE_SELECTOR));
+  }
+
+  private trapMobileMenuFocus(event: KeyboardEvent) {
+    if (!this.isMobileMenuActive() || event.key !== 'Tab') return;
+
+    const focusables = this.getMobileMenuFocusables();
+    if (focusables.length === 0) return;
+
+    const first = focusables[0];
+    const last = focusables[focusables.length - 1];
+    const active = this.el.shadowRoot?.activeElement as HTMLElement | null;
+    const activeInTrap = active != null && focusables.includes(active);
+
+    if (event.shiftKey) {
+      if (!activeInTrap || active === first) {
+        event.preventDefault();
+        last.focus();
+      }
+      return;
+    }
+
+    if (!activeInTrap || active === last) {
+      event.preventDefault();
+      first.focus();
+    }
   }
 
   private focusFirstNavItem() {
@@ -487,6 +521,11 @@ export class WegHeader {
 
   @Listen('keydown', { target: 'window' })
   handleKeyDown(event: KeyboardEvent) {
+    if (event.key === 'Tab') {
+      this.trapMobileMenuFocus(event);
+      return;
+    }
+
     if (event.key !== 'Escape') return;
 
     if (this.openDropdown) {
