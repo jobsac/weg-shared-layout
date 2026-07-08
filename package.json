@@ -1,6 +1,6 @@
 {
   "name": "weg-shared-layout",
-  "version": "0.0.58",
+  "version": "0.0.59",
   "description": "Shared layout Web Components built with Stencil",
   "main": "dist/index.cjs.js",
   "module": "dist/index.js",
