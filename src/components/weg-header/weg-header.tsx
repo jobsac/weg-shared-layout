@@ -1193,6 +1193,9 @@ export class WegHeader {
               'header--scroll-hidden': this.headerScrollHidden && this.headerScrollMode,
             }}
           >
+          {mobileMenuActive ? (
+            <div class="header-backdrop" aria-hidden="true" onClick={() => this.closeMenu({ focusToggle: true })} />
+          ) : null}
           <div class="header-inner">
             <div class="sr-only" aria-live="polite" aria-atomic="true" data-weg-sr-live />
             <button
